@@ -1,6 +1,14 @@
 {
   "hello": "Cześć",
   "length_of_stay": "Okres pobytu",
-  "select_your_stay_dates": "Wybierz termin pobytu"
+  "select_your_stay_dates": "Wybierz termin pobytu",
+  "save": "Zapisz",
+  "cancel": "Anuluj",
+  "search": "Szukaj",
+  "current": "Obecny",
+  "select_month": "Wybierz miesiąc",
+  "select": "Wybierz",
+  "maximum_length_of_stay": "Maksymalna długość pobytu: 14 dni",
+  "selected": "Wybrano"
 
 }

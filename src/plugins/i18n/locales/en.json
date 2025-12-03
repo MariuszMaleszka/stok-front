@@ -1,5 +1,13 @@
 {
   "hello": "Hello",
   "length_of_stay": "Length of stay",
-  "select_your_stay_dates":  "Select your stay dates"
+  "select_your_stay_dates":  "Select your stay dates",
+  "save": "Save",
+  "cancel": "Cancel",
+  "search": "Search",
+  "current": "Current",
+  "select_month": "Select month",
+  "select": "Select",
+  "maximum_length_of_stay": "Maximum length of stay: 14 days",
+  "selected": "Selected"
 }

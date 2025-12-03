@@ -1,0 +1,9 @@
+@use 'variables.scss' as *;
+.v-field {
+  border-bottom-left-radius: $border-radius !important;
+  border-bottom-right-radius: $border-radius !important;
+  border-top-left-radius: $border-radius !important;
+  border-top-right-radius: $border-radius !important;
+  --v-field-input-padding-top: 2px;
+  --v-field-input-padding-bottom:2px;
+}

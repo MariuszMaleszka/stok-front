@@ -1,0 +1,64 @@
+@use 'variables.scss' as *;
+// Font size utility classes
+.fs-12 {
+  font-size: 12px;
+}
+
+.fs-13 {
+  font-size: 13px;
+}
+
+.fs-14 {
+  font-size: 14px;
+}
+.fs-15 {
+  font-size: 15px;
+}
+.fs-16 {
+  font-size: 16px;
+}
+
+//font-weight utility classes
+.fw-400 {
+  font-weight: 400 !important;
+}
+.fw-500 {
+  font-weight: 500 !important;
+}
+.fw-600 {
+  font-weight: 600 !important;
+}
+
+// Font color utility classes
+.fc-black {
+  color: #000 !important;
+}
+
+.fc-white {
+  color: #fff !important;
+}
+
+.fc-blue {
+  color: $blue !important;
+}
+
+.ff-inter {
+  font-family: 'Inter', sans-serif !important;
+}
+
+// Alert styles
+.alert-info-small {
+  background-color: $blue-light !important;
+  border-color: $blue-border !important;
+  padding: 10px !important;
+  border-radius: $border-radius !important;
+}
+.alert-error-small {
+  background-color: $red-light !important;
+  border-color: $red-border !important;
+  color: $red !important;
+  padding: 10px !important;
+  border-radius: $border-radius !important;
+}
+
+

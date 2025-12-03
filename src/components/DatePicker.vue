@@ -103,9 +103,9 @@
     v-bind="pickerConfig"
     clearable
     :action-row="{
-      selectBtnLabel: 'Zapisz',
-      cancelBtnLabel: 'Anuluj',
-      nowBtnLabel: 'Current'
+      selectBtnLabel: $t('save'),
+      cancelBtnLabel: $t('cancel'),
+      nowBtnLabel:  $t('current')
     }"
     :locale="props.locale"
     :time-config="{ enableTimePicker: props.enableTimePicker }"
@@ -115,16 +115,26 @@
     @update:model-value="onChange"
   >
     <template #menu-header>
-      <div v-if="showHeader" class="pa-4 d-flex justify-space-between">
-        Wybierz termin pobytu {{ mobile }}
+      <div v-if="showHeader" class="fs-16 mb-3 d-flex justify-space-between">
+        {{ $t('select_your_stay_dates') }}
         <button class="close-btn" aria-label="Close" @click="handleClose">
-          <VIcon icon="mdi-close" />
+          <VIcon size="18" icon="mdi-close" />
         </button>
+      </div>
+      <div class="mb-3">
+      <VAlert
+        class="mb-2 fs-13 border alert-info"
+        density="compact"
+      >
+        <span class="fc-blue">
+          {{ $t('maximum_length_of_stay') }}
+        </span>
+      </VAlert>
       </div>
       <div class="d-flex justify-space-between px-4">
         <VIcon @click="handlePrevMonth" icon="mdi-chevron-left">
         </VIcon>
-          Wybierz miesiąc
+          {{ $t('select_month') }}
         <VIcon  @click="handleNextMonth" icon="mdi-chevron-right" />
       </div>
     </template>
@@ -137,7 +147,7 @@
         hide-details
         control-variant="hidden"
         :model-value="formatDateRange(modelValue)"
-        placeholder="Wybierz"
+        :placeholder="$t('select')"
       >
         <template #prepend-inner>
           <VIcon size="16" icon="mdi-calendar-blank-outline" />
@@ -145,18 +155,26 @@
 
       </VTextField>
     </template>
+    <template #action-preview="{ value }">
+      <div v-if="modelValue" class="custom-preview mr-auto">
+        {{ $t('selected') }}:
+        <span class="fw-600">
+          {{ formatDateRange(value) }}
+        </span>
+      </div>
+    </template>
   </VueDatePicker>
 </template>
 
 <style lang="scss">
 .dp__menu {
+  font-family: 'Inter', sans-serif;
   border: none;
   margin-top: 1rem;
   @media (min-width: 960px) {
     margin-top: unset;
     border-radius: 16px;
-    padding-inline: 1rem;
-    padding-bottom: 1rem;
+   padding: 16px;
     -webkit-box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, 0.2);
     -moz-box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, 0.2);
     box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, 0.2);
@@ -166,21 +184,30 @@
   }
 }
 .dp__month_year_wrap {
-  margin-left: 8px;
+  font-size: 13px;
+
   .dp--arrow-btn-nav {
     display: none !important;
   }
   .dp__month_year_select {
     width: unset !important;
     margin-right: 5px;
+    text-transform: capitalize;
+    font-weight: 700;
   }
 }
 .dp__menu_inner  {
-  padding: 0;
+  padding-bottom: 0;
+  column-gap: 10px;
+
   @media (min-width: 960px) {
-  padding: 16px !important;
+    padding: 16px 16px 0 16px !important;
 
   }
+}
+.dp__calendar_header {
+  font-size: 13px;
+  font-weight: 200;
 }
 
 .dp__action_button {
@@ -189,6 +216,7 @@
   min-height: 35px;
   border-radius: 8px;
   font-size: 16px;
+  margin-left: 8px;
 }
 .dp__action_cancel {
   background-color: $gray-light  !important;
@@ -200,5 +228,11 @@
 }
 .dp__cell_inner {
   font-size: 13px;
+}
+.dp__action_row {
+  flex-direction: column;
+  align-items: flex-start;
+  border-top: 1px solid;
+  padding-top: 12px;
 }
 </style>

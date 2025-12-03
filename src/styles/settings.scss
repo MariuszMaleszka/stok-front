@@ -7,5 +7,9 @@
 // https://vuetifyjs.com/features/sass-variables/`
 
 @use 'vuetify/settings' with (
-$body-font-family: ('Inter', sans-serif)
+  $body-font-family: ('Inter', sans-serif),
+  $field-control-height: 52px,
+  $field-input-padding-top: 0px,
+  $field-input-padding-bottom:0px,
+
 );

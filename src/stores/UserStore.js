@@ -7,7 +7,9 @@ export const useUserStore = defineStore('userStore', () => {
 
   const userDateOfStay = ref(null)
 
+
   return {
     userDateOfStay,
+
   }
 })
