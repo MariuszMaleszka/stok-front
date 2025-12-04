@@ -9,5 +9,11 @@
   "select_month": "Select month",
   "select": "Select",
   "maximum_length_of_stay": "Maximum length of stay: 14 days",
-  "selected": "Selected"
+  "selected": "Selected",
+  "participants": "Participants",
+  "classes": "Classes",
+  "details": "Details",
+  "booking_classes": "Booking Classes",
+  "provide_details_of_your_stay": "Provide details of your stay",
+  "select_day_or_period_of_stay": "Select the day or period of your stay in Białka Tatrzańska."
 }

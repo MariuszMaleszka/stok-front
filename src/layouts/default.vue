@@ -1,8 +1,8 @@
 <template>
-  <v-main>
+  <AppHeader/>
+  <VMain>
     <router-view />
-  </v-main>
-
+  </VMain>
   <AppFooter />
 </template>
 

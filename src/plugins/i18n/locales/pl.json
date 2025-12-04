@@ -9,6 +9,12 @@
   "select_month": "Wybierz miesiąc",
   "select": "Wybierz",
   "maximum_length_of_stay": "Maksymalna długość pobytu: 14 dni",
-  "selected": "Wybrano"
+  "selected": "Wybrano",
+  "participants": "Uczestnicy",
+  "classes": "Zajęcia",
+  "details": "Szczegóły",
+  "booking_classes": "Rezerwacja zajęć",
+  "provide_details_of_your_stay": "Podaj dane swojego pobytu",
+  "select_day_or_period_of_stay": "Wybierz dzień lub okres swojego pobytu w Białce Tatrzańskiej."
 
 }

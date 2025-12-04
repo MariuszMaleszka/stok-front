@@ -12,6 +12,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     AppFooter: typeof import('./src/components/AppFooter.vue')['default']
+    AppHeader: typeof import('./src/components/AppHeader.vue')['default']
     DatePicker: typeof import('./src/components/DatePicker.vue')['default']
     DatePickerResponsive: typeof import('./src/components/DatePickerResponsive.vue')['default']
     DateRangePicker: typeof import('./src/components/DateRangePicker.vue')['default']
