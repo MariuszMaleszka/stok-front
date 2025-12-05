@@ -5,6 +5,7 @@ import {useDisplay} from 'vuetify'
 import {formatDateRange} from "@/utils/dates.js";
 import {pl, enUS} from "date-fns/locale";
 import {computed, ref} from "vue";
+import {useUserStore} from '@/stores/UserStore.js'
 
 const props = defineProps({
   modelValue: {type: [Date, Array], default: null},
@@ -32,7 +33,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:modelValue'])
-
+const userStore = useUserStore()
 const datePickerRef = ref(null)
 
 const {mobile} = useDisplay()
@@ -59,6 +60,8 @@ const dayNames = computed(() => {
     : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 })
 
+const tempSelection = ref(null)
+
 const handlePrevMonth = () => {
   if (currentMonth.value === 0) {
     currentMonth.value = 11
@@ -79,13 +82,40 @@ const handleNextMonth = () => {
   datePickerRef.value?.setMonthYear({month: currentMonth.value, year: currentYear.value})
 }
 
+// Simple close
 const handleClose = () => {
   datePickerRef.value?.closeMenu()
 }
 
+// Clear selection
+const handleClear = () => {
+  tempSelection.value = null
+  emit('update:modelValue', null)
+}
+
+// Save and close for mobile dialog
+const handleSaveAndClose = () => {
+  datePickerRef.value?.selectDate()
+  datePickerRef.value?.closeMenu()
+  dialog.value = false
+}
+// Cancel selection for mobile dialog
+const handleCancel = () => {
+  tempSelection.value = ''
+  datePickerRef.value?.closeMenu()
+  dialog.value = false
+}
+
+// On change handler
 const onChange = (newValue) => {
+  tempSelection.value = newValue
   emit('update:modelValue', newValue)
 }
+// Internal update handler
+const onInternalUpdate = (newValue) => {
+  tempSelection.value = newValue
+}
+
 
 </script>
 
@@ -95,6 +125,7 @@ const onChange = (newValue) => {
   <VueDatePicker
     v-if="!mobile"
     :model-value="modelValue"
+    :key="modelValue ? modelValue.toString() : 'empty'"
     ref="datePickerRef"
     :format="formatDateRange"
     :day-names="dayNames"
@@ -113,6 +144,7 @@ const onChange = (newValue) => {
       month: 'LLLL',
     }"
     @update:model-value="onChange"
+    @internal-model-change="onInternalUpdate"
   >
     <template #menu-header>
       <div class="fs-16 mb-3 d-flex justify-space-between">
@@ -149,7 +181,7 @@ const onChange = (newValue) => {
         control-variant="hidden"
         :model-value="formatDateRange(modelValue)"
         :placeholder="$t('select')"
-        @click:clear="emit('update:modelValue', null)"
+        @click:clear="handleClear"
       >
         <template #prepend-inner>
           <VIcon size="16" icon="mdi-calendar-blank-outline"/>
@@ -158,10 +190,10 @@ const onChange = (newValue) => {
       </VTextField>
     </template>
     <template #action-preview="{ value }">
-      <div v-if="modelValue" class="custom-preview fs-13 mr-auto">
+      <div  class="custom-preview fs-13 mr-auto">
         {{ $t('selected') }}:
         <span class="fw-600">
-          {{ formatDateRange(value) }}
+          {{ formatDateRange(tempSelection) }}
         </span>
       </div>
     </template>
@@ -179,7 +211,7 @@ const onChange = (newValue) => {
     :model-value="formatDateRange(modelValue)"
     :label="$t('select')"
     @click="dialog = true"
-    @click:clear="emit('update:modelValue', null)"
+    @click:clear="handleClear"
   >
     <template #prepend-inner>
       <VIcon size="16" icon="mdi-calendar-blank-outline"/>
@@ -194,14 +226,21 @@ const onChange = (newValue) => {
   >
     <VCard>
       <VCardTitle>
-        <div class="d-flex justify-space-between">
+        <div
+          :class="mobile ? 'fs-16 py-2':''"
+          class="d-flex justify-space-between"
+        >
           {{ $t('select_your_stay_dates') }}
           <VIcon icon="mdi-close" @click="dialog = false"/>
         </div>
       </VCardTitle>
-      <VCardText class="px-2">
+      <VCardText
+        :class="mobile ? 'pt-0':''"
+        class="px-2"
+      >
         <VueDatePicker
           :model-value="modelValue"
+          :key="modelValue ? modelValue.toString() : 'empty'"
           ref="datePickerRef"
           :format="formatDateRange"
           :day-names="dayNames"
@@ -209,27 +248,26 @@ const onChange = (newValue) => {
           multiCalendars
           inline
           clearable
-          :action-row="{
-          selectBtnLabel: $t('save'),
-          cancelBtnLabel: $t('cancel'),
-          nowBtnLabel:  $t('current'),
-          selectBtnClass: 'sraka'
-        }"
+          :action-row="{ showSelect: false, showCancel: false, showNow: false }"
           :locale="normalizedLocale"
           :time-config="{ enableTimePicker: props.enableTimePicker }"
           :formats="{
-      month: 'LLLL',
-    }"
+            month: 'LLLL',
+          }"
           @update:model-value="onChange"
+          @internal-model-change="onInternalUpdate"
+
         >
           <template #menu-header>
-
             <div class="mb-3">
               <VAlert
-                class="mb-2 fs-13 border alert-info-small"
+                class="mb-2 fs-13 border alert-info-small mx-2"
                 density="compact"
               >
-        <span class="fc-blue">
+        <span
+          :class="mobile? 'fs-11' : ''"
+          class="fc-blue"
+        >
           {{ $t('maximum_length_of_stay') }}
         </span>
               </VAlert>
@@ -237,22 +275,47 @@ const onChange = (newValue) => {
             <div class="d-flex justify-space-between px-4">
               <VIcon @click="handlePrevMonth" icon="mdi-chevron-left">
               </VIcon>
-              {{ $t('select_month') }}
+              <span
+                :class="mobile ? 'fs-13':''"
+                class="fw-500"
+              >
+                {{ $t('select_month') }}
+              </span>
               <VIcon @click="handleNextMonth" icon="mdi-chevron-right"/>
             </div>
           </template>
 
           <template #action-preview="{ value }">
-            <div v-if="modelValue" class="custom-preview fs-13 mr-auto">
+            <div class="custom-preview fs-13 mr-auto">
               {{ $t('selected') }}:
               <span class="fw-600">
-          {{ formatDateRange(value) }}
-        </span>
+                 {{ formatDateRange(tempSelection) }}
+              </span>
             </div>
           </template>
         </VueDatePicker>
 
       </VCardText>
+      <VCardActions class="border-t d-flex justify-between text-capitalize">
+
+        <VBtn
+          variant="flat"
+          color="gray"
+          class="mr-auto px-4 text-capitalize"
+          @click="handleCancel"
+        >
+          {{ $t('cancel') }}
+        </VBtn>
+
+        <VBtn
+          variant="flat"
+          color="primary"
+          class="px-4 text-capitalize"
+          @click="handleSaveAndClose"
+        >
+          {{ $t('save') }}
+        </VBtn>
+      </VCardActions>
     </VCard>
   </VDialog>
 </template>
@@ -267,7 +330,6 @@ const onChange = (newValue) => {
 .dp__menu {
   font-family: 'Inter', sans-serif;
   border: none;
-  margin-top: 1rem;
   @media (min-width: 960px) {
     margin-top: unset;
     border-radius: 16px;
@@ -308,8 +370,11 @@ const onChange = (newValue) => {
 }
 
 .dp__calendar_header {
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 200;
+  @media (min-width: 960px) {
+    font-size: 13px;
+  }
 }
 
 .dp__action_button {
@@ -331,9 +396,7 @@ const onChange = (newValue) => {
   color: #fff;
 }
 
-.dp__cell_inner {
-  font-size: 13px;
-}
+
 
 .dp__action_row {
   flex-direction: column;
@@ -343,10 +406,18 @@ const onChange = (newValue) => {
   margin-top: 12px;
 }
 .dp__cell_inner {
-  padding: 1px 8px !important;
-  margin: 1px !important;
+  padding: 0 6px !important;
+  margin: 0 !important;
   border-radius: $border-radius;
-  height: 28px !important;
+  height: 24px !important;
+  font-size: 11px;
+  //width: calc(100% - 4px);
+  @media (min-width: 960px) {
+    font-size: 13px;
+    height: 28px !important;
+    padding: 1px 8px !important;
+    margin: 1px !important;
+  }
 }
 
 .dp--future.dp__range_start,
