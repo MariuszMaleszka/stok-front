@@ -2,9 +2,11 @@
 import { ref } from 'vue'
 import Logo from '@/assets/stok-logo.svg'
 import {useI18n} from "vue-i18n";
+import {useCookies} from "@vueuse/integrations/useCookies";
 
 const { locale } = useI18n()
 const menu = ref(false)
+const cookies = useCookies(['locale'])
 // Switch language
 const changeLanguage = (lang) => {
   locale.value = lang

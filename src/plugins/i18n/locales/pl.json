@@ -15,6 +15,11 @@
   "details": "Szczegóły",
   "booking_classes": "Rezerwacja zajęć",
   "provide_details_of_your_stay": "Podaj dane swojego pobytu",
-  "select_day_or_period_of_stay": "Wybierz dzień lub okres swojego pobytu w Białce Tatrzańskiej."
-
+  "select_day_or_period_of_stay": "Wybierz dzień lub okres swojego pobytu w Białce Tatrzańskiej.",
+  "adults_number": "Liczba dorosłych",
+  "children_number": "Liczba dzieci",
+  "enter_number_of_participants_adult": "Podaj liczbę osób w wieku +17 lat",
+  "enter_number_of_participants_children": "Podaj liczbę dzieci w wieku od 4 do 16 lat",
+  "next": "Dalej",
+  "previous": "Wstecz"
 }

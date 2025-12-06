@@ -3,7 +3,7 @@
   <VMain>
     <router-view />
   </VMain>
-  <AppFooter />
+<!--  <AppFooter />-->
 </template>
 
 <script setup>

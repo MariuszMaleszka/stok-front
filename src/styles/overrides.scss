@@ -6,4 +6,24 @@
   border-top-right-radius: $border-radius !important;
   --v-field-input-padding-top: 2px;
   --v-field-input-padding-bottom:2px;
+  background-color: rgb(var(--v-theme-surface));
+}
+.v-main {
+    background-color: $primary-bg !important;
+}
+.v-btn--disabled {
+  opacity: .3 !important;
+}
+.v-btn.bg-grey {
+  background: #ebe6e7 !important;
+  color: #000 !important;
+}
+
+.v-main {
+  display: flex;
+  flex-direction: column;
+    min-height: 100% !important;
+}
+.v-application__wrap {
+  height: 100%;
 }

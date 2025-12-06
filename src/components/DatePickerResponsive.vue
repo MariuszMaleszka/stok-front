@@ -5,7 +5,6 @@ import {useDisplay} from 'vuetify'
 import {formatDateRange} from "@/utils/dates.js";
 import {pl, enUS} from "date-fns/locale";
 import {computed, ref} from "vue";
-import {useUserStore} from '@/stores/UserStore.js'
 
 const props = defineProps({
   modelValue: {type: [Date, Array], default: null},
@@ -33,16 +32,18 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:modelValue'])
-const userStore = useUserStore()
 const datePickerRef = ref(null)
 
 const {mobile} = useDisplay()
+// Dialog visibility for mobile
 const dialog = ref(false)
 
+// Current month and year for navigation
 const currentMonth = ref(new Date().getMonth())
+// Current year
 const currentYear = ref(new Date().getFullYear())
 
-
+//
 const normalizedLocale = computed(() => {
   if (typeof props.locale === 'string') {
     return props.locale === 'pl' ? pl : enUS
@@ -50,6 +51,7 @@ const normalizedLocale = computed(() => {
   return props.locale
 })
 
+// Day names based on locale
 const dayNames = computed(() => {
   const localeCode = typeof props.locale === 'string'
     ? props.locale
@@ -60,8 +62,10 @@ const dayNames = computed(() => {
     : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 })
 
+// Temporary selection storage
 const tempSelection = ref(null)
 
+// Previous month handler
 const handlePrevMonth = () => {
   if (currentMonth.value === 0) {
     currentMonth.value = 11
@@ -72,6 +76,7 @@ const handlePrevMonth = () => {
   datePickerRef.value?.setMonthYear({month: currentMonth.value, year: currentYear.value})
 }
 
+// Next month handler
 const handleNextMonth = () => {
   if (currentMonth.value === 11) {
     currentMonth.value = 0
@@ -115,12 +120,11 @@ const onChange = (newValue) => {
 const onInternalUpdate = (newValue) => {
   tempSelection.value = newValue
 }
-
-
 </script>
 
 <template>
-  <span>{{ $t('length_of_stay') }}</span>
+  <div>
+
   <!-- Desktop Picker -->
   <VueDatePicker
     v-if="!mobile"
@@ -177,7 +181,7 @@ const onInternalUpdate = (newValue) => {
         readonly
         clearable
         clearIcon="mdi-close"
-        hide-details
+        hide-details="auto"
         control-variant="hidden"
         :model-value="formatDateRange(modelValue)"
         :placeholder="$t('select')"
@@ -186,7 +190,6 @@ const onInternalUpdate = (newValue) => {
         <template #prepend-inner>
           <VIcon size="16" icon="mdi-calendar-blank-outline"/>
         </template>
-
       </VTextField>
     </template>
     <template #action-preview="{ value }">
@@ -205,11 +208,11 @@ const onInternalUpdate = (newValue) => {
     density="default"
     readonly
     clearable
-    hide-details
+    hide-details="auto"
     control-variant="hidden"
     clearIcon="mdi-close"
     :model-value="formatDateRange(modelValue)"
-    :label="$t('select')"
+    :placeholder="$t('select')"
     @click="dialog = true"
     @click:clear="handleClear"
   >
@@ -300,7 +303,7 @@ const onInternalUpdate = (newValue) => {
 
         <VBtn
           variant="flat"
-          color="gray"
+          color="grey"
           class="mr-auto px-4 text-capitalize"
           @click="handleCancel"
         >
@@ -308,8 +311,10 @@ const onInternalUpdate = (newValue) => {
         </VBtn>
 
         <VBtn
+          id="save-dates-btn"
           variant="flat"
-          color="primary"
+          :disabled="!tempSelection"
+          :color="tempSelection ? '#1C64F2' : '#ebe6e7'"
           class="px-4 text-capitalize"
           @click="handleSaveAndClose"
         >
@@ -318,6 +323,7 @@ const onInternalUpdate = (newValue) => {
       </VCardActions>
     </VCard>
   </VDialog>
+  </div>
 </template>
 
 <style lang="scss">
@@ -342,6 +348,9 @@ const onInternalUpdate = (newValue) => {
   .dp__arrow_top {
     display: none;
   }
+  //#save-dates-btn {
+  //  background-color: #ebe6e7;
+  //}
 }
 
 .dp__month_year_wrap {
@@ -396,8 +405,6 @@ const onInternalUpdate = (newValue) => {
   color: #fff;
 }
 
-
-
 .dp__action_row {
   flex-direction: column;
   align-items: flex-start;
@@ -411,7 +418,6 @@ const onInternalUpdate = (newValue) => {
   border-radius: $border-radius;
   height: 24px !important;
   font-size: 11px;
-  //width: calc(100% - 4px);
   @media (min-width: 960px) {
     font-size: 13px;
     height: 28px !important;
@@ -434,13 +440,3 @@ const onInternalUpdate = (newValue) => {
   background-color: $blue !important;
 }
 </style>
-<!-- Multi-calendar range picker -->
-
-<!-- Simple single calendar -->
-<!--    <DatePicker variant="simple" />-->
-
-<!-- Range picker with time -->
-<!--    <DatePicker enable-time-picker variant="range" />-->
-
-<!-- Month picker -->
-<!--    <DatePicker variant="month-picker" />-->
