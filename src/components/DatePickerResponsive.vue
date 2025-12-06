@@ -5,6 +5,7 @@ import {useDisplay} from 'vuetify'
 import {formatDateRange} from "@/utils/dates.js";
 import {pl, enUS} from "date-fns/locale";
 import {computed, ref} from "vue";
+import {useI18n} from "vue-i18n";
 
 const props = defineProps({
   modelValue: {type: [Date, Array], default: null},
@@ -32,9 +33,14 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:modelValue'])
+const {t} = useI18n()
 const datePickerRef = ref(null)
 
 const {mobile} = useDisplay()
+
+const rules = {
+  required: value => !!value || t('select_date'),
+}
 // Dialog visibility for mobile
 const dialog = ref(false)
 
@@ -186,7 +192,9 @@ const onInternalUpdate = (newValue) => {
         :model-value="formatDateRange(modelValue)"
         :placeholder="$t('select')"
         @click:clear="handleClear"
+        :rules="[rules.required]"
       >
+<!--        :error-messages="$t('select_date')"-->
         <template #prepend-inner>
           <VIcon size="16" icon="mdi-calendar-blank-outline"/>
         </template>
@@ -215,6 +223,7 @@ const onInternalUpdate = (newValue) => {
     :placeholder="$t('select')"
     @click="dialog = true"
     @click:clear="handleClear"
+    :rules="[rules.required]"
   >
     <template #prepend-inner>
       <VIcon size="16" icon="mdi-calendar-blank-outline"/>

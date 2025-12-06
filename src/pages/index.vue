@@ -10,8 +10,7 @@ const {mobile} = useDisplay()
 </script>
 
 <template>
-  <VContainer max-width="800" class="d-flex flex-column flex-1" >
-    <h1>{{ $t('hello') }}</h1>
+  <VContainer max-width="800" class="steps-holder d-flex flex-column flex-1 mt-4" >
 
     <div
       class="tabs-holder w-100 box-shadow-sm my-1"
@@ -35,6 +34,7 @@ const {mobile} = useDisplay()
         </VTab>
         <VTab
           value="two"
+          :disabled="!viewStore.isStepOnePreferencesCompleted"
           :aria-label="$t('classes')"
           :class="mobile ? 'pr-0 pl-0': ''"
           class="fs-11 text-capitalize ls-0 "
@@ -46,6 +46,7 @@ const {mobile} = useDisplay()
 
         <VTab
           value="three"
+          :disabled="!viewStore.isStepTwoCompleted"
           :aria-label="$t('details')"
           :class="mobile ? 'pr-0 pl-0 mr-2': 'justify-end'"
           class="fs-11 text-capitalize ls-0 "
@@ -54,19 +55,34 @@ const {mobile} = useDisplay()
           {{ $t('details') }}
         </VTab>
       </VTabs>
+
+
+
     </div>
 
     <VTabsWindow
       v-model="viewStore.currentView"
-      class="h-100 flex-1"
+      class="d-flex flex-column h-100 flex-1"
     >
-      <VTabsWindowItem value="one" class="h-100 flex-1">
+      <VTabsWindowItem
+        value="one"
+        class="h-100 flex-1"
+        :class="viewStore.currentView === 'one' ? 'd-flex flex-column' : ''"
+      >
        <StepOne />
       </VTabsWindowItem>
-      <VTabsWindowItem value="two">
+      <VTabsWindowItem
+        value="two"
+        class="h-100 flex-1"
+        :class="viewStore.currentView === 'two' ? 'd-flex flex-column' : ''"
+      >
         <VSheet class="pa-5" color="orange">Two</VSheet>
       </VTabsWindowItem>
-      <VTabsWindowItem value="three">
+      <VTabsWindowItem
+        value="three"
+        class="h-100 flex-1"
+        :class="viewStore.currentView === 'three' ? 'd-flex flex-column' : ''"
+      >
         <VSheet class="pa-5" color="brown">Three</VSheet>
       </VTabsWindowItem>
     </VTabsWindow>
@@ -84,7 +100,6 @@ const {mobile} = useDisplay()
 
   .v-tab.v-tab.v-btn {
     flex: auto;
-
   }
 
   .v-tab-item--selected {
@@ -93,6 +108,18 @@ const {mobile} = useDisplay()
     .dot-indicator {
       border-color: $blue
     }
+  }
+}
+.tabs-holder-secondary {
+  background-color: transparent;
+  .v-tab-item--selected {
+    color: $blue;
+    text-decoration: underline;
+  }
+}
+.steps-holder {
+  .v-window__container {
+    flex: 1 1 auto;
   }
 }
 

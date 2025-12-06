@@ -9,6 +9,7 @@ import vuetify from './vuetify'
 import pinia from '@/stores'
 import router from '@/router'
 import i18n from './i18n'
+import Vue3Toastify from "./toast.js";
 
 export function registerPlugins (app) {
   app
@@ -16,4 +17,5 @@ export function registerPlugins (app) {
     .use(router)
     .use(pinia)
     .use(i18n)
+    .use(Vue3Toastify)
 }

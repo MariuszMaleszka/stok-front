@@ -21,5 +21,24 @@
   "enter_number_of_participants_adult": "Podaj liczbę osób w wieku +17 lat",
   "enter_number_of_participants_children": "Podaj liczbę dzieci w wieku od 4 do 16 lat",
   "next": "Dalej",
-  "previous": "Wstecz"
+  "previous": "Wstecz",
+  "select_date": "Wybierz datę",
+  "stay_datails": "Dane pobytu",
+  "participants_preferences": "Preferencje uczestników",
+  "enter_preferences_details" : "Podaj dane każdego uczestnika i wybierz odpowiedni poziom zaawansowania.",
+  "ski": "Narty",
+  "snowboard": "Snowboard",
+  "firstime": "Pierwszy raz",
+  "firstime_desc": "Nigdy nie jeździł/a",
+  "novice": "Nowicjusz",
+  "novice_desc": "Pierwsze skręty",
+  "intermediate": "Średniozaawansowany",
+  "intermediate_desc": "Umie skręcać",
+  "advanced": "Zaawansowany",
+  "advanced_desc": "Chce dopracować technikę",
+  "orange_group": "Grupa pomarańczowa",
+  "orange_group_desc": "4-10 lat, początkujący",
+  "adult": "Dorosły",
+  "child": "Dziecko"
+
 }
