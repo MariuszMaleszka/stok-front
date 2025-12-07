@@ -9,6 +9,11 @@ export const useStayStore = defineStore('stayStore', () => {
   const adultsNumber = ref(1)
   const childrenNumber = ref(0)  // Start with 0 children
 
+  const availableLanguages = [
+    {name: t('polish'), selected: true},
+    {name: t('english'), selected: false},
+  ]
+
   const participantTemplate = {
     name: '',
     participantType: '',
@@ -18,7 +23,7 @@ export const useStayStore = defineStore('stayStore', () => {
     availableActivityTypes: [],
     availableLessonTypes: [],
     showGroupLessons: true,
-    classLang: 'pl'
+    classLang: 'Polski'
   }
 
   const activityTypes = reactive([
@@ -138,6 +143,9 @@ export const useStayStore = defineStore('stayStore', () => {
     })
   }, { immediate: true })
 
+
+
+
   return {
     dateOfStay,
     adultsNumber,
@@ -149,6 +157,7 @@ export const useStayStore = defineStore('stayStore', () => {
     participants,
     maxAdults,
     maxChildren,
-    canProceed
+    canProceed,
+    availableLanguages
   }
 })

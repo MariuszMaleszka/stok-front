@@ -3,6 +3,7 @@ import {computed} from 'vue'
 import {useDisplay} from 'vuetify'
 import {useViewControlStore} from "@/stores/ViewControlStore.js"
 import StepOne from "@/components/StepOne.vue"
+import StepTwo from "@/components/StepTwo.vue"
 
 const viewStore = useViewControlStore()
 const {mobile} = useDisplay()
@@ -76,7 +77,7 @@ const {mobile} = useDisplay()
         class="h-100 flex-1"
         :class="viewStore.currentView === 'two' ? 'd-flex flex-column' : ''"
       >
-        <VSheet class="pa-5" color="orange">Two</VSheet>
+        <StepTwo />
       </VTabsWindowItem>
       <VTabsWindowItem
         value="three"

@@ -23,6 +23,7 @@ declare module 'vue' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     StepOne: typeof import('./src/components/StepOne.vue')['default']
+    StepTwo: typeof import('./src/components/StepTwo.vue')['default']
     Toast: typeof import('./src/components/toasts/Toast.vue')['default']
   }
 }

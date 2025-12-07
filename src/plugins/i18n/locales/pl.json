@@ -74,6 +74,17 @@
   "narrow_snowboard_info": "Skręca pewnie, ogarnia czerwone trasy, jeździ różnym promieniem, jeździ w każdych warunkach",
   "child_age": "Wiek dziecka",
   "min_child_age": "Minimalny wiek to skończone 4 lata. W przypadku dzieci 3+, prosimy o kontakt",
-  "with_customers_service": "z biurem obsługi klienta"
+  "with_customers_service": "z biurem obsługi klienta",
+  "error": "Błąd",
+  "please_fill_required_fields": "Proszę wypełnić wymagane pola",
+  "fill_the_field_properly": "Proszę poprawnie wypełnić pole",
+  "select_class_type": "Wybierz rodzaj zajęć",
+  "select_difficulty_level": "Wybierz poziom trudności",
+  "select_classes": "Wybierz zajęcia",
+  "select_classes_for_each_participant": "Wybierz zajęcia w wybrane dni dla każdego z uczestników",
+  "timer_info": "Twoje rezerwacje będą aktywne jeszcze:",
+  "classes_lang": "Język lekcji",
+  "polish": "Polski",
+    "english": "Angielski"
 }
 

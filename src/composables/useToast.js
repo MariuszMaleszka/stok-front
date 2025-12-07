@@ -4,8 +4,15 @@ import ToastWithAction from '@/components/toasts/Toast.vue'
 
 export function useToast() {
   const showSimpleToast = (message, type = 'info') => {
-    toast[type](message, {
-      autoClose: 3000,
+    const toastMethod = {
+      'success': toast.success,
+      'error': toast.error,
+      'warning': toast.warning,
+      'info': toast.info
+    }[type] || toast.info
+
+    toastMethod(message, {
+      autoClose: 6000,
       hideProgressBar: true,
     })
   }
@@ -19,7 +26,7 @@ export function useToast() {
         toast.dismiss(toastId)
       }
     }), {
-      autoClose: 5000, // Set a timeout or keep false
+      autoClose: false, // Set a timeout or keep false
       closeButton: true,
       hideProgressBar: true,
     })

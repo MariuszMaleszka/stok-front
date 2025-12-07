@@ -74,6 +74,17 @@
   "narrow_snowboard_info": "Turns confidently, handles red slopes, rides with different radius, rides in all conditions",
   "child_age": "Child age",
   "min_child_age" : "The minimum age is 4 years old. For children aged 3+, please contact us",
-  "with_customers_service": "with customer service"
+  "with_customers_service": "with customer service",
+  "error": "Error",
+  "please_fill_required_fields": "Please fill in the required fields",
+  "fill_the_field_properly": "Please fill the field properly",
+  "select_class_type": "Select class type",
+  "select_difficulty_level": "Select difficulty level",
+  "select_classes": "Select classes",
+  "select_classes_for_each_participant": "Select classes on selected days for each participant",
+  "timer_info": "Your reservations will remain active for:",
+  "classes_lang": "Classes language",
+  "polish": "Polish",
+  "english": "English"
 
 }
