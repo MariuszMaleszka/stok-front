@@ -37,6 +37,10 @@
 .ls-0 {
   letter-spacing: 0px !important;
 }
+// Line height utility classes
+.lh-normal {
+  line-height: normal !important;
+}
 
 //font-weight utility classes
 .fw-400 {
@@ -132,4 +136,7 @@
 }
 .flex-1 {
     flex: 1 !important;
+}
+.flex-2 {
+  flex: 2 !important;
 }

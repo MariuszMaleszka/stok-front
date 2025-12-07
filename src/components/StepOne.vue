@@ -105,8 +105,9 @@ const handleNextClick = () => {
               variant="outlined"
               controlVariant="split"
               hide-details="auto"
-              :min="1"
-              :max="6"
+              :step="1"
+              :min="stayStore.childrenNumber === 0 ? 1 : 0"
+              :max="stayStore.maxAdults"
               max-width="165px"
             >
 
@@ -123,8 +124,9 @@ const handleNextClick = () => {
               variant="outlined"
               controlVariant="split"
               hide-details="auto"
-              :min="1"
-              :max="6"
+              :step="1"
+              :min="stayStore.adultsNumber === 0 ? 1 : 0"
+              :max="stayStore.maxChildren"
               max-width="165px"
             >
             </VNumberInput>
@@ -154,15 +156,15 @@ const handleNextClick = () => {
             </small>
           </div>
 
-          <div class="my-4">
-            <VExpansionPanels>
+          <div class="d-flex flex-column ga-4 my-4">
+
               <ParticipantAccordion
+                class="ga-4"
                 v-for="(participant, index) in stayStore.participants"
                 :key="index"
                 :index="index"
                 :participant="participant"
               />
-            </VExpansionPanels>
 
           </div>
 
@@ -180,6 +182,7 @@ const handleNextClick = () => {
         size="x-large"
         color="blue"
         class="fs-16 text-capitalize flex-1"
+        prepend-icon="mdi-arrow-left"
         @click="viewStore.stepOne = viewStore.STEP_ONE_DATA"
       >
         {{ $t('previous') }}
@@ -188,7 +191,7 @@ const handleNextClick = () => {
         variant="flat"
         size="x-large"
         color="blue"
-        class=" fs-16 text-capitalize flex-1"
+        class=" fs-16 text-capitalize flex-2"
         :disabled="!stayStore.dateOfStay"
         @click="handleNextClick"
       >

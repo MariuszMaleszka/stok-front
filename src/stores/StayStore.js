@@ -1,29 +1,24 @@
-/* eslint-disable unicorn/no-array-for-each */
-/* eslint-disable unicorn/no-negated-condition */
 import {defineStore} from 'pinia'
-import {reactive, ref} from 'vue'
+import {computed, reactive, ref, watch} from 'vue'
 import {useI18n} from "vue-i18n";
-
-
 
 export const useStayStore = defineStore('stayStore', () => {
   const {t} = useI18n()
 
-
   const dateOfStay = ref(null)
   const adultsNumber = ref(1)
-  const childrenNumber = ref(1)
+  const childrenNumber = ref(0)  // Start with 0 children
 
-  const participant = {
-    name: '', // "Imię"
-    participantType: '', // 'adult' or 'child'
-    age: null, // required for children (4-16), null for adults
-    activityType: '', // 'Narty' or 'Snowboard' - availability depends on age
-    skillLevel: '', // 'first-time', 'beginner', 'intermediate', 'advanced'
-    availableActivityTypes: [], // computed based on age: ['Narty'] for 4-8, ['Narty', 'Snowboard'] for 8+
-    availableLessonTypes: [], // computed: ['group', 'individual'] or ['individual'] if beginner
-    showGroupLessons: true, // false if skillLevel is 'first-time' (nowicjusz)
-    classLang: 'pl' // 'pl' or 'en'
+  const participantTemplate = {
+    name: '',
+    participantType: '',
+    age: null,
+    activityType: '',
+    skillLevel: '',
+    availableActivityTypes: [],
+    availableLessonTypes: [],
+    showGroupLessons: true,
+    classLang: 'pl'
   }
 
   const activityTypes = reactive([
@@ -31,66 +26,129 @@ export const useStayStore = defineStore('stayStore', () => {
     {name: t('snowboard'), selected: false},
   ])
 
-  const skillLevels_ADULT = reactive([
-    {name: t('firstime'), selected: false},
-    {name: t('novice'), selected: false},
-    {name: t('intermediate'), selected: false},
-    {name: t('advanced'), selected: false},
+  const skillLevels_ADULTS = reactive([
+    {
+      name: t('firstime'),
+      description: t('firstime_desc'),
+      additionalInfo: t('firstime_info'),
+      selected: false
+    },
+    {
+      name: t('novice'),
+      description: t('novice_desc'),
+      additionalInfo: t('novice_info'),
+      selected: false
+    },
+    {
+      name: t('intermediate'),
+      description: t('intermediate_desc'),
+      additionalInfo: t('intermediate_info'),
+      selected: false
+    },
+    {
+      name: t('advanced'),
+      description: t('advanced_desc'),
+      additionalInfo: t('advanced_info'),
+      selected: false
+    },
   ])
-  const skillLevels_CHILD = reactive([
-    {name: t('firstime'), selected: false},
-    {name: t('orange_group'), selected: false},
+
+  const skillLevels_CHILDREN_SKI = reactive([
+    {
+      name: t('orange_group'),
+      description: t('orange_group_desc'),
+      additionalInfo: t('orange_group_info'),
+      selected: false
+    },
+    {
+      name: t('bronze_group'),
+      description: t('bronze_group_desc'),
+      additionalInfo: t('bronze_group_info'),
+      selected: false
+    },
+    {
+      name: t('silver_group'),
+      description: t('silver_group_desc'),
+      additionalInfo: t('silver_group_info'),
+      selected: false
+    },
+    {
+      name: t('gold_group'),
+      description: t('gold_group_desc'),
+      additionalInfo: t('gold_group_info'),
+      selected: false
+    },
+    {
+      name: t('diamond_group'),
+      description: t('diamond_group_desc'),
+      additionalInfo: t('diamond_group_info'),
+      selected: false
+    }
+  ])
+
+  const skillLevels_CHILDREN_SNOWBOARD = reactive([
+    {
+      name: t('yellow_snowboard'),
+      description: t('yellow_snowboard_desc'),
+      additionalInfo: t('yellow_snowboard_info'),
+      selected: false
+    },
+    {
+      name: t('wide_snowboard'),
+      description: t('wide_snowboard_desc'),
+      additionalInfo: t('wide_snowboard_info'),
+      selected: false
+    },
+    {
+      name: t('narrow_snowboard'),
+      description: t('narrow_snowboard_desc'),
+      additionalInfo: t('narrow_snowboard_info'),
+      selected: false
+    }
   ])
 
 
-  // const participantsArray = ref([])
+  const participants = ref([])
 
-  const addParticipant = () => {
-    participantsArray.value.push({...participant})
-  }
+  // Computed max values based on total constraint
+  const maxAdults = computed(() => 12 - childrenNumber.value)
+  const maxChildren = computed(() => 12 - adultsNumber.value)
 
-  const participants = computed(() => {
-    const result = []
-
-    // Add adults
-    for (let i = 0; i < adultsNumber.value; i++) {
-      result.push({
-        ...participant,
-        participantType: 'adult',
-        name: `${t('adult')} ${i + 1}`,
-        availableActivityTypes: [t('ski'), t('snowboard')],
-        availableLessonTypes: ['group', 'individual'],
-        showGroupLessons: true
-      })
-    }
-
-    // Add children
-    for (let i = 0; i < childrenNumber.value; i++) {
-      result.push({
-        ...participant,
-        participantType: 'child',
-        name: `${t('child')} ${i + 1}`,
-        age: null, // Will be set by user
-        availableActivityTypes: [], // Will be computed based on age
-        availableLessonTypes: ['group', 'individual'],
-        showGroupLessons: true
-      })
-    }
-
-    return result
+  // Participants number validation
+  const canProceed = computed(() => {
+    return adultsNumber.value > 0 || childrenNumber.value > 0
   })
 
+  watch([adultsNumber, childrenNumber], ([newAdults, newChildren]) => {
+    const totalNeeded = newAdults + newChildren
+    const currentLength = participants.value.length
 
+    if (totalNeeded > currentLength) {
+      const toAdd = totalNeeded - currentLength
+      const newParticipants = Array.from({length: toAdd}, () =>
+        reactive({...participantTemplate})
+      )
+      participants.value.push(...newParticipants)
+    } else if (totalNeeded < currentLength) {
+      participants.value = participants.value.slice(0, totalNeeded)
+    }
 
-    return {
+    participants.value.forEach((participant, index) => {
+      participant.participantType = index < newAdults ? 'adult' : 'child'
+    })
+  }, { immediate: true })
+
+  return {
     dateOfStay,
     adultsNumber,
     childrenNumber,
     activityTypes,
-    skillLevels_ADULT,
-    skillLevels_CHILD,
-    // participantsArray,
-    addParticipant,
-    participants
+    skillLevels_ADULTS,
+    skillLevels_CHILDREN_SKI,
+    skillLevels_CHILDREN_SNOWBOARD,
+    participants,
+    maxAdults,
+    maxChildren,
+    canProceed
   }
 })
