@@ -19,15 +19,10 @@ const {mobile} = useDisplay()
 const currentLocale = computed(() => cookies.get('locale') || 'pl')
 const {t} = useI18n()
 
-// Form refs
-const dataForm = ref(null)
-const participantForms = ref([])
 
-const isFormValid = computed(() => {
-
-})
 const handleNextClick = async () => {
-
+  viewStore.isStepTwoCompleted = true
+  viewStore.goToNextStep()
 }
 
 watch(() => timerStore.timeRemaining, (remaining) => {

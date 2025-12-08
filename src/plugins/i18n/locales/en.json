@@ -85,6 +85,15 @@
   "timer_info": "Your reservations will remain active for:",
   "classes_lang": "Classes language",
   "polish": "Polish",
-  "english": "English"
+  "english": "English",
+  "select_language": "Select language",
+  "cart": "Cart",
+  "participants_data": "Participants data",
+  "payment": "Payment",
+  "cart_subtitle": "Check that your order is correct\nand add any additional services.",
+  "selected_classes": "Selected classes",
+  "add_insurance": "Add insurance",
+  "expand": "Rozwiń",
+  "collapse": "Zwiń"
 
 }

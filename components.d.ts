@@ -22,7 +22,9 @@ declare module 'vue' {
     ParticipantAccordion: typeof import('./src/components/ParticipantAccordion.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    SelectedParticipantClasses: typeof import('./src/components/SelectedParticipantClasses.vue')['default']
     StepOne: typeof import('./src/components/StepOne.vue')['default']
+    StepThree: typeof import('./src/components/StepThree.vue')['default']
     StepTwo: typeof import('./src/components/StepTwo.vue')['default']
     Toast: typeof import('./src/components/toasts/Toast.vue')['default']
   }

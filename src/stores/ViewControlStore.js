@@ -2,34 +2,38 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 
 export const useViewControlStore = defineStore('viewStore', () => {
-  // Constants for tab values
-  const STEP_ONE_DATA = 'step_one_data'
-  const STEP_ONE_PREFERENCES = 'step_one_preferences'
+  // Constants
+  const STEP_ONE = 'one'
   const STEP_TWO = 'two'
   const STEP_THREE = 'three'
 
-  // Main tabs/steps: 'one', 'two', 'three'
-  const currentView = ref('one')
+  const STEP_ONE_DATA = 'data'
+  const STEP_ONE_PREFERENCES = 'preferences'
 
-  // Internal step for tab 'one'
-  const stepOne = ref(STEP_ONE_DATA)
+  const STEP_THREE_CART = 'step_three_cart'
+  const STEP_THREE_PARTICIPANTS_DETAILS = 'step_three_participants_details'
+  const STEP_THREE_PARTICIPANTS_PAYMENT = 'step_three_participants_payment'
 
-  // Flags to track completion
+  // State
+  const currentView = ref(STEP_ONE)
+  const stepOneView = ref(STEP_ONE_DATA)
+  const stepThreeView = ref(STEP_THREE_CART)
+
   const isStepOneDataCompleted = ref(false)
   const isStepOnePreferencesCompleted = ref(false)
   const isStepTwoCompleted = ref(false)
 
-  // Computed flags
+  // Computed
   const canProceedFromStepOneData = computed(() => isStepOneDataCompleted.value)
   const canProceedFromStepOnePreferences = computed(() => isStepOnePreferencesCompleted.value)
   const canProceedFromStepTwo = computed(() => isStepTwoCompleted.value)
 
-  // Navigation method
+  // Methods
   function goToNextStep() {
-    if (currentView.value === 'one') {
-      if (stepOne.value === STEP_ONE_DATA && canProceedFromStepOneData.value) {
-        stepOne.value = STEP_ONE_PREFERENCES
-      } else if (stepOne.value === STEP_ONE_PREFERENCES && canProceedFromStepOnePreferences.value) {
+    if (currentView.value === STEP_ONE) {
+      if (stepOneView.value === STEP_ONE_DATA && canProceedFromStepOneData.value) {
+        stepOneView.value = STEP_ONE_PREFERENCES
+      } else if (stepOneView.value === STEP_ONE_PREFERENCES && canProceedFromStepOnePreferences.value) {
         currentView.value = STEP_TWO
       }
     } else if (currentView.value === STEP_TWO && canProceedFromStepTwo.value) {
@@ -37,27 +41,48 @@ export const useViewControlStore = defineStore('viewStore', () => {
     }
   }
 
-  // Reset methods
+  function goToPreviousStep() {
+    if (currentView.value === STEP_ONE && stepOneView.value === STEP_ONE_PREFERENCES) {
+      stepOneView.value = STEP_ONE_DATA
+    } else if (currentView.value === STEP_TWO) {
+      currentView.value = STEP_ONE
+      stepOneView.value = STEP_ONE_PREFERENCES
+    }
+  }
+
   function resetStepOne() {
-    stepOne.value = STEP_ONE_DATA
+    stepOneView.value = STEP_ONE_DATA
     isStepOneDataCompleted.value = false
     isStepOnePreferencesCompleted.value = false
   }
 
   return {
-    currentView,
-    stepOne,
-    STEP_ONE_DATA,
-    STEP_ONE_PREFERENCES,
+    // Constants
+    STEP_ONE,
     STEP_TWO,
     STEP_THREE,
+    STEP_ONE_DATA,
+    STEP_ONE_PREFERENCES,
+    STEP_THREE_CART,
+    STEP_THREE_PARTICIPANTS_DETAILS,
+    STEP_THREE_PARTICIPANTS_PAYMENT,
+
+    // State
+    currentView,
+    stepOneView,
+    stepThreeView,
     isStepOneDataCompleted,
     isStepOnePreferencesCompleted,
     isStepTwoCompleted,
+
+    // Computed
     canProceedFromStepOneData,
     canProceedFromStepOnePreferences,
     canProceedFromStepTwo,
+
+    // Methods
     goToNextStep,
+    goToPreviousStep,
     resetStepOne
   }
 })

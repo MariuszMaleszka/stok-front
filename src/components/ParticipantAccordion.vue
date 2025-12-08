@@ -34,10 +34,20 @@ const availableSkillLevels = computed(() => {
   if (props.participant.participantType === 'adult') {
     return stayStore.skillLevels_ADULTS
   } else if (props.participant.participantType === 'child') {
+    if (!props.participant.age) {
+      return []
+    }
+
+    const age = parseInt(props.participant.age)
+
     if (classType.value === 0) {
-      return stayStore.skillLevels_CHILDREN_SKI
+      return stayStore.skillLevels_CHILDREN_SKI.filter(level =>
+        age >= level.ageRange[0] && age <= level.ageRange[1]
+      )
     } else if (classType.value === 1) {
-      return stayStore.skillLevels_CHILDREN_SNOWBOARD
+      return stayStore.skillLevels_CHILDREN_SNOWBOARD.filter(level =>
+        age >= level.ageRange[0] && age <= level.ageRange[1]
+      )
     }
   }
   return []
@@ -113,7 +123,7 @@ defineExpose({
               variant="outlined"
               density="default"
               :min="4"
-              :max="16"
+              :max="14"
               :step="1"
               control-variant="split"
               hide-details="auto"

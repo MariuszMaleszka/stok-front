@@ -84,7 +84,7 @@ const {mobile} = useDisplay()
         class="h-100 flex-1"
         :class="viewStore.currentView === 'three' ? 'd-flex flex-column' : ''"
       >
-        <VSheet class="pa-5" color="brown">Three</VSheet>
+        <StepThree />
       </VTabsWindowItem>
     </VTabsWindow>
 

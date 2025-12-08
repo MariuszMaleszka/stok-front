@@ -85,6 +85,17 @@
   "timer_info": "Twoje rezerwacje będą aktywne jeszcze:",
   "classes_lang": "Język lekcji",
   "polish": "Polski",
-    "english": "Angielski"
+  "english": "Angielski",
+  "select_language": "Wybierz język",
+  "cart": "Koszyk",
+  "participants_data": "Dane uczestników",
+  "payment": "Płatność",
+  "cart_subtitle": "Sprawdź poprawność Twojego zamówienia i dodaj usługi dodatkowe.",
+  "selected_classes": "Wybrane zajęcia",
+  "add_insurance": "Dodaj ubezpieczenie NNW",
+  "expand": "Rozwiń",
+  "collapse": "Zwiń"
+
+
 }
 
