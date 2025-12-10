@@ -101,5 +101,11 @@
   "see_more": "See more",
   "insurance_details": "Insurance details",
   "delete": "Delete",
-  "delete_class_confirmation": "Are you sure you want to remove classes from your schedule?"
+  "delete_class_confirmation": "Are you sure you want to remove classes from your schedule?",
+  "add_classes": "Add classes",
+  "you_save": "You save",
+  "you_gain": "You gain",
+  "total": "Total",
+  "aditional_options": "Additional options",
+  "insurance_for_all_option": "Add accident insurance to all activities, for all participants."
 }

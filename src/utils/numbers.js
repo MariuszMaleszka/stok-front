@@ -6,7 +6,10 @@
  * @returns {string} Formatted price string without currency
  */
 export function formatPrice(amount) {
-  return amount.toLocaleString('pl-PL', {
+  // Handle undefined, null, or non-numeric values
+  const numericAmount = Number(amount) || 0
+
+  return numericAmount.toLocaleString('pl-PL', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   })

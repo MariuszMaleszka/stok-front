@@ -70,3 +70,9 @@
   }
 }
 
+// green outlined button
+.v-btn.v-btn--variant-outlined.text-green {
+  color: $green-dark !important;
+  border-color: $green-dark !important;
+}
+

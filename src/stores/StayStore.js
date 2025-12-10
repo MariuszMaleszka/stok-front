@@ -1,7 +1,7 @@
-import { defineStore } from 'pinia'
-import { computed, reactive, ref, watch } from 'vue'
-import { useStayConfigStore } from './StayConfigStore.js'
-
+import {defineStore} from 'pinia'
+import {computed, reactive, ref, watch} from 'vue'
+import {useStayConfigStore} from './StayConfigStore.js'
+import {generateUniqueId} from '@/utils/numbers.js'
 // To be removed
 const DUMMY_SELECTED_CLASSES = [
   {
@@ -13,7 +13,7 @@ const DUMMY_SELECTED_CLASSES = [
     instructor: 'Kaczyński Jan',
     skillLevel: 'Średni',
     dates: [
-      { date: '01.01.2025', time: '9:00 - 9:55' }
+      {date: '01.01.2025', time: '9:00 - 9:55'}
     ],
     price: 100.00,
     insurance: {
@@ -33,9 +33,9 @@ const DUMMY_SELECTED_CLASSES = [
     skillLevel: 'Nowicjusz',
     instructor: 'Marcin Kowalik',
     dates: [
-      { date: '01.01.2025', time: '9:00 - 9:55' },
-      { date: '02.01.2025', time: '9:00 - 9:55' },
-      { date: '03.01.2025', time: '9:00 - 9:55' },
+      {date: '01.01.2025', time: '9:00 - 9:55'},
+      {date: '02.01.2025', time: '9:00 - 9:55'},
+      {date: '03.01.2025', time: '9:00 - 9:55'},
     ],
     price: 100.00,
     insurance: {
@@ -51,6 +51,7 @@ const DUMMY_SELECTED_CLASSES = [
 
 // Blank participant template
 const blankParticipant = {
+  dynamicId:'',
   name: '',
   participantType: '',
   age: null,
@@ -66,13 +67,13 @@ const blankParticipant = {
 export const useStayStore = defineStore('stayStore', () => {
   const configStore = useStayConfigStore()
 
-  // State
+  // States
   const dateOfStay = ref(null)
   const adultsNumber = ref(1)
   const childrenNumber = ref(0)
   const participants = ref([])
 
-  // Computed event object
+  // 👉 Computed event object
   const event = computed(() => ({
     id: null,
     dateOfStay: dateOfStay.value,
@@ -85,20 +86,59 @@ export const useStayStore = defineStore('stayStore', () => {
   const maxAdults = computed(() => 12 - childrenNumber.value)
   const maxChildren = computed(() => 12 - adultsNumber.value)
 
-  // Participants number validation
-  const canProceed = computed(() => {
+  // Participants number condition
+  const participantQuantityConditions = computed(() => {
     return adultsNumber.value > 0 || childrenNumber.value > 0
   })
 
-  // Watch for participants count changes
+// 👉 Participant classes total price
+  const participantClassesTotalPrice = computed(() => {
+    const priceMap = new Map()
+
+    participants.value.forEach(participant => {
+      if (!participant.selectedClasses || participant.selectedClasses.length === 0) {
+        priceMap.set(participant.dynamicId, 0)
+        return
+      }
+
+      const total = participant.selectedClasses.reduce((sum, classItem) => {
+        let classTotal = classItem.price || 0
+
+        if (classItem.insurance?.enabled) {
+          if (classItem.insurance.perDay && classItem.dates) {
+            classTotal += (classItem.insurance.price * classItem.dates.length)
+          } else {
+            classTotal += classItem.insurance.price
+          }
+        }
+
+        return sum + classTotal
+      }, 0)
+
+      priceMap.set(participant.dynamicId, total)
+    })
+
+    return priceMap
+  })
+
+  // 👉 Promotions/discounts/suggestions
+  const discountPackage_10 = ref(false)
+  const discountPackage_20 = ref(false)
+  const missingClassesForDiscount = ref(false)
+  const insuranceForAllCost = 200
+
+
+
+  // CRUCIAL: Watchers to sync participants with adults/children numbers
+  // This is responsible for adding/removing participant entries
   watch([adultsNumber, childrenNumber], ([newAdults, newChildren]) => {
     const totalNeeded = newAdults + newChildren
     const currentLength = participants.value.length
 
     if (totalNeeded > currentLength) {
       const toAdd = totalNeeded - currentLength
-      const newParticipants = Array.from({ length: toAdd }, () =>
-        reactive({ ...blankParticipant })
+      const newParticipants = Array.from({length: toAdd}, () =>
+        reactive({...blankParticipant, dynamicId: generateUniqueId()})
       )
       participants.value.push(...newParticipants)
     } else if (totalNeeded < currentLength) {
@@ -108,7 +148,7 @@ export const useStayStore = defineStore('stayStore', () => {
     participants.value.forEach((participant, index) => {
       participant.participantType = index < newAdults ? 'adult' : 'child'
     })
-  }, { immediate: true })
+  }, {immediate: true})
 
   // Reset function
   const resetEvent = () => {
@@ -125,11 +165,16 @@ export const useStayStore = defineStore('stayStore', () => {
     adultsNumber,
     childrenNumber,
     participants,
+    discountPackage_10,
+    discountPackage_20,
+    missingClassesForDiscount,
+    insuranceForAllCost,
 
     // Computed
     maxAdults,
     maxChildren,
-    canProceed,
+    participantQuantityConditions,
+    participantClassesTotalPrice,
 
     // Actions
     resetEvent,
@@ -140,6 +185,7 @@ export const useStayStore = defineStore('stayStore', () => {
     skillLevels_CHILDREN_SKI: configStore.skillLevels_CHILDREN_SKI,
     skillLevels_CHILDREN_SNOWBOARD: configStore.skillLevels_CHILDREN_SNOWBOARD,
     availableLanguages: configStore.availableLanguages,
+    currency: configStore.currency,
 
     // Temporary
     DUMMY_SELECTED_CLASSES

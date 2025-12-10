@@ -101,6 +101,12 @@
   "see_more": "Zobacz więcej",
   "insurance_details": "Szczegóły ubezpieczenia",
   "delete": "Usuń",
-  "delete_class_confirmation": "Czy na pewno chcesz usunąć zajęcia z planu?"
+  "delete_class_confirmation": "Czy na pewno chcesz usunąć zajęcia z planu?",
+  "add_classes": "Dodaj zajęcia",
+  "you_save": "Oszczędzasz",
+  "you_gain": "Zyskujesz",
+  "total": "Razem",
+  "aditional_options": "Dodatkowe opcje",
+  "insurance_for_all_option": "Dodaj ubezpieczenie NNW do wszystkich zajęć, dla wszystkich uczestników."
 }
 
