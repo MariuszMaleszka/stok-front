@@ -94,8 +94,13 @@
   "selected_classes": "Wybrane zajęcia",
   "add_insurance": "Dodaj ubezpieczenie NNW",
   "expand": "Rozwiń",
-  "collapse": "Zwiń"
-
-
+  "collapse": "Zwiń",
+  "day": "dzień",
+  "days": "dni",
+  "aditional_info": "Dodatkowe informacje",
+  "see_more": "Zobacz więcej",
+  "insurance_details": "Szczegóły ubezpieczenia",
+  "delete": "Usuń",
+  "delete_class_confirmation": "Czy na pewno chcesz usunąć zajęcia z planu?"
 }
 

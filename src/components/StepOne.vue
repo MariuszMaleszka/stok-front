@@ -20,6 +20,10 @@ const {t} = useI18n()
 // Form refs
 const dataForm = ref(null)
 const participantForms = ref([])
+// Watch for changes in participants count and reset form refs
+watch(() => stayStore.participants.length, () => {
+  participantForms.value = []
+})
 
 const handleNextClick = async () => {
   if (viewStore.stepOneView === viewStore.STEP_ONE_DATA) {
@@ -28,12 +32,12 @@ const handleNextClick = async () => {
       showSimpleToast(t('please_fill_required_fields'), 'error')
       return
     }
+
     viewStore.isStepOneDataCompleted = true
     viewStore.stepOneView = viewStore.STEP_ONE_PREFERENCES
   } else if (viewStore.stepOneView === viewStore.STEP_ONE_PREFERENCES) {
-    const validationResults = await Promise.all(
-      participantForms.value.map(form => form?.validate())
-    )
+    const validForms = participantForms.value.filter(form => form != null)
+    const validationResults = await Promise.all(validForms.map(form => form.validate()))
     const allValid = validationResults.every(result => result?.valid)
 
     if (!allValid) {
@@ -203,7 +207,7 @@ const handleNextClick = async () => {
         :disabled="!stayStore.dateOfStay"
         @click="handleNextClick"
       >
-<!--        :disabled="!isFormValid"-->
+        <!--        :disabled="!isFormValid"-->
         {{ $t('next') }}
       </VBtn>
     </div>

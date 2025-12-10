@@ -21,6 +21,7 @@ const stayStore = useStayStore()
 const infoDialog = ref(false)
 const selectedSkillLevel = ref(null)
 const {t} = useI18n()
+const panel = ref([0])
 const form = ref(null)
 const showErrors = ref(false)
 
@@ -108,7 +109,7 @@ defineExpose({
 
 <template>
   <VExpansionPanels>
-    <VExpansionPanel>
+    <VExpansionPanel v-model="panel">
       <VExpansionPanelTitle>
         <span class="fw-600">
           {{ index + 1 }} - {{ t(`${participant.participantType}`) || '-' }}

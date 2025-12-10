@@ -117,7 +117,7 @@ const handleNextClick = async () => {
           >
             <p>{{ $t('selected_classes') }}:</p>
           </div>
-          <div class="px-1">
+          <div class="d-flex flex-column ga-4 px-1">
             <SelectedParticipantClasses
               v-for="(participant, index) in stayStore.participants"
               :key="index"

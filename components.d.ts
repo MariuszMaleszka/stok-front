@@ -20,6 +20,7 @@ declare module 'vue' {
     DateRangePickerModal: typeof import('./src/components/modals/DateRangePickerModal.vue')['default']
     HelloWorld: typeof import('./src/components/HelloWorld.vue')['default']
     ParticipantAccordion: typeof import('./src/components/ParticipantAccordion.vue')['default']
+    PopupSmall: typeof import('./src/components/modals/PopupSmall.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     SelectedParticipantClasses: typeof import('./src/components/SelectedParticipantClasses.vue')['default']

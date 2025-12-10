@@ -1,25 +1,24 @@
-/**
- * Formats a number as a price in Polish format (e.g., 100,00 zł)
- * @param {number} amount - The amount to format
- * @param {string} currency - Currency symbol (default: 'zł')
- * @returns {string} Formatted price string
- */
-export function formatPrice(amount, currency = 'zł') {
-  const formatted = amount.toLocaleString('pl-PL', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  })
-  return `${formatted} ${currency}`
-}
+
 
 /**
  * Formats a number as a price without currency symbol
  * @param {number} amount - The amount to format
  * @returns {string} Formatted price string without currency
  */
-export function formatPriceNoCurrency(amount) {
+export function formatPrice(amount) {
   return amount.toLocaleString('pl-PL', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   })
+}
+
+/**
+ * Generates a unique 8-character ID using timestamp and random characters
+ * @returns {string} 8-character unique identifier
+ */
+export function generateUniqueId() {
+  const timestamp = Date.now().toString(36)
+  const random = Math.random().toString(36).substring(2)
+  const combined = timestamp + random
+  return combined.substring(0, 8).toUpperCase()
 }

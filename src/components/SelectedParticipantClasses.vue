@@ -4,6 +4,9 @@ import snowboardLOGO from '@/assets/snowboard-icon.svg'
 import {useI18n} from "vue-i18n";
 import {formatPrice} from "@/utils/numbers.js";
 import {useStayStore} from "@/stores/StayStore.js";
+import {useDisplay} from 'vuetify';
+import PopupSmall from "@/components/modals/PopupSmall.vue";
+import InsuranceIMG from '@/assets/insurance_img.png'
 
 const props = defineProps({
   participant: {
@@ -16,127 +19,286 @@ const props = defineProps({
   }
 })
 
-
 const {t} = useI18n()
-const expandedPanel = ref(null)
-const rules = {
-  required: value => !!value || t('fill_the_field_properly'),
-}
+const {mobile} = useDisplay()
+const stayStore = useStayStore()
+const expandedPanels = ref({})
+const insuranceSelected = ref({}) // Holds the insurance selection state
+const insuranceInfoDialog = ref(false) // Controls the insurance info dialog visibility
+const confirmClassDeletationDialog = ref(false) // Controls the confirmation dialog visibility
+const currentInsurance = ref(null) // Holds the insurance info to display
+const classToDelete = ref(null) // Holds the class selected for deletion
+const panel = ref([0])// Expansion panel state
 
+const openInsuranceDialog = (insurance) => {
+  currentInsurance.value = insurance
+  insuranceInfoDialog.value = true
+}
+// Delete class
+const deleteClass = (dynamicId) => {
+  const item = props.participant.selectedClasses.find(c => c.dynamicId === dynamicId)
+  if (item) {
+    classToDelete.value = item
+    confirmClassDeletationDialog.value = true
+  }
+}
+// Confirm deletion
+const confirmDeleteClass = () => {
+  if (classToDelete.value) {
+    const index = props.participant.selectedClasses.findIndex(
+      c => c.dynamicId === classToDelete.value.dynamicId
+    )
+    if (index !== -1) {
+      props.participant.selectedClasses.splice(index, 1)
+    }
+    classToDelete.value = null
+  }
+  confirmClassDeletationDialog.value = false
+}
+// Cancel deletion
+const cancelDelete = () => {
+  classToDelete.value = null
+  confirmClassDeletationDialog.value = false
+}
 </script>
 
 <template>
-  <VExpansionPanels class="participant-selected-classes-item">
+  <VExpansionPanels v-model="panel" class="participant-selected-classes-item">
     <VExpansionPanel>
       <VExpansionPanelTitle>
         <div class="d-flex ga-2 fw-600">
-          <span>
-            {{ index + 1 }}.
-          </span>
-          <span>
-           {{ props.participant.name || '-' }}
-          </span>
+          <span>{{ index + 1 }}.</span>
+          <span>{{ props.participant.name || '-' }}</span>
         </div>
       </VExpansionPanelTitle>
       <VExpansionPanelText class="border-t">
-       <VList class="py-0">
-         <div
-           v-for="(item, idx) in props.participant.selectedClasses"
-           :key="idx"
-           class="border-b"
-         >
-           <VListItem
-            class="px-0 py-4"
-           >
-             <template #prepend>
-               <img :src="item.classType === 'ski' ? skiLOGO : snowboardLOGO" alt="">
-             </template>
-             <template #append>
-               <span class="mr-2 fs-12 fw-600">
-                {{ formatPrice(item.price) }}
-               </span>
-                <VIcon icon="mdi-close" @click="console.log('delete')"/>
-             </template>
-             <VListItemTitle class="fs-12 fs-500 text-pre-wrap lh-normal">
-              {{ item.title }}
-             </VListItemTitle>
-             <VListItemSubtitle class="fs-9 fw-500 text-pre-wrap lh-normal">
-               {{ item.groupName }}
-               {{ item.skillLevel }}
-             </VListItemSubtitle>
-             <VListItemSubtitle
-               class="fs-9 fw-500 "
-               v-for="(day, dIdx) in item.dates" :key="dIdx"
-             >
-               {{ day.date }}
-               {{ day.time }}
+        <VList density="compact" class="py-0">
+          <div
+            v-for="item in props.participant.selectedClasses"
+            :key="item.dynamicId"
+            class="border-b"
+          >
+            <div
+              :class="mobile ? 'px-0': 'px-4'"
+              class="py-4 pb-0 d-flex justify-between"
+            >
+              <img class="mb-auto" width="28px" :src="item.classType === 'ski' ? skiLOGO : snowboardLOGO" alt="">
 
-             </VListItemSubtitle>
+              <div class="d-flex flex-column ml-2 flex-1">
+                <p
+                  v-if="item.title"
+                  :class="mobile ? 'fs-12 ': 'fs-14'"
+                  class="fs-500 text-pre-wrap lh-normal"
+                >
+                  {{ item.title }}
+                </p>
 
-           </VListItem>
-           <VListItem class="px-0">
-             <VExpansionPanels v-model="expandedPanel" flat>
-               <VExpansionPanel class="expansion-panel-small">
-                 <VExpansionPanelTitle class="pa-0">
-                   <div class="d-flex">
-                     <span class="fs-10 fw-500">
-                       {{ t('add_insurance')}}
-                     </span>
-                     <span class="fs-10 fw-400">
-                      {{ expandedPanel === 0 ? t('collapse') : t('expand') }}
-                     </span>
+                <div
+                  :class="mobile ? 'fs-9 ': 'fs-12'"
+                  class="d-flex flex-column fw-500 text-pre-wrap lh-normal fc-gray mt-1"
+                >
+                  <div class="d-flex align-center">
+                    <p v-if="item.groupName" class="fc-gray">
+                      &#8226; <span class="ml-1">{{ item.groupName }},</span>
+                    </p>
+                    <p v-if="item.skillLevel" class="fc-gray">
+                      &#8226;<span class="ml-1">{{ item.skillLevel }}</span>
+                    </p>
+                  </div>
+                  <div
+                    :class="mobile ? 'fs-9 ': 'fs-12'"
+                    class="d-flex align-center"
+                    v-for="(day, dIdx) in item.dates" :key="dIdx"
+                  >
+                    <p v-if="day.date">
+                      &#8226;<span class="ml-1">{{ day.date }}</span>
+                    </p>
+                    <p v-if="day.time">
+                      &#8226;<span class="ml-1">{{ day.time }}</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
 
-                   </div>
-                 </VExpansionPanelTitle>
-                 <VExpansionPanelText>
-                   {{ item.insurance.description }}
-                 </VExpansionPanelText>
-               </VExpansionPanel>
-             </VExpansionPanels>
-           </VListItem>
-         </div>
+              <div class="d-flex align-center">
+                <span
+                  :class="mobile ? 'fs-12 ': 'fs-14'"
+                  class="mr-2 fw-600"
+                >
+                  {{ formatPrice(item.price) }}
+                </span>
+                <VIcon size="small" color="grey" icon="mdi-close" @click="deleteClass(item.dynamicId)"/>
+              </div>
+            </div>
 
-       </VList>
+            <VSheet class="rounded bg-light-gray mt-2 mb-4">
+              <div
+                :class="mobile ? 'px-0': 'px-4'"
+                class="pt-0 rounded d-flex align-center justify-between"
+              >
+                <VCheckbox
+                  density="compact"
+                  v-model="insuranceSelected[item.dynamicId]"
+                  hide-details
+                  color="info"
+                />
+                <div
+                  :class="mobile ? 'fs-10': 'fs-14'"
+                  class="fw-400 d-flex align-center ml-2"
+                >
+                  {{ t('add_insurance') }}
+
+                  <VBtn
+                    :class="mobile ? 'fs-10': 'fs-14'"
+                    class="ma-2 text-capitalize px-2"
+                    variant="text"
+                    size="small"
+                    flat
+                    color="grey"
+                    @click="expandedPanels[item.dynamicId] = !expandedPanels[item.dynamicId]"
+                  >
+                    {{ expandedPanels[item.dynamicId] ? t('collapse') : t('expand') }}
+                    <VIcon :icon="expandedPanels[item.dynamicId] ? 'mdi-chevron-up' : 'mdi-chevron-down'"/>
+                  </VBtn>
+                </div>
+
+                <div
+                  :class="mobile ? 'fs-11 ': 'fs-14'"
+                  class="d-flex flex-column align-end ml-auto ma-0 fc-gray"
+                >
+                  <span class="fw-500">
+                    + {{ formatPrice(item.insurance.price) }}
+                  </span>
+                  <span class="fw-400 mt-n1 text-no-wrap">
+                    {{ item.insurance.perDay ? ` ( 1 ${t('day')})` : '' }}
+                  </span>
+                </div>
+              </div>
+
+              <VExpandTransition>
+                <VCard
+                  v-show="expandedPanels[item.dynamicId]"
+                  width="100%"
+                  flat
+                  style="background-color: transparent;"
+                >
+                  <VCardText class="px-8 pt-0">
+                    <p :class="mobile ? 'fs-10' : 'fs-12'">
+                      {{ item.insurance.description }}
+                    </p>
+
+                    <div
+                      :class="mobile ? 'fs-10' : 'fs-12'"
+                      class="custom-badge gray mt-4"
+                      @click="openInsuranceDialog(item.insurance)"
+                    >
+                      <VIcon class="mr-1" color="grey" icon="mdi-information-slab-circle"/>
+                      {{ $t('aditional_info') }}
+                    </div>
+                  </VCardText>
+                </VCard>
+              </VExpandTransition>
+            </VSheet>
+          </div>
+        </VList>
       </VExpansionPanelText>
     </VExpansionPanel>
 
-<!--    <VDialog v-model="infoDialog" max-width="320px">-->
-<!--      <VCard v-if="currentSkillLevelInfo">-->
-<!--        <VCardTitle>-->
-<!--          <div :class="mobile ? 'py-2':''" class="d-flex justify-space-between">-->
-<!--            <span :class="mobile ? 'fs-14':'fs-16'">-->
-<!--              {{ currentSkillLevelInfo.name }}-->
-<!--            </span>-->
-<!--            <button class="close-btn" aria-label="Close" @click="infoDialog = false">-->
-<!--              <VIcon size="18" icon="mdi-close"/>-->
-<!--            </button>-->
-<!--          </div>-->
-<!--        </VCardTitle>-->
-<!--        <VCardText-->
-<!--          :class="mobile ? 'pt-0':''"-->
-<!--        >-->
-<!--          <p :class="mobile ? 'fs-12':'fs-14'">-->
-<!--            {{ currentSkillLevelInfo.additionalInfo }}-->
-<!--          </p>-->
-<!--        </VCardText>-->
-<!--        <VCardActions class="border-t d-flex justify-between text-capitalize">-->
-<!--          <VBtn variant="flat" class="px-4 text-capitalize" @click="infoDialog = false">-->
-<!--            Ok-->
-<!--          </VBtn>-->
-<!--        </VCardActions>-->
-<!--      </VCard>-->
-<!--    </VDialog>-->
+    <PopupSmall
+      v-model="insuranceInfoDialog"
+      :title="currentInsurance?.title || t('insurance_details')"
+      max-width="500px"
+    >
+      <template #content>
+        <img :src="InsuranceIMG" alt="Insurance" class="w-100 mb-4">
+        <p>{{ currentInsurance?.description }}</p>
+      </template>
+      <template #actions>
+        <VBtn variant="outlined" @click="insuranceInfoDialog = false">
+          Ok
+        </VBtn>
+        <VBtn
+          variant="flat"
+          color="blue"
+          class="text-capitalize px-4"
+          @click="console.log('see more')"
+        >
+          {{ $t('see_more') }}
+        </VBtn>
+      </template>
+    </PopupSmall>
+
+    <PopupSmall
+      v-model="confirmClassDeletationDialog"
+      :title="t('delete_class_confirmation')"
+      max-width="500px"
+    >
+      <template #content>
+        <div
+          v-if="classToDelete"
+        >
+          <div class="d-flex justify-between">
+            <img class="mb-auto" width="28px" :src="classToDelete.classType === 'ski' ? skiLOGO : snowboardLOGO" alt="">
+
+            <div class="d-flex flex-column ml-2 flex-1">
+              <p
+                :class="mobile ? 'fs-12 ': 'fs-14'"
+                class="fs-500 text-pre-wrap lh-normal"
+              >
+                {{ classToDelete.title }}
+              </p>
+
+              <div
+                :class="mobile ? 'fs-9 ': 'fs-12'"
+                class="d-flex flex-column fw-500 text-pre-wrap lh-normal fc-gray mt-1"
+              >
+                <div class="d-flex align-center">
+                  <p v-if="classToDelete.groupName" class="fc-gray">
+                    &#8226; <span class="ml-1">{{ classToDelete.groupName }},</span>
+                  </p>
+                  <p v-if="classToDelete.skillLevel" class="fc-gray">
+                    &#8226;<span class="ml-1">{{ classToDelete.skillLevel }}</span>
+                  </p>
+                </div>
+                <div
+                  :class="mobile ? 'fs-9 ': 'fs-12'"
+                  class="d-flex align-center"
+                  v-for="(day, dIdx) in classToDelete.dates" :key="dIdx"
+                >
+                  <p v-if="day.date">
+                    &#8226;<span class="ml-1">{{ day.date }}</span>
+                  </p>
+                  <p v-if="day.time">
+                    &#8226;<span class="ml-1">{{ day.time }}</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="d-flex align-center">
+              <span
+                :class="mobile ? 'fs-12 ': 'fs-14'"
+                class="fw-600"
+              >
+                {{ formatPrice(classToDelete.price) }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </template>
+      <template #actions>
+        <VBtn variant="outlined" class="text-capitalize" @click="cancelDelete">
+          {{ $t('cancel') }}
+        </VBtn>
+        <VBtn
+          variant="flat"
+          color="red"
+          class="text-capitalize px-4"
+          @click="confirmDeleteClass"
+        >
+          {{ $t('delete') }}
+        </VBtn>
+      </template>
+    </PopupSmall>
   </VExpansionPanels>
 </template>
-<style lang="scss">
-.participant-selected-classes-item {
-  .v-expansion-panel-text__wrapper {
-    padding-inline: 8px;
-    padding-block: 0;
-  }
-  .v-expansion-panel .v-list-item__prepend {
-    margin-top: 5px;
-    margin-bottom: auto;
-  }
-}
-</style>
