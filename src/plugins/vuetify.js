@@ -26,7 +26,7 @@ export default createVuetify({
     },
   },
   display: {
-    mobileBreakpoint: 'md',
+    mobileBreakpoint: 'sm',
   },
   defaults: {
     global: {

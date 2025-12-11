@@ -127,8 +127,6 @@ export const useStayStore = defineStore('stayStore', () => {
   const missingClassesForDiscount = ref(false)
   const insuranceForAllCost = 200
 
-
-
   // CRUCIAL: Watchers to sync participants with adults/children numbers
   // This is responsible for adding/removing participant entries
   watch([adultsNumber, childrenNumber], ([newAdults, newChildren]) => {
