@@ -58,20 +58,29 @@ defineExpose({
   <VStepper
     ref="stepOneNestedRef"
     v-model="activeChildStep"
-    class="step-one-element d-flex flex-column flex-1"
-    flat
+    class="child-stepper step-one-element d-flex flex-column flex-1"
     hide-actions
   >
-    <VStepperHeader>
+    <VStepperHeader class="mt-2">
       <VStepperItem
         :value="1"
         :title="$t('stay_datails')"
+        class="px-1 py-0"
         :complete="viewStore.isStepOneDataCompleted"
-      />
+      >
+        <template #icon>
+            1.
+        </template>
+      </VStepperItem>
       <VStepperItem
         :value="2"
+        class="px-1 py-0"
         :title="$t('participants_preferences')"
-      />
+     >
+        <template #icon>
+            2.
+        </template>
+      </VStepperItem>
     </VStepperHeader>
 
     <VStepperWindow class="flex-1">
@@ -171,13 +180,13 @@ defineExpose({
   </VStepper>
 </template>
 <style lang="scss">
-.step-one-element {
-  .v-stepper-header {
-    .v-avatar {
-      display: none;
-    }
-  }
-
-}
+//.step-one-element {
+//  .v-stepper-header {
+//    .v-avatar {
+//      display: none;
+//    }
+//  }
+//
+//}
 
 </style>

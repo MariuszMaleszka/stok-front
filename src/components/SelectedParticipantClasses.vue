@@ -25,7 +25,7 @@ const stayStore = useStayStore()
 const expandedPanels = ref({})
 const panel = ref([0])// Expansion panel state (main)
 
-const insuranceSelected = ref({}) // Holds the insurance selection state
+// const insuranceSelected = ref({}) // Holds the insurance selection state
 const insuranceInfoDialog = ref(false) // Controls the insurance info dialog visibility
 
 
@@ -64,6 +64,10 @@ const cancelDelete = () => {
   classToDelete.value = null
   confirmClassDeletationDialog.value = false
 }
+
+// defineExpose({
+//   insuranceSelected
+// })
 </script>
 
 <template>
@@ -81,7 +85,6 @@ const cancelDelete = () => {
             <div
               v-for="item in props.participant.selectedClasses"
               :key="item.dynamicId"
-              class="border-b"
             >
               <div
                 :class="mobile ? 'px-0': 'px-4'"
@@ -104,7 +107,7 @@ const cancelDelete = () => {
                   >
                     <div class="d-flex align-center">
                       <p v-if="item.groupName" class="fc-gray">
-                        &#8226; <span class="ml-1">{{ item.groupName }},</span>
+                        &#8226; <span >{{ item.groupName }},</span>
                       </p>
                       <p v-if="item.skillLevel" class="fc-gray">
                         &#8226;<span class="ml-1">{{ item.skillLevel }}</span>
@@ -143,7 +146,7 @@ const cancelDelete = () => {
                 >
                   <VCheckbox
                     density="compact"
-                    v-model="insuranceSelected[item.dynamicId]"
+                    v-model="stayStore.insuranceSelected[item.dynamicId]"
                     hide-details
                     color="info"
                   />
@@ -214,7 +217,7 @@ const cancelDelete = () => {
             <span :class="mobile ? 'fs-12 ': 'fs-14'" class="fw-600">
               {{ $t('total') }}
             </span>
-              <span class="fw-500 ml-2" >
+              <span :class="mobile ? 'fs-14 ': 'fs-16'" class="fw-500 ml-2" >
              {{ formatPrice(stayStore.participantClassesTotalPrice.get(participant.dynamicId)) }}&nbsp;{{ stayStore.currency }}
             </span>
             </p>

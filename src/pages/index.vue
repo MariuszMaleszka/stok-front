@@ -51,7 +51,10 @@ const handleNext = async () => {
   if (viewStore.currentStep.parent === 1 && viewStore.currentStep.child === 2) {
     const isValid = await stepOneComponentRef.value?.validateCurrentStep()
     if (isValid) {
+      viewStore.isStepOneCompleted = true
       parentStepperRef.value.next()
+    } else {
+      viewStore.isStepOneCompleted = false
     }
     return
   }
@@ -73,28 +76,39 @@ watch(parentActiveStep, (newStep) => {
 
 <template>
   {{ viewStore.currentStep }}
-  <VContainer max-width="800" class="d-flex flex-column flex-1 mt-4">
+  <VContainer
+    max-width="800"
+    :class="mobile ? 'px-2': ''"
+    class="d-flex flex-column flex-1 mt-4"
+  >
     <VStepper
       ref="parentStepperRef"
       v-model="parentActiveStep"
-      class="d-flex flex-column flex-1 rounded-lg"
-      flat
+      class="parent-stepper pa-0 fs-11 d-flex flex-column flex-1 "
       min-height="100%"
     >
-      <VStepperHeader>
+      <VStepperHeader
+        :class="mobile ? 'px-2 py-4' : ''"
+        class="pa-4 box-shadow-sm"
+      >
         <VStepperItem
           :value="1"
           :title="$t('participants')"
-          :complete="viewStore.currentStep.parent === 2"
-        />
-        <v-divider></v-divider>
+          class="pa-1"
+          :complete="viewStore.isStepOneCompleted"
+
+        >
+        </VStepperItem>
+        <VDivider :style="mobile ? 'max-width: 10px' : ''"></VDivider>
         <VStepperItem
           :value="2"
+          class="pa-1"
           :title="$t('classes')"
         />
-        <v-divider></v-divider>
+        <VDivider :style="mobile ? 'max-width: 10px' : ''"></VDivider>
         <VStepperItem
           :value="3"
+          class="pa-1"
           :title="$t('details')"
         />
       </VStepperHeader>
@@ -114,7 +128,7 @@ watch(parentActiveStep, (newStep) => {
       </VStepperWindow>
 
       <template #actions>
-        <div class="d-flex justify-space-between">
+        <div class="d-flex justify-space-between mt-4 mb-2">
           <VBtn
             v-if="viewStore.currentStep.parent !== 1 || viewStore.currentStep.child !== 1"
             variant="outlined"
@@ -157,6 +171,8 @@ watch(parentActiveStep, (newStep) => {
 <style lang="scss">
 .v-stepper {
   background: transparent;
+  box-shadow: none;
+  border: none !important;
 
   .v-stepper-window,
   .v-window__container,
@@ -165,9 +181,102 @@ watch(parentActiveStep, (newStep) => {
     flex-direction: column;
     flex: 1;
   }
+
   .v-stepper-window {
     margin: 0;
+  }
 
+  .v-divider {
+    flex: .4
+  }
+
+  .v-stepper-item__avatar.v-avatar {
+    background: none;
+    color: #000;
+    border: 1px solid;
+    border-color: #000;
+  }
+
+
+}
+
+// Parent stepper
+.parent-stepper {
+  &:not(.child-stepper) {
+    > .v-stepper-header {
+      border-radius: $border-radius;
+      background: #fff;
+      box-shadow: none;
+
+      .v-stepper-item--selected {
+        background-color: #EBF5FF;
+        border-radius: 24px;
+        color: $blue;
+        font-weight: 600;
+
+        .v-stepper-item__avatar.v-avatar {
+          background-color: $blue;
+          color: #fff;
+          border-color: $blue;
+        }
+      }
+
+      .v-stepper-item--complete {
+        color: $blue;
+
+        .v-stepper-item__avatar.v-avatar {
+          background-color: $blue;
+          color: #fff;
+          border-color: $blue;
+        }
+      }
+    }
+  }
+}
+
+.child-stepper {
+  .v-stepper-item__avatar.v-avatar {
+    border: none;
+  }
+
+  .v-stepper-header {
+    box-shadow: none;
+    justify-content: center;
+    column-gap: 10px;
+  }
+
+  .v-stepper-item__avatar.v-avatar {
+    margin-right: 0 !important;
+  }
+
+  .v-stepper-item--selected {
+    color: $blue;
+    font-weight: 600;
+    position: relative;
+
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 10px;
+      width: 90%;
+      height: 1px;
+      background-color: $blue;
+    }
+
+    .v-stepper-item__avatar.v-avatar,
+    .v-stepper-item__avatar.v-avatar > * {
+      color: $blue;
+    }
+  }
+
+  .v-stepper-item--complete {
+    color: $blue;
+
+    .v-stepper-item__avatar.v-avatar {
+      color: $blue;
+      border-color: $blue;
+    }
   }
 }
 </style>

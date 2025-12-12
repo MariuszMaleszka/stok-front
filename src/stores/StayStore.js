@@ -46,6 +46,31 @@ const DUMMY_SELECTED_CLASSES = [
       description: 'PAKIET NNW TURYSTYCZNO-SPORTOWY - Wariant 111 SWIJ indywidualnych podróży Kontynenty na terenie RP.',
       imgSource: ''
     }
+  },
+  {
+    dynamicId: 'ff12126xs',
+    type: 'individual',
+    title: 'Zajęcia Specjalne - Mateusz',
+    classType: 'snowboard',
+    groupName: 'Grupa wieczorna - specjalna',
+    skillLevel: 'Nowicjusz',
+    instructor: 'Mateusz Zzaskakującymnazwiskiem',
+    dates: [
+      {date: '01.01.2025', time: '9:00 - 9:55'},
+      {date: '02.01.2025', time: '9:00 - 9:55'},
+      {date: '03.01.2025', time: '9:00 - 9:55'},
+      {date: '04.01.2025', time: '9:00 - 9:55'},
+      {date: '05.01.2025', time: '9:00 - 9:55'},
+    ],
+    price: 250.00,
+    insurance: {
+      title: 'NNW Turystyczno-Sportowe lorem ipsum amet dolor blabla tututut',
+      enabled: false,
+      price: 20.00,
+      perDay: true,
+      description: 'PAKIET NNW TURYSTYCZNO-SPORTOWY - Wariant Mateusz na terenie RP.',
+      imgSource: ''
+    }
   }
 ]
 
@@ -79,7 +104,13 @@ export const useStayStore = defineStore('stayStore', () => {
     dateOfStay: dateOfStay.value,
     adultsNumber: adultsNumber.value,
     childrenNumber: childrenNumber.value,
-    participants: participants.value
+    participants: participants.value,
+    additionalOptions: {
+      insuranceForAll: {
+        insuranceForAll: selectedInsurancesForAll.value,
+      }
+    },
+    loyaltyCard: null,
   }))
 
   // Computed max values based on total constraint
@@ -91,7 +122,68 @@ export const useStayStore = defineStore('stayStore', () => {
     return adultsNumber.value > 0 || childrenNumber.value > 0
   })
 
-// 👉 Participant classes total price
+// 👉 Participant (singular) classes total price
+//   const participantClassesTotalPrice = computed(() => {
+//     const priceMap = new Map()
+//
+//     participants.value.forEach(participant => {
+//       if (!participant.selectedClasses || participant.selectedClasses.length === 0) {
+//         priceMap.set(participant.dynamicId, 0)
+//         return
+//       }
+//
+//       const total = participant.selectedClasses.reduce((sum, classItem) => {
+//         let classTotal = classItem.price || 0
+//
+//         if (classItem.insurance?.enabled) {
+//           if (classItem.insurance.perDay && classItem.dates) {
+//             classTotal += (classItem.insurance.price * classItem.dates.length)
+//           } else {
+//             classTotal += classItem.insurance.price
+//           }
+//         }
+//
+//         return sum + classTotal
+//       }, 0)
+//
+//       priceMap.set(participant.dynamicId, total)
+//     })
+//
+//     return priceMap
+//   })
+
+
+  // 👉 Insurance for all participants option cost
+  const calculateClassInsuranceCost = (classItem) => {
+    const insurance = classItem.insurance
+    if (!insurance) return 0
+
+    return insurance.perDay && classItem.dates?.length
+      ? insurance.price * classItem.dates.length
+      : insurance.price
+  }
+
+  // 👉 Total cost if insurance for all is selected
+  const sumInsurances = (includeAllClasses) => {
+    let total = 0
+
+    participants.value.forEach(participant => {
+      participant.selectedClasses?.forEach(classItem => {
+        if (!includeAllClasses && !insuranceSelected.value?.[classItem.dynamicId]) return
+        total += calculateClassInsuranceCost(classItem)
+      })
+    })
+
+    return total
+  }
+
+  // 👉 Total insurance cost
+  const insurancePrice = computed(() => {
+    return selectedInsurancesForAll.value
+      ? sumInsurances(true)
+      : sumInsurances(false)
+  })
+
   const participantClassesTotalPrice = computed(() => {
     const priceMap = new Map()
 
@@ -104,13 +196,6 @@ export const useStayStore = defineStore('stayStore', () => {
       const total = participant.selectedClasses.reduce((sum, classItem) => {
         let classTotal = classItem.price || 0
 
-        if (classItem.insurance?.enabled) {
-          if (classItem.insurance.perDay && classItem.dates) {
-            classTotal += (classItem.insurance.price * classItem.dates.length)
-          } else {
-            classTotal += classItem.insurance.price
-          }
-        }
 
         return sum + classTotal
       }, 0)
@@ -126,8 +211,11 @@ export const useStayStore = defineStore('stayStore', () => {
   const discountPackage_20 = ref(false) // not used for now
   const missingClassesForDiscount = ref(false) // not used for now
 
-  const insuranceForAllCost = 200
+  // Additional options
+  const insuranceSelected = ref({}) // Track insurance selections by class dynamicId
   const selectedInsurancesForAll = ref(false) // For all participants
+
+
 
   // CRUCIAL: Watchers to sync participants with adults/children numbers
   // This is responsible for adding/removing participant entries
@@ -168,7 +256,7 @@ export const useStayStore = defineStore('stayStore', () => {
     discountPackage_10,
     discountPackage_20,
     missingClassesForDiscount,
-    insuranceForAllCost,
+    insuranceSelected,
     selectedInsurancesForAll,
 
     // Computed
@@ -176,6 +264,7 @@ export const useStayStore = defineStore('stayStore', () => {
     maxChildren,
     participantQuantityConditions,
     participantClassesTotalPrice,
+    insurancePrice,
 
     // Actions
     resetEvent,

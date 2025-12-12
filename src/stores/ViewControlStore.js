@@ -21,9 +21,8 @@ export const useViewControlStore = defineStore('viewStore', () => {
   }
   )
 
-  const isStepOneDataCompleted = ref(false) // step one - data
-  const isStepOnePreferencesCompleted = ref(false) // step one - preferences
-  const isStepOneCompleted = computed(() => isStepOneDataCompleted.value && isStepOnePreferencesCompleted.value)
+
+  const isStepOneCompleted = ref(false)
 
   const isStepTwoCompleted = ref(false)
 
@@ -36,8 +35,6 @@ export const useViewControlStore = defineStore('viewStore', () => {
   return {
 
     currentStep,
-    isStepOneDataCompleted, // step one - data
-    isStepOnePreferencesCompleted, // step one - preferences
     isStepOneCompleted, // step one - overall
     isStepTwoCompleted, // step two - overall
     isStepThreeCartCompleted, // step three - cart
