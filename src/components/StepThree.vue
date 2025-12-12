@@ -1,7 +1,7 @@
 <script setup>
 import DatePickerResponsive from "@/components/DatePickerResponsive.vue";
 import {useStayStore} from '@/stores/StayStore.js'
-import {computed, ref} from "vue";
+import {computed, ref, watch} from "vue";
 import {useCookies} from "@vueuse/integrations/useCookies";
 import {useToast} from '@/composables/useToast'
 import {useViewControlStore} from "@/stores/ViewControlStore.js";
@@ -21,82 +21,46 @@ const {t} = useI18n()
 // Form refs
 const dataForm = ref(null)
 const participantForms = ref([])
+const stepThreeNestedRef = ref(null)
+const activeChildStep = ref(1)
 
-const handleNextClick = async () => {
-  if (viewStore.stepOne === viewStore.STEP_ONE_DATA) {
-    const {valid} = await dataForm.value.validate()
-    if (!valid) {
-      showSimpleToast(t('please_fill_required_fields'), 'error')
-      return
-    }
-    viewStore.isStepOneDataCompleted = true
-    viewStore.stepOne = viewStore.STEP_ONE_PREFERENCES
-  } else if (viewStore.stepOne === viewStore.STEP_ONE_PREFERENCES) {
-    const validationResults = await Promise.all(
-      participantForms.value.map(form => form?.validate())
-    )
-    const allValid = validationResults.every(result => result?.valid)
+watch(activeChildStep, async (newStep) => {
+  await nextTick()
+  viewStore.currentStep.child = newStep
+})
+// Expose for parent access
+defineExpose({
+  stepThreeNestedRef,
+})
 
-    if (!allValid) {
-      showSimpleToast(t('please_fill_required_fields'), 'error')
-      return
-    }
-
-    viewStore.isStepOnePreferencesCompleted = true
-    viewStore.goToNextStep()
-  }
-}
 </script>
 
 <template>
-  <div class="d-flex flex-column justify-space-between h-100 flex-1">
-    <!-- tabs navigation remains the same -->
-    <div class="tabs-holder-secondary">
-      <VTabs
-        v-model="viewStore.stepThreeView"
-        align-tabs="center"
-        density="compact"
-        class="tabs-navigation"
-        hide-slider
-      >
-        <VTab
-          :value="viewStore.STEP_THREE_CART"
-          :aria-label="$t('participants')"
-          :class="mobile ? 'pr-0 pl-0 ml-2': 'justify-start'"
-          class="fs-11 text-capitalize ls-0 "
-        >
-          1. {{ $t('cart') }}
-        </VTab>
-        <VTab
-          :value="viewStore.STEP_THREE_PARTICIPANTS_DETAILS"
-          :disabled="!stayStore.dateOfStay"
-          :aria-label="$t('classes')"
-          :class="mobile ? 'pr-0 pl-0': ''"
-          class="fs-11 text-capitalize ls-0 "
-        >
-          2. {{ $t('participants_data') }}
-        </VTab>
-        <VTab
-          :value="viewStore.STEP_THREE_PARTICIPANTS_PAYMENT"
-          :disabled="!stayStore.dateOfStay"
-          :aria-label="$t('classes')"
-          :class="mobile ? 'pr-0 pl-0': ''"
-          class="fs-11 text-capitalize ls-0 "
-        >
-          3. {{ $t('payment') }}
-        </VTab>
-      </VTabs>
-    </div>
+  <VStepper
+    ref="stepThreeNestedRef"
+    v-model="activeChildStep"
+    class="step-three-element d-flex flex-column flex-1"
+    flat
+    hide-actions
+  >
 
-    <VTabsWindow
-      v-model="viewStore.stepThreeView"
-      class="d-flex flex-column h-100 flex-1"
-    >
-      <VTabsWindowItem
-        :value="viewStore.STEP_THREE_CART"
-        class="h-100 flex-1"
-        :class="viewStore.stepThreeView === viewStore.STEP_THREE_CART ? 'd-flex flex-column' : ''"
-      >
+    <VStepperHeader>
+      <VStepperItem
+        :value="1"
+        :title="$t('cart')"
+      />
+      <VStepperItem
+        :value="2"
+        :title="$t('participants_data')"
+      />
+      <VStepperItem
+        :value="3"
+        :title="$t('payment')"
+      />
+    </VStepperHeader>
+
+    <VStepperWindow class="flex-1">
+      <VStepperWindowItem :value="1">
         <div>
           <p
             class="fs-24 font-weight-bold my-4"
@@ -129,13 +93,9 @@ const handleNextClick = async () => {
           </div>
 
         </div>
-      </VTabsWindowItem>
+      </VStepperWindowItem>
 
-      <VTabsWindowItem
-        :value="viewStore.STEP_THREE_PARTICIPANTS_DETAILS"
-        class="h-100 flex-1"
-        :class="viewStore.stepThreeView === viewStore.STEP_THREE_PARTICIPANTS_DETAILS ? 'd-flex flex-column' : ''"
-      >
+      <VStepperWindowItem :value="2">
         <div>
           <p class="fs-24 font-weight-bold my-4">
             {{ $t('participants_data') }}:
@@ -156,12 +116,9 @@ const handleNextClick = async () => {
           </div>
 
         </div>
-      </VTabsWindowItem>
-      <VTabsWindowItem
-        :value="viewStore.STEP_THREE_PARTICIPANTS_PAYMENT"
-        class="h-100 flex-1"
-        :class="viewStore.stepThreeView === viewStore.STEP_THREE_PARTICIPANTS_PAYMENT ? 'd-flex flex-column' : ''"
-      >
+      </VStepperWindowItem>
+
+      <VStepperWindowItem :value="3">
         <div class="px-1">
           <p class="fs-24 font-weight-bold my-4">
             {{ $t('payment') }}:
@@ -176,32 +133,8 @@ const handleNextClick = async () => {
           </div>
 
         </div>
-      </VTabsWindowItem>
-    </VTabsWindow>
+      </VStepperWindowItem>
+    </VStepperWindow>
+  </VStepper>
 
-    <div class="navigation-tab-actions d-flex ga-4 justify-space-between ">
-<!--      <VBtn-->
-<!--        v-if="viewStore.stepOne === viewStore.STEP_ONE_PREFERENCES"-->
-<!--        variant="outlined"-->
-<!--        size="x-large"-->
-<!--        color="blue"-->
-<!--        class="fs-16 text-capitalize flex-1"-->
-<!--        prepend-icon="mdi-arrow-left"-->
-<!--        @click="viewStore.stepOne = viewStore.STEP_ONE_DATA"-->
-<!--      >-->
-<!--        {{ $t('previous') }}-->
-<!--      </VBtn>-->
-<!--      <VBtn-->
-<!--        variant="flat"-->
-<!--        size="x-large"-->
-<!--        color="blue"-->
-<!--        class="fs-16 text-capitalize flex-2"-->
-<!--        :disabled="!stayStore.dateOfStay"-->
-<!--        @click="handleNextClick"-->
-<!--      >-->
-<!--        &lt;!&ndash;        :disabled="!isFormValid"&ndash;&gt;-->
-<!--        {{ $t('next') }}-->
-<!--      </VBtn>-->
-    </div>
-  </div>
 </template>

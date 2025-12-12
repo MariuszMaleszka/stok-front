@@ -7,7 +7,6 @@ import {useStayStore} from "@/stores/StayStore.js";
 import {useDisplay} from 'vuetify';
 import PopupSmall from "@/components/modals/PopupSmall.vue";
 import InsuranceIMG from '@/assets/insurance_img.png'
-import PackageInfoBox from '@/components/PackageInfoBox.vue'
 
 const props = defineProps({
   participant: {
@@ -28,8 +27,7 @@ const panel = ref([0])// Expansion panel state (main)
 
 const insuranceSelected = ref({}) // Holds the insurance selection state
 const insuranceInfoDialog = ref(false) // Controls the insurance info dialog visibility
-const additionalInsuranceSelected = ref(false) // Insurance for all option
-const additionalInsuranceExpanded = ref(false) // Controls the expansion of insurance for all details
+
 
 const currentInsurance = ref(null) // Holds the insurance info to display
 
@@ -208,39 +206,6 @@ const cancelDelete = () => {
               </VSheet>
             </div>
           </VList>
-          <!--INFO BOX-->
-          <PackageInfoBox class="my-4" color="yellow">
-            <span class="fw-500">11 / 10h w pakiecie.</span>
-            <p class="mb-2">Aktywowano niższy pakiet cenowy <span>-100,00zł</span></p>
-            <div :class="mobile? 'fs-10':'fs-12'" class="custom-badge info">
-              Oszczędzasz -10%
-            </div>
-          </PackageInfoBox>
-          <!--INFO BOX-->
-          <PackageInfoBox class="my-4" color="green" :showIcon="false">
-            <div class="d-flex justify-space-between mb-2">
-              <p class="fw-500">Brakuje Ci 2h zajęć, by aktywować tańszy pakiet cenowy.</p>
-              <VBtn
-                variant="outlined"
-                color="green"
-                :class="mobile? 'fs-12':'fs-14'"
-                class="text-capitalize pa-2 mt-4 mb-2 ml-2"
-              >
-                {{ $t('add_classes') }}
-              </VBtn>
-            </div>
-            <div :class="mobile ? 'fs-10' : 'fs-12'" class="custom-badge green">
-              {{ $t('you_gain') }}-10%
-            </div>
-          </PackageInfoBox>
-          <!--INFO BOX-->
-          <PackageInfoBox class="my-4" color="orange" >
-            <span class="fw-500">11 / 10h w pakiecie.</span>
-            <p class="mb-2">Aktywowano niższy pakiet cenowy <span>-200,00zł</span></p>
-            <div :class="mobile? 'fs-10':'fs-12'" class="custom-badge orange">
-              {{ $t('you_save') }} -20%
-            </div>
-          </PackageInfoBox>
 
           <VSheet
             class="participant-selected-classes-summary rounded-lg bg-gray-primary pa-4"
@@ -259,81 +224,7 @@ const cancelDelete = () => {
       </VExpansionPanel>
     </VExpansionPanels>
 
-    <!--ADITIONAL OPTIONS-->
-    <!--ADITIONAL OPTIONS-->
-    <div class="aditional-options w-100">
-      <p :class="mobile ? 'fs-16' : 'fs-20'" class="fc-smoked fw-500 my-4">
-        {{ $t('aditional_options') }}:
-      </p>
-      <VSheet class="rounded bg-light-gray mt-2 mb-4">
-        <div
-          :class="mobile ? 'px-0': 'px-4'"
-          class="pt-0 rounded d-flex align-center justify-between"
-        >
-          <VCheckbox
-            v-model="additionalInsuranceSelected"
-            density="compact"
-            hide-details
-            color="info"
-            class="mb-auto"
-          />
-          <div
-            :class="mobile ? 'fs-10': 'fs-14'"
-            class="fw-400 d-flex flex-column align-center ml-2"
-          >
-            <p class="mt-2">
-              {{ t('insurance_for_all_option') }}
-            </p>
 
-            <VBtn
-              :class="mobile ? 'fs-10': 'fs-14'"
-              class="text-capitalize px-0 mr-auto"
-              variant="text"
-              size="small"
-              flat
-              color="grey"
-              @click="additionalInsuranceExpanded = !additionalInsuranceExpanded"
-            >
-              {{ additionalInsuranceExpanded ? t('collapse') : t('expand') }}
-              <VIcon :icon="additionalInsuranceExpanded ? 'mdi-chevron-up' : 'mdi-chevron-down'"/>
-            </VBtn>
-          </div>
-
-          <div
-            :class="mobile ? 'fs-11 ': 'fs-14'"
-            class="d-flex flex-column align-end ml-auto fc-gray mb-auto mt-2"
-          >
-            <span class="fw-500">
-              -&nbsp;{{ formatPrice(stayStore.insuranceForAllCost) }}&nbsp;{{ stayStore.currency }}
-            </span>
-          </div>
-        </div>
-
-        <VExpandTransition>
-          <VCard
-            v-show="additionalInsuranceExpanded"
-            width="100%"
-            flat
-            style="background-color: transparent;"
-          >
-            <VCardText class="px-8">
-              <p :class="mobile ? 'fs-10' : 'fs-12'">
-                <!-- Add insurance description here -->
-                Lorem ipsum dolor sit amet, consectetur adipisicing elit. Cum cupiditate ipsa ipsum laborum libero tempore ut voluptatem? Dolorem ex libero maiores necessitatibus quaerat. Adipisci, culpa doloribus illum odit quod tempore.
-              </p>
-
-              <div
-                :class="mobile ? 'fs-10' : 'fs-12'"
-                class="custom-badge gray mt-4"
-              >
-                <VIcon class="mr-1" color="grey" icon="mdi-information-slab-circle"/>
-                {{ $t('aditional_info') }}
-              </div>
-            </VCardText>
-          </VCard>
-        </VExpandTransition>
-      </VSheet>
-    </div>
 
     <!--POPUPS-->
     <PopupSmall

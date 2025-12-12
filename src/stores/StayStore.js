@@ -122,10 +122,12 @@ export const useStayStore = defineStore('stayStore', () => {
   })
 
   // 👉 Promotions/discounts/suggestions
-  const discountPackage_10 = ref(false)
-  const discountPackage_20 = ref(false)
-  const missingClassesForDiscount = ref(false)
+  const discountPackage_10 = ref(false) // not used for now
+  const discountPackage_20 = ref(false) // not used for now
+  const missingClassesForDiscount = ref(false) // not used for now
+
   const insuranceForAllCost = 200
+  const selectedInsurancesForAll = ref(false) // For all participants
 
   // CRUCIAL: Watchers to sync participants with adults/children numbers
   // This is responsible for adding/removing participant entries
@@ -167,6 +169,7 @@ export const useStayStore = defineStore('stayStore', () => {
     discountPackage_20,
     missingClassesForDiscount,
     insuranceForAllCost,
+    selectedInsurancesForAll,
 
     // Computed
     maxAdults,

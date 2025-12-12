@@ -1,88 +1,50 @@
-import { defineStore } from 'pinia'
-import { computed, ref } from 'vue'
+import {defineStore} from 'pinia'
+import {computed, ref} from 'vue'
+import {useI18n} from 'vue-i18n'
+
 
 export const useViewControlStore = defineStore('viewStore', () => {
-  // Constants
-  const STEP_ONE = 'one'
-  const STEP_TWO = 'two'
-  const STEP_THREE = 'three'
+  const {t} = useI18n()
 
-  const STEP_ONE_DATA = 'data'
-  const STEP_ONE_PREFERENCES = 'preferences'
+  // const STEP_ONE_ID = 'STEP_ONE'
+  // const STEP_ONE_DATA_ID = 'STEP_ONE_DATA'
+  // const STEP_ONE_PREFERENCES_ID = 'STEP_ONE_PREFERENCES'
+  // const STEP_TWO_ID = 'STEP_TWO'
+  // const STEP_THREE_ID = 'STEP_THREE'
+  // const STEP_THREE_CART_ID = 'STEP_THREE_CART'
+  // const STEP_THREE_PARTICIPANTS_ID = 'STEP_THREE_PARTICIPANTS'
+  // const STEP_THREE_PAYMENT_ID = 'STEP_THREE_PAYMENT'
 
-  const STEP_THREE_CART = 'step_three_cart'
-  const STEP_THREE_PARTICIPANTS_DETAILS = 'step_three_participants_details'
-  const STEP_THREE_PARTICIPANTS_PAYMENT = 'step_three_participants_payment'
+  const currentStep = ref({
+      parent: 1,
+      child: 1
+  }
+  )
 
-  // State
-  const currentView = ref(STEP_ONE)
-  const stepOneView = ref(STEP_ONE_DATA)
-  const stepThreeView = ref(STEP_THREE_CART)
+  const isStepOneDataCompleted = ref(false) // step one - data
+  const isStepOnePreferencesCompleted = ref(false) // step one - preferences
+  const isStepOneCompleted = computed(() => isStepOneDataCompleted.value && isStepOnePreferencesCompleted.value)
 
-  const isStepOneDataCompleted = ref(false)
-  const isStepOnePreferencesCompleted = ref(false)
   const isStepTwoCompleted = ref(false)
 
-  // Computed
-  const canProceedFromStepOneData = computed(() => isStepOneDataCompleted.value)
-  const canProceedFromStepOnePreferences = computed(() => isStepOnePreferencesCompleted.value)
-  const canProceedFromStepTwo = computed(() => isStepTwoCompleted.value)
+  const isStepThreeCartCompleted = ref(false) // step three - cart
+  const isStepThreeParticipantsCompleted = ref(false) // step three - participants
+  const isStepThreePaymentCompleted = ref(false) // step three - payment
+  const isStepThreeCompleted = computed(() => isStepThreeCartCompleted.value && isStepThreeParticipantsCompleted.value && isStepThreePaymentCompleted.value)
 
-  // Methods
-  function goToNextStep() {
-    if (currentView.value === STEP_ONE) {
-      if (stepOneView.value === STEP_ONE_DATA && canProceedFromStepOneData.value) {
-        stepOneView.value = STEP_ONE_PREFERENCES
-      } else if (stepOneView.value === STEP_ONE_PREFERENCES && canProceedFromStepOnePreferences.value) {
-        currentView.value = STEP_TWO
-      }
-    } else if (currentView.value === STEP_TWO && canProceedFromStepTwo.value) {
-      currentView.value = STEP_THREE
-    }
-  }
-
-  function goToPreviousStep() {
-    if (currentView.value === STEP_ONE && stepOneView.value === STEP_ONE_PREFERENCES) {
-      stepOneView.value = STEP_ONE_DATA
-    } else if (currentView.value === STEP_TWO) {
-      currentView.value = STEP_ONE
-      stepOneView.value = STEP_ONE_PREFERENCES
-    }
-  }
-
-  function resetStepOne() {
-    stepOneView.value = STEP_ONE_DATA
-    isStepOneDataCompleted.value = false
-    isStepOnePreferencesCompleted.value = false
-  }
 
   return {
-    // Constants
-    STEP_ONE,
-    STEP_TWO,
-    STEP_THREE,
-    STEP_ONE_DATA,
-    STEP_ONE_PREFERENCES,
-    STEP_THREE_CART,
-    STEP_THREE_PARTICIPANTS_DETAILS,
-    STEP_THREE_PARTICIPANTS_PAYMENT,
 
-    // State
-    currentView,
-    stepOneView,
-    stepThreeView,
-    isStepOneDataCompleted,
-    isStepOnePreferencesCompleted,
-    isStepTwoCompleted,
+    currentStep,
+    isStepOneDataCompleted, // step one - data
+    isStepOnePreferencesCompleted, // step one - preferences
+    isStepOneCompleted, // step one - overall
+    isStepTwoCompleted, // step two - overall
+    isStepThreeCartCompleted, // step three - cart
+    isStepThreeParticipantsCompleted, // step three - participants
+    isStepThreePaymentCompleted, // step three - payment
+    isStepThreeCompleted, // step three - overall
 
-    // Computed
-    canProceedFromStepOneData,
-    canProceedFromStepOnePreferences,
-    canProceedFromStepTwo,
 
-    // Methods
-    goToNextStep,
-    goToPreviousStep,
-    resetStepOne
   }
 })

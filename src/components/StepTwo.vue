@@ -1,7 +1,7 @@
 <script setup>
 import DatePickerResponsive from "@/components/DatePickerResponsive.vue";
 import {useStayStore} from '@/stores/StayStore.js'
-import {computed, ref} from "vue";
+import {computed, ref, watch} from "vue";
 import {useCookies} from "@vueuse/integrations/useCookies";
 import {useToast} from '@/composables/useToast'
 import {useViewControlStore} from "@/stores/ViewControlStore.js";
@@ -18,13 +18,6 @@ const cookies = useCookies(['locale'])
 const {mobile} = useDisplay()
 const currentLocale = computed(() => cookies.get('locale') || 'pl')
 const {t} = useI18n()
-
-
-const handleNextClick = async () => {
-  viewStore.isStepTwoCompleted = true
-  viewStore.goToNextStep()
-}
-
 watch(() => timerStore.timeRemaining, (remaining) => {
   if (remaining === 0) {
     showSimpleToast(t('time_expired'), 'warning')
@@ -65,28 +58,5 @@ onMounted(() => {
     </div>
 
 
-    <div class="navigation-tab-actions d-flex ga-4 justify-space-between ">
-      <VBtn
-        variant="outlined"
-        size="x-large"
-        color="blue"
-        class="fs-16 text-capitalize flex-1"
-        prepend-icon="mdi-arrow-left"
-        @click="viewStore.currentView = 'one'; viewStore.stepOne = viewStore.STEP_ONE_PREFERENCES"
-      >
-        {{ $t('previous') }}
-      </VBtn>
-      <VBtn
-        variant="flat"
-        size="x-large"
-        color="blue"
-        class="fs-16 text-capitalize flex-2"
-        :disabled="!stayStore.dateOfStay"
-        @click="handleNextClick"
-      >
-        <!--        :disabled="!isFormValid"-->
-        {{ $t('next') }}
-      </VBtn>
-    </div>
   </div>
 </template>

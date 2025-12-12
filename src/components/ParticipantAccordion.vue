@@ -14,22 +14,23 @@ const props = defineProps({
     required: true
   }
 })
+const stayStore = useStayStore()
+const {mobile} = useDisplay()
+const {t} = useI18n()
 
 const CUSTOMER_SERVICE_LINK = "https://szkolastok.pl/kontakt"
-const {mobile} = useDisplay()
-const stayStore = useStayStore()
 const infoDialog = ref(false)
-const selectedSkillLevel = ref(null)
-const {t} = useI18n()
-const panel = ref([0])
-const form = ref(null)
-const showErrors = ref(false)
+
+const panel = ref([0]) // To control expansion panel opened/closed state
+const form = ref(null) // Reference to the form (participant details)
+const showErrors = ref(false) // To control error display
 
 const rules = {
   required: value => !!value || t('fill_the_field_properly'),
 }
 
-const classType = ref(null)
+const selectedSkillLevel = ref(null)
+const selectedClassType = ref(null)
 
 const availableSkillLevels = computed(() => {
   if (props.participant.participantType === 'adult') {
@@ -41,11 +42,11 @@ const availableSkillLevels = computed(() => {
 
     const age = parseInt(props.participant.age)
 
-    if (classType.value === 0) {
+    if (selectedClassType.value === 0) {
       return stayStore.skillLevels_CHILDREN_SKI.filter(level =>
         age >= level.ageRange[0] && age <= level.ageRange[1]
       )
-    } else if (classType.value === 1) {
+    } else if (selectedClassType.value === 1) {
       return stayStore.skillLevels_CHILDREN_SNOWBOARD.filter(level =>
         age >= level.ageRange[0] && age <= level.ageRange[1]
       )
@@ -82,8 +83,8 @@ watch(selectedSkillLevel, (newValue) => {
 })
 
 watch(() => props.participant.age, (newAge) => {
-  if (props.participant.participantType === 'child' && newAge !== null && newAge < 8 && classType.value === 1) {
-    classType.value = null
+  if (props.participant.participantType === 'child' && newAge !== null && newAge < 8 && selectedClassType.value === 1) {
+    selectedClassType.value = null
     props.participant.activityType = ''
     selectedSkillLevel.value = null
     props.participant.skillLevel = ''
@@ -97,7 +98,7 @@ defineExpose({
     const formValid = await form.value?.validate()
 
     // Additional validation for classType and skillLevel
-    const hasClassType = classType.value !== null
+    const hasClassType = selectedClassType.value !== null
     const hasSkillLevel = selectedSkillLevel.value !== null && selectedSkillLevel.value.length > 0
 
     return {
@@ -108,8 +109,8 @@ defineExpose({
 </script>
 
 <template>
-  <VExpansionPanels>
-    <VExpansionPanel v-model="panel">
+  <VExpansionPanels v-model="panel">
+    <VExpansionPanel >
       <VExpansionPanelTitle>
         <span class="fw-600">
           {{ index + 1 }} - {{ t(`${participant.participantType}`) || '-' }}
@@ -185,7 +186,7 @@ defineExpose({
           <div class="mb-4">
             <p class="custom-input-label mb-2">{{ $t('classes_type') }}</p>
             <VBtnToggle
-              v-model="classType"
+              v-model="selectedClassType"
               class="ga-2 w-100"
               mandatory
               @update:model-value="(val) => {
@@ -197,7 +198,7 @@ defineExpose({
                 variant="outlined"
                 :class="[
                   mobile ? 'flex-1' : 'px-8',
-                  { 'border-error': showErrors && classType === null }
+                  { 'border-error': showErrors && selectedClassType === null }
                 ]"
                 class="text-capitalize border rounded"
               >
@@ -209,19 +210,19 @@ defineExpose({
                 :disabled="isSnowboardDisabled"
                 :class="[
                   mobile ? 'flex-1' : 'px-8',
-                  { 'border-error border-2': showErrors && classType === null }
+                  { 'border-error border-2': showErrors && selectedClassType === null }
                 ]"
                 class="text-capitalize border rounded"
               >
                 {{ $t('snowboard') }}
               </VBtn>
             </VBtnToggle>
-            <small v-if="showErrors && classType === null" class="fs-12 fc-error pl-4 pt-2">
+            <small v-if="showErrors && selectedClassType === null" class="fs-12 fc-error pl-4 pt-2">
               {{ $t('select_class_type') }}
             </small>
           </div>
 
-          <div class="mb-4" v-if="classType === 0 || classType === 1">
+          <div class="mb-4" v-if="selectedClassType === 0 || selectedClassType === 1">
             <p class="custom-input-label mb-2">{{ $t('difficulty_level') }}</p>
             <VList
               v-model:selected="selectedSkillLevel"
