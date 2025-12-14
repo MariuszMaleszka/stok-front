@@ -27,8 +27,6 @@ const panel = ref([0])// Expansion panel state (main)
 
 // const insuranceSelected = ref({}) // Holds the insurance selection state
 const insuranceInfoDialog = ref(false) // Controls the insurance info dialog visibility
-
-
 const currentInsurance = ref(null) // Holds the insurance info to display
 
 const classToDelete = ref(null) // Holds the class selected for deletion
@@ -65,9 +63,6 @@ const cancelDelete = () => {
   confirmClassDeletationDialog.value = false
 }
 
-// defineExpose({
-//   insuranceSelected
-// })
 </script>
 
 <template>
@@ -133,9 +128,9 @@ const cancelDelete = () => {
                   :class="mobile ? 'fs-12 ': 'fs-14'"
                   class="mr-2 fw-600"
                 >
-                  {{ formatPrice(item.price) }}
+                  {{ formatPrice(item.price) }}&nbsp;{{ stayStore.currency }}
                 </span>
-                  <VIcon size="small" color="grey" icon="mdi-close" @click="deleteClass(item.dynamicId)"/>
+                  <VIcon size="18" color="grey" icon="mdi-close" @click="deleteClass(item.dynamicId)"/>
                 </div>
               </div>
 
@@ -146,7 +141,7 @@ const cancelDelete = () => {
                 >
                   <VCheckbox
                     density="compact"
-                    v-model="stayStore.insuranceSelected[item.dynamicId]"
+                    v-model="item.insurance.enabled"
                     hide-details
                     color="info"
                   />
@@ -214,12 +209,18 @@ const cancelDelete = () => {
             class="participant-selected-classes-summary rounded-lg bg-gray-primary pa-4"
           >
             <p class="text-right ml-auto">
-            <span :class="mobile ? 'fs-12 ': 'fs-14'" class="fw-600">
-              {{ $t('total') }}
-            </span>
-              <span :class="mobile ? 'fs-14 ': 'fs-16'" class="fw-500 ml-2" >
-             {{ formatPrice(stayStore.participantClassesTotalPrice.get(participant.dynamicId)) }}&nbsp;{{ stayStore.currency }}
-            </span>
+              <span :class="mobile ? 'fs-12 ': 'fs-14'" class="fw-600">
+                {{ $t('total') }}
+              </span>
+                        <span :class="mobile ? 'fs-14 ': 'fs-16'" class="fw-500 ml-2">
+                {{ formatPrice(stayStore.participantClassesTotalPrice(participant.dynamicId) + stayStore.participantInsuranceTotalPrice(participant.dynamicId)) }}&nbsp;{{ stayStore.currency }}
+                <br>
+                <p v-if="stayStore.participantInsuranceTotalPrice(participant.dynamicId) > 0" class="fs-10 mt-n1">
+                  {{ $t('including') }}
+                  {{ formatPrice(stayStore.participantInsuranceTotalPrice(participant.dynamicId)) }}&nbsp;{{ stayStore.currency }}
+                  {{ $t('insurance') }}
+                </p>
+              </span>
             </p>
           </VSheet>
 
@@ -280,7 +281,7 @@ const cancelDelete = () => {
               >
                 <div class="d-flex align-center">
                   <p v-if="classToDelete.groupName" class="fc-gray">
-                    &#8226; <span class="ml-1">{{ classToDelete.groupName }},</span>
+                    &#8226; <span >{{ classToDelete.groupName }},</span>
                   </p>
                   <p v-if="classToDelete.skillLevel" class="fc-gray">
                     &#8226;<span class="ml-1">{{ classToDelete.skillLevel }}</span>
@@ -306,7 +307,7 @@ const cancelDelete = () => {
                 :class="mobile ? 'fs-12 ': 'fs-14'"
                 class="fw-600"
               >
-                {{ formatPrice(classToDelete.price) }}
+                {{ formatPrice(classToDelete.price) }}&nbsp;{{ stayStore.currency }}
               </span>
             </div>
           </div>

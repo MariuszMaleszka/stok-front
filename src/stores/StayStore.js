@@ -66,7 +66,7 @@ const DUMMY_SELECTED_CLASSES = [
     insurance: {
       title: 'NNW Turystyczno-Sportowe lorem ipsum amet dolor blabla tututut',
       enabled: false,
-      price: 20.00,
+      price: 10.00,
       perDay: true,
       description: 'PAKIET NNW TURYSTYCZNO-SPORTOWY - Wariant Mateusz na terenie RP.',
       imgSource: ''
@@ -86,7 +86,8 @@ const blankParticipant = {
   availableLessonTypes: [],
   showGroupLessons: true,
   classLang: 'Polski',
-  selectedClasses: DUMMY_SELECTED_CLASSES
+  selectedClasses: DUMMY_SELECTED_CLASSES,
+  loyaltyProgram: {},
 }
 
 export const useStayStore = defineStore('stayStore', () => {
@@ -97,6 +98,13 @@ export const useStayStore = defineStore('stayStore', () => {
   const adultsNumber = ref(1)
   const childrenNumber = ref(0)
   const participants = ref([])
+  const hasLoyaltyCard = ref(false) // Loyalty card checkbox
+  const loyaltyProgram = ref({
+    loyaltyCard: false,
+    loyaltyCardOwnerName: '',
+    loyaltyCardOwnerSurname: '',
+    loyaltyCardNumber: null,
+  })
 
   // 👉 Computed event object
   const event = computed(() => ({
@@ -105,12 +113,12 @@ export const useStayStore = defineStore('stayStore', () => {
     adultsNumber: adultsNumber.value,
     childrenNumber: childrenNumber.value,
     participants: participants.value,
-    additionalOptions: {
-      insuranceForAll: {
-        insuranceForAll: selectedInsurancesForAll.value,
-      }
-    },
-    loyaltyCard: null,
+    loyaltyProgram: {
+      loyaltyCard: hasLoyaltyCard.value,
+      loyaltyCardOwnerName: loyaltyProgram.value.loyaltyCardOwnerName,
+      loyaltyCardOwnerSurname: loyaltyProgram.value.loyaltyCardOwnerSurname,
+      loyaltyCardNumber: loyaltyProgram.value.loyaltyCardNumber,
+    }
   }))
 
   // Computed max values based on total constraint
@@ -118,92 +126,39 @@ export const useStayStore = defineStore('stayStore', () => {
   const maxChildren = computed(() => 12 - adultsNumber.value)
 
   // Participants number condition
-  const participantQuantityConditions = computed(() => {
+  const participantsNumberCondition = computed(() => {
     return adultsNumber.value > 0 || childrenNumber.value > 0
   })
 
 // 👉 Participant (singular) classes total price
-//   const participantClassesTotalPrice = computed(() => {
-//     const priceMap = new Map()
-//
-//     participants.value.forEach(participant => {
-//       if (!participant.selectedClasses || participant.selectedClasses.length === 0) {
-//         priceMap.set(participant.dynamicId, 0)
-//         return
-//       }
-//
-//       const total = participant.selectedClasses.reduce((sum, classItem) => {
-//         let classTotal = classItem.price || 0
-//
-//         if (classItem.insurance?.enabled) {
-//           if (classItem.insurance.perDay && classItem.dates) {
-//             classTotal += (classItem.insurance.price * classItem.dates.length)
-//           } else {
-//             classTotal += classItem.insurance.price
-//           }
-//         }
-//
-//         return sum + classTotal
-//       }, 0)
-//
-//       priceMap.set(participant.dynamicId, total)
-//     })
-//
-//     return priceMap
-//   })
-
-
-  // 👉 Insurance for all participants option cost
-  const calculateClassInsuranceCost = (classItem) => {
-    const insurance = classItem.insurance
-    if (!insurance) return 0
-
-    return insurance.perDay && classItem.dates?.length
-      ? insurance.price * classItem.dates.length
-      : insurance.price
-  }
-
-  // 👉 Total cost if insurance for all is selected
-  const sumInsurances = (includeAllClasses) => {
-    let total = 0
-
-    participants.value.forEach(participant => {
-      participant.selectedClasses?.forEach(classItem => {
-        if (!includeAllClasses && !insuranceSelected.value?.[classItem.dynamicId]) return
-        total += calculateClassInsuranceCost(classItem)
-      })
-    })
-
-    return total
-  }
-
-  // 👉 Total insurance cost
-  const insurancePrice = computed(() => {
-    return selectedInsurancesForAll.value
-      ? sumInsurances(true)
-      : sumInsurances(false)
-  })
-
   const participantClassesTotalPrice = computed(() => {
-    const priceMap = new Map()
-
-    participants.value.forEach(participant => {
-      if (!participant.selectedClasses || participant.selectedClasses.length === 0) {
-        priceMap.set(participant.dynamicId, 0)
-        return
+    return (participantId) => {
+      const participant = participants.value.find(p => p.dynamicId === participantId)
+      if (!participant?.selectedClasses || participant.selectedClasses.length === 0) {
+        return 0
       }
 
-      const total = participant.selectedClasses.reduce((sum, classItem) => {
-        let classTotal = classItem.price || 0
-
-
-        return sum + classTotal
+      return participant.selectedClasses.reduce((sum, classItem) => {
+        return sum + (classItem.price || 0)
       }, 0)
+    }
+  })
+  // 👉 Participant (singular) insurance total price
+  const participantInsuranceTotalPrice = computed(() => {
+    return (participantId) => {
+      const participant = participants.value.find(p => p.dynamicId === participantId)
+      if (!participant?.selectedClasses) {
+        return 0
+      }
 
-      priceMap.set(participant.dynamicId, total)
-    })
+      return participant.selectedClasses.reduce((sum, classItem) => {
+        if (!classItem.insurance?.enabled) return sum
 
-    return priceMap
+        const insurancePrice = classItem.insurance.price || 0
+        const dayMultiplier = classItem.insurance.perDay ? (classItem.dates?.length || 1) : 1
+        return sum + (insurancePrice * dayMultiplier)
+      }, 0)
+    }
   })
 
   // 👉 Promotions/discounts/suggestions
@@ -212,10 +167,7 @@ export const useStayStore = defineStore('stayStore', () => {
   const missingClassesForDiscount = ref(false) // not used for now
 
   // Additional options
-  const insuranceSelected = ref({}) // Track insurance selections by class dynamicId
-  const selectedInsurancesForAll = ref(false) // For all participants
-
-
+  const insuranceSelected = ref({})
 
   // CRUCIAL: Watchers to sync participants with adults/children numbers
   // This is responsible for adding/removing participant entries
@@ -225,8 +177,13 @@ export const useStayStore = defineStore('stayStore', () => {
 
     if (totalNeeded > currentLength) {
       const toAdd = totalNeeded - currentLength
+      // Participants must have their own reactive objects
       const newParticipants = Array.from({length: toAdd}, () =>
-        reactive({...blankParticipant, dynamicId: generateUniqueId()})
+        reactive({
+          ...blankParticipant,
+          dynamicId: generateUniqueId(),
+          selectedClasses: JSON.parse(JSON.stringify(blankParticipant.selectedClasses))
+        })
       )
       participants.value.push(...newParticipants)
     } else if (totalNeeded < currentLength) {
@@ -246,6 +203,22 @@ export const useStayStore = defineStore('stayStore', () => {
     participants.value = []
   }
 
+  // Loyalty card number checking simulation
+  const checkingLoyaltyCardNumber = ref(false)
+  const isValidLoyaltyCardNumber = ref(null)
+  const checkLoyaltyCardNumber = (number) => {
+    checkingLoyaltyCardNumber.value = true
+    isValidLoyaltyCardNumber.value = null // Reset validation state
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const isValid = parseInt(number.slice(-1)) % 2 === 0
+        isValidLoyaltyCardNumber.value = isValid
+        checkingLoyaltyCardNumber.value = false
+        resolve(isValid)
+      }, 1000)
+    })
+  }
+
   return {
     // State
     event,
@@ -257,14 +230,16 @@ export const useStayStore = defineStore('stayStore', () => {
     discountPackage_20,
     missingClassesForDiscount,
     insuranceSelected,
-    selectedInsurancesForAll,
-
+    hasLoyaltyCard,
+    loyaltyProgram,
+    isValidLoyaltyCardNumber,
     // Computed
     maxAdults,
     maxChildren,
-    participantQuantityConditions,
+    participantsNumberCondition,
     participantClassesTotalPrice,
-    insurancePrice,
+    participantInsuranceTotalPrice,
+    checkingLoyaltyCardNumber,
 
     // Actions
     resetEvent,
@@ -278,6 +253,8 @@ export const useStayStore = defineStore('stayStore', () => {
     currency: configStore.currency,
 
     // Temporary
-    DUMMY_SELECTED_CLASSES
+    DUMMY_SELECTED_CLASSES,
+    // Methods
+    checkLoyaltyCardNumber,
   }
 })

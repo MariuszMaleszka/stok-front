@@ -148,6 +148,7 @@ defineExpose({
               clearIcon="mdi-close"
               autocomplete="off"
               hide-details="auto"
+              maxLength="50"
               :placeholder="$t('enter_name')"
               @click:clear="participant.name = ''"
               :rules="[rules.required]"
