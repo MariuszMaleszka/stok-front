@@ -1,14 +1,14 @@
-import { toast } from 'vue3-toastify'
 import { h } from 'vue'
+import { toast } from 'vue3-toastify'
 import ToastWithAction from '@/components/toasts/Toast.vue'
 
-export function useToast() {
+export function useToast () {
   const showSimpleToast = (message, type = 'info') => {
     const toastMethod = {
-      'success': toast.success,
-      'error': toast.error,
-      'warning': toast.warning,
-      'info': toast.info
+      success: toast.success,
+      error: toast.error,
+      warning: toast.warning,
+      info: toast.info,
     }[type] || toast.info
 
     toastMethod(message, {
@@ -24,7 +24,7 @@ export function useToast() {
       onAction: () => {
         onAction()
         toast.dismiss(toastId)
-      }
+      },
     }), {
       autoClose: false, // Set a timeout or keep false
       closeButton: true,

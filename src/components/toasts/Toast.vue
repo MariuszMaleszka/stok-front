@@ -1,22 +1,22 @@
 <script setup>
-defineProps({
-  message: {
-    type: String,
-    required: true,
-  },
-  buttonText: {
-    type: String,
-    required: true,
-  },
-  onAction: {
-    type: Function,
-    required: true,
-  },
-})
+  defineProps({
+    message: {
+      type: String,
+      required: true,
+    },
+    buttonText: {
+      type: String,
+      required: true,
+    },
+    onAction: {
+      type: Function,
+      required: true,
+    },
+  })
 
-const handleAction = () => {
-  onAction()
-}
+  function handleAction () {
+    onAction()
+  }
 </script>
 <template>
   <div class="toast-with-action">

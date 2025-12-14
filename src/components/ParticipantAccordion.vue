@@ -1,110 +1,106 @@
 <script setup>
-import {computed, ref} from 'vue'
-import {useDisplay} from 'vuetify';
-import {useI18n} from "vue-i18n";
-import {useStayStore} from "@/stores/StayStore.js";
+  import { computed, ref } from 'vue'
+  import { useI18n } from 'vue-i18n'
+  import { useDisplay } from 'vuetify'
+  import { useStayStore } from '@/stores/StayStore.js'
 
-const props = defineProps({
-  participant: {
-    type: Object,
-    required: true
-  },
-  index: {
-    type: Number,
-    required: true
+  const props = defineProps({
+    participant: {
+      type: Object,
+      required: true,
+    },
+    index: {
+      type: Number,
+      required: true,
+    },
+  })
+
+  const CUSTOMER_SERVICE_LINK = 'https://szkolastok.pl/kontakt'
+  const { mobile } = useDisplay()
+  const stayStore = useStayStore()
+  const infoDialog = ref(false)
+  const selectedSkillLevel = ref(null)
+  const { t } = useI18n()
+  const panel = ref([0])
+  const form = ref(null)
+  const showErrors = ref(false)
+
+  const rules = {
+    required: value => !!value || t('fill_the_field_properly'),
   }
-})
 
-const CUSTOMER_SERVICE_LINK = "https://szkolastok.pl/kontakt"
-const {mobile} = useDisplay()
-const stayStore = useStayStore()
-const infoDialog = ref(false)
-const selectedSkillLevel = ref(null)
-const {t} = useI18n()
-const panel = ref([0])
-const form = ref(null)
-const showErrors = ref(false)
+  const classType = ref(null)
 
-const rules = {
-  required: value => !!value || t('fill_the_field_properly'),
-}
+  const availableSkillLevels = computed(() => {
+    if (props.participant.participantType === 'adult') {
+      return stayStore.skillLevels_ADULTS
+    } else if (props.participant.participantType === 'child') {
+      if (!props.participant.age) {
+        return []
+      }
 
-const classType = ref(null)
+      const age = Number.parseInt(props.participant.age)
 
-const availableSkillLevels = computed(() => {
-  if (props.participant.participantType === 'adult') {
-    return stayStore.skillLevels_ADULTS
-  } else if (props.participant.participantType === 'child') {
-    if (!props.participant.age) {
-      return []
+      if (classType.value === 0) {
+        return stayStore.skillLevels_CHILDREN_SKI.filter(level =>
+          age >= level.ageRange[0] && age <= level.ageRange[1],
+        )
+      } else if (classType.value === 1) {
+        return stayStore.skillLevels_CHILDREN_SNOWBOARD.filter(level =>
+          age >= level.ageRange[0] && age <= level.ageRange[1],
+        )
+      }
     }
+    return []
+  })
 
-    const age = parseInt(props.participant.age)
+  const currentSkillLevelInfo = computed(() => {
+    if (!selectedSkillLevel.value || !selectedSkillLevel.value[0]) return null
+    return availableSkillLevels.value.find(level => level === selectedSkillLevel.value[0])
+  })
 
-    if (classType.value === 0) {
-      return stayStore.skillLevels_CHILDREN_SKI.filter(level =>
-        age >= level.ageRange[0] && age <= level.ageRange[1]
-      )
-    } else if (classType.value === 1) {
-      return stayStore.skillLevels_CHILDREN_SNOWBOARD.filter(level =>
-        age >= level.ageRange[0] && age <= level.ageRange[1]
-      )
+  const isSnowboardDisabled = computed(() => {
+    return props.participant.participantType === 'child'
+      && props.participant.age !== null
+      && props.participant.age < 8
+  })
+
+  function selectSkillLevel (level) {
+    for (const l of availableSkillLevels.value) l.selected = false
+    level.selected = true
+    props.participant.skillLevel = level.name
+    selectedSkillLevel.value = [level]
+    infoDialog.value = false
+  }
+
+  watch(selectedSkillLevel, newValue => {
+    props.participant.skillLevel = newValue && newValue[0] ? newValue[0].name : ''
+  })
+
+  watch(() => props.participant.age, newAge => {
+    if (props.participant.participantType === 'child' && newAge !== null && newAge < 8 && classType.value === 1) {
+      classType.value = null
+      props.participant.activityType = ''
+      selectedSkillLevel.value = null
+      props.participant.skillLevel = ''
     }
-  }
-  return []
-})
+  })
 
-const currentSkillLevelInfo = computed(() => {
-  if (!selectedSkillLevel.value || !selectedSkillLevel.value[0]) return null
-  return availableSkillLevels.value.find(level => level === selectedSkillLevel.value[0])
-})
+  // Expose validate method for parent
+  defineExpose({
+    validate: async () => {
+      showErrors.value = true
+      const formValid = await form.value?.validate()
 
-const isSnowboardDisabled = computed(() => {
-  return props.participant.participantType === 'child' &&
-    props.participant.age !== null &&
-    props.participant.age < 8
-})
+      // Additional validation for classType and skillLevel
+      const hasClassType = classType.value !== null
+      const hasSkillLevel = selectedSkillLevel.value !== null && selectedSkillLevel.value.length > 0
 
-const selectSkillLevel = (level) => {
-  availableSkillLevels.value.forEach(l => l.selected = false)
-  level.selected = true
-  props.participant.skillLevel = level.name
-  selectedSkillLevel.value = [level]
-  infoDialog.value = false
-}
-
-watch(selectedSkillLevel, (newValue) => {
-  if (newValue && newValue[0]) {
-    props.participant.skillLevel = newValue[0].name
-  } else {
-    props.participant.skillLevel = ''
-  }
-})
-
-watch(() => props.participant.age, (newAge) => {
-  if (props.participant.participantType === 'child' && newAge !== null && newAge < 8 && classType.value === 1) {
-    classType.value = null
-    props.participant.activityType = ''
-    selectedSkillLevel.value = null
-    props.participant.skillLevel = ''
-  }
-})
-
-// Expose validate method for parent
-defineExpose({
-  validate: async () => {
-    showErrors.value = true
-    const formValid = await form.value?.validate()
-
-    // Additional validation for classType and skillLevel
-    const hasClassType = classType.value !== null
-    const hasSkillLevel = selectedSkillLevel.value !== null && selectedSkillLevel.value.length > 0
-
-    return {
-      valid: formValid?.valid && hasClassType && hasSkillLevel
-    }
-  }
-})
+      return {
+        valid: formValid?.valid && hasClassType && hasSkillLevel,
+      }
+    },
+  })
 </script>
 
 <template>
@@ -117,23 +113,23 @@ defineExpose({
       </VExpansionPanelTitle>
       <VExpansionPanelText class="border-t">
         <VForm ref="form">
-          <div class="mb-4" v-if="participant.participantType === 'child'">
+          <div v-if="participant.participantType === 'child'" class="mb-4">
             <p class="custom-input-label mb-2">{{ $t('child_age') }}</p>
             <VNumberInput
               v-model="participant.age"
-              variant="outlined"
-              density="default"
-              :min="4"
-              :max="14"
-              :step="1"
               control-variant="split"
+              density="default"
               hide-details="auto"
+              :max="14"
               max-width="165px"
+              :min="4"
               :rules="[rules.required]"
+              :step="1"
+              variant="outlined"
             />
             <p class="fs-12 fc-gray">
               {{ $t('min_child_age') }}
-              <a class="fc-gray" target="_blank" :href="CUSTOMER_SERVICE_LINK">{{ $t('with_customers_service') }}</a>
+              <a class="fc-gray" :href="CUSTOMER_SERVICE_LINK" target="_blank">{{ $t('with_customers_service') }}</a>
             </p>
           </div>
 
@@ -141,15 +137,15 @@ defineExpose({
             <p class="custom-input-label mb-2">{{ $t('name') }}</p>
             <VTextField
               v-model="participant.name"
-              variant="outlined"
-              density="default"
-              clearable
-              clearIcon="mdi-close"
               autocomplete="off"
+              clear-icon="mdi-close"
+              clearable
+              density="default"
               hide-details="auto"
               :placeholder="$t('enter_name')"
-              @click:clear="participant.name = ''"
               :rules="[rules.required]"
+              variant="outlined"
+              @click:clear="participant.name = ''"
               @keydown="(e) => /\d/.test(e.key) && e.preventDefault()"
               @paste="(e) => {
                 const pastedText = e.clipboardData.getData('text')
@@ -159,7 +155,7 @@ defineExpose({
               }"
             >
               <template #prepend-inner>
-                <VIcon size="18" icon="mdi-account"/>
+                <VIcon icon="mdi-account" size="18" />
               </template>
             </VTextField>
           </div>
@@ -168,17 +164,15 @@ defineExpose({
 
             <VSelect
               v-model="participant.classLang"
-              :items="stayStore.availableLanguages"
-              item-title="name"
-              item-value="name"
-              variant="outlined"
               density="default"
               hide-details="auto"
+              item-title="name"
+              item-value="name"
+              :items="stayStore.availableLanguages"
               :placeholder="$t('select_language')"
               :rules="[rules.required]"
-            >
-            </VSelect>
-
+              variant="outlined"
+            />
 
           </div>
 
@@ -193,25 +187,25 @@ defineExpose({
               }"
             >
               <VBtn
-                :value="0"
-                variant="outlined"
+                class="text-capitalize border rounded"
                 :class="[
                   mobile ? 'flex-1' : 'px-8',
                   { 'border-error': showErrors && classType === null }
                 ]"
-                class="text-capitalize border rounded"
+                :value="0"
+                variant="outlined"
               >
                 {{ $t('ski') }}
               </VBtn>
               <VBtn
-                :value="1"
-                variant="outlined"
-                :disabled="isSnowboardDisabled"
+                class="text-capitalize border rounded"
                 :class="[
                   mobile ? 'flex-1' : 'px-8',
                   { 'border-error border-2': showErrors && classType === null }
                 ]"
-                class="text-capitalize border rounded"
+                :disabled="isSnowboardDisabled"
+                :value="1"
+                variant="outlined"
               >
                 {{ $t('snowboard') }}
               </VBtn>
@@ -221,7 +215,7 @@ defineExpose({
             </small>
           </div>
 
-          <div class="mb-4" v-if="classType === 0 || classType === 1">
+          <div v-if="classType === 0 || classType === 1" class="mb-4">
             <p class="custom-input-label mb-2">{{ $t('difficulty_level') }}</p>
             <VList
               v-model:selected="selectedSkillLevel"
@@ -231,15 +225,15 @@ defineExpose({
               <VListItem
                 v-for="(item, i) in availableSkillLevels"
                 :key="i"
-                :value="item"
-                color="primary"
                 class="border rounded-lg mb-2"
+                color="primary"
+                :value="item"
                 @click="selectSkillLevel(item)"
               >
-                <template v-slot:prepend="{ isSelected }">
+                <template #prepend="{ isSelected }">
                   <VIcon
-                    size="16"
                     :icon="isSelected ? 'mdi-circle-slice-8' : 'mdi-circle-outline'"
+                    size="16"
                   />
                 </template>
                 <VListItemTitle>
@@ -252,8 +246,8 @@ defineExpose({
                 </p>
                 <template #append>
                   <VIcon
-                    size="16"
                     icon="mdi-information-slab-circle"
+                    size="16"
                     @click.stop="selectedSkillLevel = [item]; infoDialog = true"
                   />
                 </template>
@@ -270,12 +264,12 @@ defineExpose({
     <VDialog v-model="infoDialog" max-width="320px">
       <VCard v-if="currentSkillLevelInfo">
         <VCardTitle>
-          <div :class="mobile ? 'py-2':''" class="d-flex justify-space-between">
+          <div class="d-flex justify-space-between" :class="mobile ? 'py-2':''">
             <span :class="mobile ? 'fs-14':'fs-16'">
               {{ currentSkillLevelInfo.name }}
             </span>
-            <button class="close-btn" aria-label="Close" @click="infoDialog = false">
-              <VIcon size="18" icon="mdi-close"/>
+            <button aria-label="Close" class="close-btn" @click="infoDialog = false">
+              <VIcon icon="mdi-close" size="18" />
             </button>
           </div>
         </VCardTitle>
@@ -287,7 +281,7 @@ defineExpose({
           </p>
         </VCardText>
         <VCardActions class="border-t d-flex justify-between text-capitalize">
-          <VBtn variant="flat" class="px-4 text-capitalize" @click="infoDialog = false">
+          <VBtn class="px-4 text-capitalize" variant="flat" @click="infoDialog = false">
             Ok
           </VBtn>
         </VCardActions>

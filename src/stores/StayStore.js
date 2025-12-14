@@ -1,7 +1,7 @@
-import {defineStore} from 'pinia'
-import {computed, reactive, ref, watch} from 'vue'
-import {useStayConfigStore} from './StayConfigStore.js'
-import {generateUniqueId} from '@/utils/numbers.js'
+import { defineStore } from 'pinia'
+import { computed, reactive, ref, watch } from 'vue'
+import { generateUniqueId } from '@/utils/numbers.js'
+import { useStayConfigStore } from './StayConfigStore.js'
 // To be removed
 const DUMMY_SELECTED_CLASSES = [
   {
@@ -13,16 +13,16 @@ const DUMMY_SELECTED_CLASSES = [
     instructor: 'Kaczyński Jan',
     skillLevel: 'Średni',
     dates: [
-      {date: '01.01.2025', time: '9:00 - 9:55'}
+      { date: '01.01.2025', time: '9:00 - 9:55' },
     ],
-    price: 100.00,
+    price: 100,
     insurance: {
       title: 'NNW Turystyczno-Sportowe lorem ipsum amet dolor blabla tututut',
       enabled: false,
-      price: 10.00,
+      price: 10,
       perDay: true,
       description: 'PAKIET NNW TURYSTYCZNO-SPORTOWY - Wariant 111 SWIJ indywidualnych\n',
-    }
+    },
   },
   {
     dynamicId: 'asdh7126xs',
@@ -33,25 +33,25 @@ const DUMMY_SELECTED_CLASSES = [
     skillLevel: 'Nowicjusz',
     instructor: 'Marcin Kowalik',
     dates: [
-      {date: '01.01.2025', time: '9:00 - 9:55'},
-      {date: '02.01.2025', time: '9:00 - 9:55'},
-      {date: '03.01.2025', time: '9:00 - 9:55'},
+      { date: '01.01.2025', time: '9:00 - 9:55' },
+      { date: '02.01.2025', time: '9:00 - 9:55' },
+      { date: '03.01.2025', time: '9:00 - 9:55' },
     ],
-    price: 100.00,
+    price: 100,
     insurance: {
       title: 'NNW Turystyczno-Sportowe lorem ipsum amet dolor blabla tututut',
       enabled: false,
-      price: 10.00,
+      price: 10,
       perDay: true,
       description: 'PAKIET NNW TURYSTYCZNO-SPORTOWY - Wariant 111 SWIJ indywidualnych podróży Kontynenty na terenie RP.',
-      imgSource: ''
-    }
-  }
+      imgSource: '',
+    },
+  },
 ]
 
 // Blank participant template
 const blankParticipant = {
-  dynamicId:'',
+  dynamicId: '',
   name: '',
   participantType: '',
   age: null,
@@ -61,7 +61,7 @@ const blankParticipant = {
   availableLessonTypes: [],
   showGroupLessons: true,
   classLang: 'Polski',
-  selectedClasses: DUMMY_SELECTED_CLASSES
+  selectedClasses: DUMMY_SELECTED_CLASSES,
 }
 
 export const useStayStore = defineStore('stayStore', () => {
@@ -79,7 +79,7 @@ export const useStayStore = defineStore('stayStore', () => {
     dateOfStay: dateOfStay.value,
     adultsNumber: adultsNumber.value,
     childrenNumber: childrenNumber.value,
-    participants: participants.value
+    participants: participants.value,
   }))
 
   // Computed max values based on total constraint
@@ -91,32 +91,28 @@ export const useStayStore = defineStore('stayStore', () => {
     return adultsNumber.value > 0 || childrenNumber.value > 0
   })
 
-// 👉 Participant classes total price
+  // 👉 Participant classes total price
   const participantClassesTotalPrice = computed(() => {
     const priceMap = new Map()
 
-    participants.value.forEach(participant => {
+    for (const participant of participants.value) {
       if (!participant.selectedClasses || participant.selectedClasses.length === 0) {
         priceMap.set(participant.dynamicId, 0)
-        return
+        continue
       }
 
       const total = participant.selectedClasses.reduce((sum, classItem) => {
         let classTotal = classItem.price || 0
 
         if (classItem.insurance?.enabled) {
-          if (classItem.insurance.perDay && classItem.dates) {
-            classTotal += (classItem.insurance.price * classItem.dates.length)
-          } else {
-            classTotal += classItem.insurance.price
-          }
+          classTotal += classItem.insurance.perDay && classItem.dates ? (classItem.insurance.price * classItem.dates.length) : classItem.insurance.price
         }
 
         return sum + classTotal
       }, 0)
 
       priceMap.set(participant.dynamicId, total)
-    })
+    }
 
     return priceMap
   })
@@ -127,8 +123,6 @@ export const useStayStore = defineStore('stayStore', () => {
   const missingClassesForDiscount = ref(false)
   const insuranceForAllCost = 200
 
-
-
   // CRUCIAL: Watchers to sync participants with adults/children numbers
   // This is responsible for adding/removing participant entries
   watch([adultsNumber, childrenNumber], ([newAdults, newChildren]) => {
@@ -137,18 +131,18 @@ export const useStayStore = defineStore('stayStore', () => {
 
     if (totalNeeded > currentLength) {
       const toAdd = totalNeeded - currentLength
-      const newParticipants = Array.from({length: toAdd}, () =>
-        reactive({...blankParticipant, dynamicId: generateUniqueId()})
+      const newParticipants = Array.from({ length: toAdd }, () =>
+        reactive({ ...blankParticipant, dynamicId: generateUniqueId() }),
       )
       participants.value.push(...newParticipants)
     } else if (totalNeeded < currentLength) {
       participants.value = participants.value.slice(0, totalNeeded)
     }
 
-    participants.value.forEach((participant, index) => {
+    for (const [index, participant] of participants.value.entries()) {
       participant.participantType = index < newAdults ? 'adult' : 'child'
-    })
-  }, {immediate: true})
+    }
+  }, { immediate: true })
 
   // Reset function
   const resetEvent = () => {
@@ -188,6 +182,6 @@ export const useStayStore = defineStore('stayStore', () => {
     currency: configStore.currency,
 
     // Temporary
-    DUMMY_SELECTED_CLASSES
+    DUMMY_SELECTED_CLASSES,
   }
 })

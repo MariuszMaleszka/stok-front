@@ -12,8 +12,10 @@ export const useTimerStore = defineStore('timerStore', () => {
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
   })
 
-  const startTimer = () =>  {
-    if (timerInterval.value) return
+  const startTimer = () => {
+    if (timerInterval.value) {
+      return
+    }
 
     isTimerActive.value = true
     timerInterval.value = setInterval(() => {
@@ -33,7 +35,7 @@ export const useTimerStore = defineStore('timerStore', () => {
     }
   }
 
-  const resetTimer = () =>  {
+  const resetTimer = () => {
     stopTimer()
     timeRemaining.value = 20 * 60
   }
@@ -44,6 +46,6 @@ export const useTimerStore = defineStore('timerStore', () => {
     isTimerActive,
     startTimer,
     stopTimer,
-    resetTimer
+    resetTimer,
   }
 })

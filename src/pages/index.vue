@@ -1,17 +1,17 @@
 <script setup>
-import {computed} from 'vue'
-import {useDisplay} from 'vuetify'
-import {useViewControlStore} from "@/stores/ViewControlStore.js"
-import StepOne from "@/components/StepOne.vue"
-import StepTwo from "@/components/StepTwo.vue"
+  import { computed } from 'vue'
+  import { useDisplay } from 'vuetify'
+  import StepOne from '@/components/StepOne.vue'
+  import StepTwo from '@/components/StepTwo.vue'
+  import { useViewControlStore } from '@/stores/ViewControlStore.js'
 
-const viewStore = useViewControlStore()
-const {mobile} = useDisplay()
+  const viewStore = useViewControlStore()
+  const { mobile } = useDisplay()
 
 </script>
 
 <template>
-  <VContainer max-width="800" class="steps-holder d-flex flex-column flex-1 mt-4" >
+  <VContainer class="steps-holder d-flex flex-column flex-1 mt-4" max-width="800">
 
     <div
       class="tabs-holder w-100 box-shadow-sm my-1"
@@ -19,45 +19,43 @@ const {mobile} = useDisplay()
       <VTabs
         v-model="viewStore.currentView"
         align-tabs="center"
-        density="compact"
         class="tabs-navigation"
+        density="compact"
         hide-slider
       >
         <VTab
-          value="one"
           :aria-label="$t('participants')"
-          :class="mobile ? 'pr-0 pl-0 ml-2': 'justify-start'"
           class="fs-11 text-capitalize ls-0 "
+          :class="mobile ? 'pr-0 pl-0 ml-2': 'justify-start'"
+          value="one"
         >
           <span class="dot-indicator mr-1">1</span>
           {{ $t('participants') }}
-          <VIcon size="20" icon="mdi-chevron-double-right" class="ml-1 my-auto"/>
+          <VIcon class="ml-1 my-auto" icon="mdi-chevron-double-right" size="20" />
         </VTab>
         <VTab
-          value="two"
-          :disabled="!viewStore.isStepOnePreferencesCompleted"
           :aria-label="$t('classes')"
-          :class="mobile ? 'pr-0 pl-0': ''"
           class="fs-11 text-capitalize ls-0 "
+          :class="mobile ? 'pr-0 pl-0': ''"
+          :disabled="!viewStore.isStepOnePreferencesCompleted"
+          value="two"
         >
           <span class="dot-indicator mr-1">2</span>
           {{ $t('classes') }}
-          <VIcon size="20" icon="mdi-chevron-double-right" class="ml-1 my-auto"/>
+          <VIcon class="ml-1 my-auto" icon="mdi-chevron-double-right" size="20" />
         </VTab>
 
         <VTab
-          value="three"
-          :disabled="!viewStore.isStepTwoCompleted"
           :aria-label="$t('details')"
-          :class="mobile ? 'pr-0 pl-0 mr-2': 'justify-end'"
           class="fs-11 text-capitalize ls-0 "
+          :class="mobile ? 'pr-0 pl-0 mr-2': 'justify-end'"
+          :disabled="!viewStore.isStepTwoCompleted"
+          value="three"
         >
           <span class="dot-indicator mr-1">3</span>
           {{ $t('details') }}
         </VTab>
       </VTabs>
-
-
 
     </div>
 
@@ -66,23 +64,23 @@ const {mobile} = useDisplay()
       class="d-flex flex-column h-100 flex-1"
     >
       <VTabsWindowItem
-        value="one"
         class="h-100 flex-1"
         :class="viewStore.currentView === 'one' ? 'd-flex flex-column' : ''"
+        value="one"
       >
-       <StepOne />
+        <StepOne />
       </VTabsWindowItem>
       <VTabsWindowItem
-        value="two"
         class="h-100 flex-1"
         :class="viewStore.currentView === 'two' ? 'd-flex flex-column' : ''"
+        value="two"
       >
         <StepTwo />
       </VTabsWindowItem>
       <VTabsWindowItem
-        value="three"
         class="h-100 flex-1"
         :class="viewStore.currentView === 'three' ? 'd-flex flex-column' : ''"
+        value="three"
       >
         <StepThree />
       </VTabsWindowItem>

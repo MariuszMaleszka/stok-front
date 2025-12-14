@@ -4,12 +4,12 @@
  * Automatically included in `./src/main.js`
  */
 
+import router from '@/router'
+import pinia from '@/stores'
+import i18n from './i18n'
+import Vue3Toastify from './toast.js'
 // Plugins
 import vuetify from './vuetify'
-import pinia from '@/stores'
-import router from '@/router'
-import i18n from './i18n'
-import Vue3Toastify from "./toast.js";
 
 export function registerPlugins (app) {
   app

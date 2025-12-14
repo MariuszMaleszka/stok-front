@@ -77,7 +77,7 @@ export const useModalStore = defineStore('modalManager', () => {
   }
 
   const resetModals = () => {
-    Object.keys(modals).forEach((key) => {
+    Object.keys(modals).forEach(key => {
       modals[key] = false
       modalParams[key] = {}
       modalResults[key] = null

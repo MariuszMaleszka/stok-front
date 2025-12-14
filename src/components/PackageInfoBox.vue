@@ -1,48 +1,48 @@
 <script setup>
-import GreenShieldIcon from "@/assets/shield-check-green.svg";
-import YellowShieldIcon from "@/assets/shield-check-yellow.svg";
-import OrangeShieldIcon from "@/assets/shield-check-orange.svg";
-import {useDisplay} from "vuetify";
-const props = defineProps({
-  color: {
-    type: String,
-    default: 'yellow',
-    validator: (value) => ['yellow', 'green', 'orange'].includes(value)
-  },
-  showIcon: {
-    type: Boolean,
-    default: true
-  }
-});
-const {mobile} = useDisplay();
-const icon = computed(() => {
-  const iconMap = {
-    green: GreenShieldIcon,
-    yellow: YellowShieldIcon,
-    orange: OrangeShieldIcon
-  };
-  return iconMap[props.color];
-});
+  import { useDisplay } from 'vuetify'
+  import GreenShieldIcon from '@/assets/shield-check-green.svg'
+  import OrangeShieldIcon from '@/assets/shield-check-orange.svg'
+  import YellowShieldIcon from '@/assets/shield-check-yellow.svg'
+  const props = defineProps({
+    color: {
+      type: String,
+      default: 'yellow',
+      validator: value => ['yellow', 'green', 'orange'].includes(value),
+    },
+    showIcon: {
+      type: Boolean,
+      default: true,
+    },
+  })
+  const { mobile } = useDisplay()
+  const icon = computed(() => {
+    const iconMap = {
+      green: GreenShieldIcon,
+      yellow: YellowShieldIcon,
+      orange: OrangeShieldIcon,
+    }
+    return iconMap[props.color]
+  })
 
-const backgroundColor = computed(() => {
-  const bgMap = {
-    green: 'bg-green-light',
-    yellow: 'bg-yellow-light',
-    orange: 'bg-orange-light'
-  };
-  return bgMap[props.color];
-});
+  const backgroundColor = computed(() => {
+    const bgMap = {
+      green: 'bg-green-light',
+      yellow: 'bg-yellow-light',
+      orange: 'bg-orange-light',
+    }
+    return bgMap[props.color]
+  })
 </script>
 
 <template>
   <div
     :class="[
-    mobile ? 'pa-4 pt-2' : 'px-4 pb-4 py-2',
-    'package-card-info',
-    'rounded-lg',
-    'position-relative',
-    backgroundColor
-  ]"
+      mobile ? 'pa-4 pt-2' : 'px-4 pb-4 py-2',
+      'package-card-info',
+      'rounded-lg',
+      'position-relative',
+      backgroundColor
+    ]"
   >
     <div class="d-flex justify-end mb-n4 mr-n1">
       <VIcon class="ml-auto" color="grey" icon="mdi-information-slab-circle" />
@@ -51,7 +51,7 @@ const backgroundColor = computed(() => {
       class="pa-0 position-relative"
     >
       <template v-if="showIcon" #prepend>
-        <img class="mt-1" width="18px" :src="icon" alt="">
+        <img alt="" class="mt-1" :src="icon" width="18px">
       </template>
       <div :class="mobile ? 'fs-12' : 'fs-14'">
         <slot />

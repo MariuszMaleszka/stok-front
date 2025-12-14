@@ -29,7 +29,7 @@ export const useViewControlStore = defineStore('viewStore', () => {
   const canProceedFromStepTwo = computed(() => isStepTwoCompleted.value)
 
   // Methods
-  function goToNextStep() {
+  function goToNextStep () {
     if (currentView.value === STEP_ONE) {
       if (stepOneView.value === STEP_ONE_DATA && canProceedFromStepOneData.value) {
         stepOneView.value = STEP_ONE_PREFERENCES
@@ -41,7 +41,7 @@ export const useViewControlStore = defineStore('viewStore', () => {
     }
   }
 
-  function goToPreviousStep() {
+  function goToPreviousStep () {
     if (currentView.value === STEP_ONE && stepOneView.value === STEP_ONE_PREFERENCES) {
       stepOneView.value = STEP_ONE_DATA
     } else if (currentView.value === STEP_TWO) {
@@ -50,7 +50,7 @@ export const useViewControlStore = defineStore('viewStore', () => {
     }
   }
 
-  function resetStepOne() {
+  function resetStepOne () {
     stepOneView.value = STEP_ONE_DATA
     isStepOneDataCompleted.value = false
     isStepOnePreferencesCompleted.value = false
@@ -83,6 +83,6 @@ export const useViewControlStore = defineStore('viewStore', () => {
     // Methods
     goToNextStep,
     goToPreviousStep,
-    resetStepOne
+    resetStepOne,
   }
 })

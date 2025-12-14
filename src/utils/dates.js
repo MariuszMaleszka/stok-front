@@ -1,4 +1,4 @@
-import { format, differenceInCalendarDays } from 'date-fns'
+import { differenceInCalendarDays, format } from 'date-fns'
 import { pl } from 'date-fns/locale'
 
 /**
@@ -22,7 +22,7 @@ import { pl } from 'date-fns/locale'
  * Note: Uses `date-fns` for formatting and `pl` locale.
  */
 
-export function formatDateRange(input, locale = pl) {
+export function formatDateRange (input, locale = pl) {
   let startDate, endDate
 
   if (Array.isArray(input)) {
@@ -41,10 +41,14 @@ export function formatDateRange(input, locale = pl) {
     return ''
   }
 
-  if (!startDate || isNaN(startDate)) return ''
+  if (!startDate || Number.isNaN(startDate)) {
+    return ''
+  }
 
   const startFormatted = format(startDate, 'd MMMM', { locale })
-  if (!endDate || isNaN(endDate)) return startFormatted
+  if (!endDate || Number.isNaN(endDate)) {
+    return startFormatted
+  }
 
   const endFormatted = format(endDate, 'd MMMM', { locale })
   const days = differenceInCalendarDays(endDate, startDate)

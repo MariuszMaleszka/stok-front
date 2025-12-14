@@ -1,39 +1,44 @@
 <script setup>
-import DatePickerResponsive from "@/components/DatePickerResponsive.vue";
-import {useStayStore} from '@/stores/StayStore.js'
-import {computed, ref} from "vue";
-import {useCookies} from "@vueuse/integrations/useCookies";
-import {useToast} from '@/composables/useToast'
-import {useViewControlStore} from "@/stores/ViewControlStore.js";
-import {useDisplay} from 'vuetify'
-import {useI18n} from "vue-i18n";
-import { useTimerStore } from '@/stores/TimerStore.js'
+  import { useI18n } from 'vue-i18n'
+  import ClassesModal from '@/components/modals/ClassesModal.vue'
+  import ParticipantCard from '@/components/ParticipantCard.vue'
+  import { useToast } from '@/composables/useToast'
+  import { useStayStore } from '@/stores/StayStore.js'
+  import { useTimerStore } from '@/stores/TimerStore.js'
+  import { useViewControlStore } from '@/stores/ViewControlStore.js'
 
-const timerStore = useTimerStore()
+  const timerStore = useTimerStore()
 
-const {showSimpleToast, showActionToast} = useToast()
-const stayStore = useStayStore()
-const viewStore = useViewControlStore()
-const cookies = useCookies(['locale'])
-const {mobile} = useDisplay()
-const currentLocale = computed(() => cookies.get('locale') || 'pl')
-const {t} = useI18n()
+  const { showSimpleToast, showActionToast } = useToast()
+  const stayStore = useStayStore()
+  const viewStore = useViewControlStore()
+  const { t } = useI18n()
 
-
-const handleNextClick = async () => {
-  viewStore.isStepTwoCompleted = true
-  viewStore.goToNextStep()
-}
-
-watch(() => timerStore.timeRemaining, (remaining) => {
-  if (remaining === 0) {
-    showSimpleToast(t('time_expired'), 'warning')
+  const classesModalOpen = ref(false)
+  const selectedParticipant = ref(null)
+  function openClassesModal (participant) {
+    selectedParticipant.value = participant
+    classesModalOpen.value = true
   }
-})
+  function closeClassesModal () {
+    classesModalOpen.value = false
+    selectedParticipant.value = null
+  }
 
-onMounted(() => {
-  timerStore.startTimer()
-})
+  async function handleNextClick () {
+    viewStore.isStepTwoCompleted = true
+    viewStore.goToNextStep()
+  }
+
+  watch(() => timerStore.timeRemaining, remaining => {
+    if (remaining === 0) {
+      showSimpleToast(t('time_expired'), 'warning')
+    }
+  })
+
+  onMounted(() => {
+    timerStore.startTimer()
+  })
 </script>
 
 <template>
@@ -44,49 +49,86 @@ onMounted(() => {
         {{ $t('timer_info') }}
         <span class="black-badge ">
 
-        {{ timerStore.formattedTime }}
+          {{ timerStore.formattedTime }}
         </span>
       </div>
-      <div>
+      <div />
 
-      </div>
-
-    <p class="fs-20 font-weight-bold my-4">
-      {{ $t('select_classes') }}:
-    </p>
-    <div class="my-4">
-      <p class="fs-18 font-weight-medium mb-n2">
-        {{ $t('select_classes_for_each_participant') }}:
+      <p class="fs-24 font-weight-medium mb-2 mt-4 text-black">
+        {{ $t('select_classes') }}:
       </p>
-      <small class="fs-11">
-        {{ $t('select_day_or_period_of_stay') }}
-      </small>
+      <div>
+        <p class="fs-14 mb-2 text-gray-600">
+          {{ $t('select_classes_subtitle') }}
+        </p>
+      </div>
+      <div class="d-flex flex-column ga-3 mt-4 mb-4">
+        <ParticipantCard
+          v-for="(p, i) in stayStore.participants"
+          :key="p.dynamicId || i"
+          :activity-type="p.activityType === t('snowboard') ? 'snowboard' : 'ski'"
+          :age="p.age"
+          :completed="false"
+          :currency="stayStore.currency"
+          :index="i"
+          :name="p.name || '-'"
+          :participant-type="p.participantType"
+          :subtitle="`${t(p.participantType || 'adult')} - ${p.activityType || t('ski')} - Poz. ${p.skillLevel || '-'}`"
+          :total-price="stayStore.participantClassesTotalPrice.get(p.dynamicId)"
+          @click="openClassesModal(p)"
+          @edit="openClassesModal(p)"
+        />
+      </div>
     </div>
-    </div>
-
 
     <div class="navigation-tab-actions d-flex ga-4 justify-space-between ">
       <VBtn
-        variant="outlined"
-        size="x-large"
-        color="blue"
         class="fs-16 text-capitalize flex-1"
-        prepend-icon="mdi-arrow-left"
+        color="blue"
+        size="x-large"
+        variant="outlined"
         @click="viewStore.currentView = 'one'; viewStore.stepOne = viewStore.STEP_ONE_PREFERENCES"
       >
         {{ $t('previous') }}
       </VBtn>
       <VBtn
-        variant="flat"
-        size="x-large"
-        color="blue"
         class="fs-16 text-capitalize flex-2"
+        color="blue"
         :disabled="!stayStore.dateOfStay"
+        size="x-large"
+        variant="flat"
         @click="handleNextClick"
       >
         <!--        :disabled="!isFormValid"-->
         {{ $t('next') }}
       </VBtn>
     </div>
+    <ClassesModal
+      v-model="classesModalOpen"
+      :activity-type="selectedParticipant?.activityType === t('snowboard') ? 'snowboard' : 'ski'"
+      :age="selectedParticipant?.age"
+      :participant="selectedParticipant"
+      :participant-type="selectedParticipant?.participantType"
+      :subtitle="`${t(selectedParticipant?.participantType || 'adult')} - ${selectedParticipant?.activityType || t('ski')} - Poz. ${selectedParticipant?.skillLevel || '-'}`"
+      @save="closeClassesModal"
+    />
   </div>
 </template>
+
+<style scoped lang="scss">
+.text-gray-600 {
+  color: #4B5563;
+}
+
+.v-overlay__scrim {
+  color: #4B5563;
+  top: 64px;
+}
+
+.v-overlay {
+  top: 64px;
+}
+.v-overlay__scrim {
+    top: 64px;
+}
+</style>
