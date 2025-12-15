@@ -109,12 +109,18 @@
   "aditional_options": "Dodatkowe opcje",
   "insurance_for_all_option": "Dodaj ubezpieczenie NNW do wszystkich zajęć, dla wszystkich uczestników.",
   "finalize": "Sfinalizuj",
-  "including" : "w tym",
+  "including" : "W tym",
   "insurance": "ubezpieczenie",
   "loyalty_card": "Karta stałego klienta",
   "i_have_loyalty_card": "Mam kartę stałego klienta",
   "enter_loyalty_card_number": "Wpisz numer karty stałego klienta",
   "surname": "Nazwisko",
-  "invalid_loyalty_card_number": "Wpisano niepoprawny kod"
+  "invalid_loyalty_card_number": "Wpisano niepoprawny kod",
+  "insurance_included": "Ubezpieczenie NNW w pakiecie.",
+  "summary": "Podsumowanie",
+  "price_total": "Cena razem",
+  "discounts_title": "Informacje o rabatach",
+  "discounts_info": "Rabaty (Karta klienta, happy hours, pakiety godiznowe) nie łączą się – zastosowano korzystniejszy.",
+  "discount": "Rabat"
 }
 

@@ -42,6 +42,11 @@ const availableSkillLevels = computed(() => {
 
     const age = parseInt(props.participant.age)
 
+    // Use adult skill levels for children aged 14 and above
+    if (age >= 14) {
+      return stayStore.skillLevels_ADULTS
+    }
+
     if (selectedClassType.value === 0) {
       return stayStore.skillLevels_CHILDREN_SKI.filter(level =>
         age >= level.ageRange[0] && age <= level.ageRange[1]
@@ -125,7 +130,7 @@ defineExpose({
               variant="outlined"
               density="default"
               :min="4"
-              :max="14"
+              :max="16"
               :step="1"
               control-variant="split"
               hide-details="auto"

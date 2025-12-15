@@ -115,5 +115,11 @@
   "i_have_loyalty_card": "I have a loyalty card",
   "enter_loyalty_card_number": "Enter loyalty card number",
   "surname": "Surname",
-  "invalid_loyalty_card_number": "Enter a valid loyalty card number"
+  "invalid_loyalty_card_number": "Enter a valid loyalty card number",
+  "insurance_included": "Accident insurance included",
+  "summary": "Summary",
+  "price_total": "Price total",
+  "discounts_title": "Discount information",
+  "discounts_info": "Discounts (customer card, happy hours, hourly packages) cannot be combined – the most favourable one applies.",
+  "discount": "Discount"
 }

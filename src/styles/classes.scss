@@ -112,6 +112,9 @@
 .bg-light-gray {
   background-color: $bg-gray-light !important;
 }
+.bg-dark-gray {
+  background-color: $gray-dark !important;
+}
 .bg-gray-primary {
   background-color: #E5E7EB !important;
 }
@@ -193,7 +196,9 @@
   }
 }
 
-
+.list-style-none {
+  list-style: none;
+}
 
 .package-card.green {
   background-color: #F3FAF7;

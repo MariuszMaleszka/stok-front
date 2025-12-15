@@ -76,7 +76,7 @@ const DUMMY_SELECTED_CLASSES = [
 
 // Blank participant template
 const blankParticipant = {
-  dynamicId:'',
+  dynamicId: '',
   name: '',
   participantType: '',
   age: null,
@@ -113,6 +113,7 @@ export const useStayStore = defineStore('stayStore', () => {
     adultsNumber: adultsNumber.value,
     childrenNumber: childrenNumber.value,
     participants: participants.value,
+    additionalOptions: {},
     loyaltyProgram: {
       loyaltyCard: hasLoyaltyCard.value,
       loyaltyCardOwnerName: loyaltyProgram.value.loyaltyCardOwnerName,
@@ -152,6 +153,11 @@ export const useStayStore = defineStore('stayStore', () => {
       }
 
       return participant.selectedClasses.reduce((sum, classItem) => {
+        // Skip insurance for child participants in group classes
+        if (participant.participantType === 'child' && classItem.type === 'group') {
+          return sum
+        }
+
         if (!classItem.insurance?.enabled) return sum
 
         const insurancePrice = classItem.insurance.price || 0
@@ -161,13 +167,27 @@ export const useStayStore = defineStore('stayStore', () => {
     }
   })
 
+// 👉 All participants total price (combined classes + insurance)
+  const allParticipantsTotalPrice = computed(() => {
+    const classesTotal = participants.value.reduce((total, participant) => {
+      return total + participantClassesTotalPrice.value(participant.dynamicId)
+    }, 0)
+
+    const insuranceTotal = participants.value.reduce((total, participant) => {
+      return total + participantInsuranceTotalPrice.value(participant.dynamicId)
+    }, 0)
+
+    return Math.max(0, (classesTotal + insuranceTotal) - discountGeneric)
+  })
+
   // 👉 Promotions/discounts/suggestions
   const discountPackage_10 = ref(false) // not used for now
   const discountPackage_20 = ref(false) // not used for now
+  const discountGeneric = 50 // a generic discount value for demonstration
   const missingClassesForDiscount = ref(false) // not used for now
 
   // Additional options
-  const insuranceSelected = ref({})
+  const insuranceSelected = ref({}) // selections per participant
 
   // CRUCIAL: Watchers to sync participants with adults/children numbers
   // This is responsible for adding/removing participant entries
@@ -177,22 +197,24 @@ export const useStayStore = defineStore('stayStore', () => {
 
     if (totalNeeded > currentLength) {
       const toAdd = totalNeeded - currentLength
-      // Participants must have their own reactive objects
-      const newParticipants = Array.from({length: toAdd}, () =>
-        reactive({
+      const adultsToAdd = Math.max(0, newAdults - participants.value.filter(p => p.participantType === 'adult').length)
+
+      const newParticipants = Array.from({length: toAdd}, (_, i) => {
+        const isAdult = i < adultsToAdd
+        return reactive({
           ...blankParticipant,
           dynamicId: generateUniqueId(),
+          participantType: isAdult ? 'adult' : 'child',
+          age: isAdult ? null : null, // Age will be set by user for children
           selectedClasses: JSON.parse(JSON.stringify(blankParticipant.selectedClasses))
         })
-      )
+      })
       participants.value.push(...newParticipants)
     } else if (totalNeeded < currentLength) {
-      participants.value = participants.value.slice(0, totalNeeded)
+      // Remove excess participants from the end
+      const toRemove = currentLength - totalNeeded
+      participants.value.splice(-toRemove)
     }
-
-    participants.value.forEach((participant, index) => {
-      participant.participantType = index < newAdults ? 'adult' : 'child'
-    })
   }, {immediate: true})
 
   // Reset function
@@ -233,12 +255,14 @@ export const useStayStore = defineStore('stayStore', () => {
     hasLoyaltyCard,
     loyaltyProgram,
     isValidLoyaltyCardNumber,
+    discountGeneric,
     // Computed
     maxAdults,
     maxChildren,
     participantsNumberCondition,
     participantClassesTotalPrice,
     participantInsuranceTotalPrice,
+    allParticipantsTotalPrice,
     checkingLoyaltyCardNumber,
 
     // Actions

@@ -1,6 +1,7 @@
 <script setup>
 import skiLOGO from '@/assets/ski-icon.svg'
 import snowboardLOGO from '@/assets/snowboard-icon.svg'
+import GreenShield from '@/assets/shield-check-green.svg'
 import {useI18n} from "vue-i18n";
 import {formatPrice} from "@/utils/numbers.js";
 import {useStayStore} from "@/stores/StayStore.js";
@@ -134,7 +135,69 @@ const cancelDelete = () => {
                 </div>
               </div>
 
-              <VSheet class="rounded bg-light-gray mt-2 mb-4">
+              <VSheet
+                v-if="participant.participantType === 'child' && item.type === 'group'"
+                class="rounded mt-2 mb-4 bg-light-green"
+
+              >
+                <div
+                  :class="mobile ? 'px-0': 'px-4'"
+                  class="pt-0 rounded d-flex align-center justify-between"
+                >
+                  <img width="16px" :src="GreenShield" alt="shield">
+
+                  <div
+                    :class="mobile ? 'fs-10': 'fs-14'"
+                    class="fw-400 d-flex align-center ml-2"
+                  >
+                    {{ t('insurance_included') }}
+
+                    <VBtn
+                      :class="mobile ? 'fs-10': 'fs-14'"
+                      class="ma-2 text-capitalize px-2"
+                      variant="text"
+                      size="small"
+                      flat
+                      color="grey"
+                      @click="expandedPanels[item.dynamicId] = !expandedPanels[item.dynamicId]"
+                    >
+                      {{ expandedPanels[item.dynamicId] ? t('collapse') : t('expand') }}
+                      <VIcon :icon="expandedPanels[item.dynamicId] ? 'mdi-chevron-up' : 'mdi-chevron-down'"/>
+                    </VBtn>
+                  </div>
+
+
+                </div>
+
+                <VExpandTransition>
+                  <VCard
+                    v-show="expandedPanels[item.dynamicId]"
+                    width="100%"
+                    flat
+                    style="background-color: transparent;"
+                  >
+                    <VCardText class="px-8 pt-0">
+                      <p :class="mobile ? 'fs-10' : 'fs-12'">
+                        {{ item.insurance.description }}
+                      </p>
+
+                      <div
+                        :class="mobile ? 'fs-10' : 'fs-12'"
+                        class="custom-badge gray mt-4"
+                        @click="openInsuranceDialog(item.insurance)"
+                      >
+                        <VIcon class="mr-1" color="grey" icon="mdi-information-slab-circle"/>
+                        {{ $t('aditional_info') }}
+                      </div>
+                    </VCardText>
+                  </VCard>
+                </VExpandTransition>
+              </VSheet>
+
+              <VSheet
+                v-else
+                class="rounded bg-light-gray mt-2 mb-4"
+              >
                 <div
                   :class="mobile ? 'px-0': 'px-4'"
                   class="pt-0 rounded d-flex align-center justify-between"
@@ -202,6 +265,7 @@ const cancelDelete = () => {
                   </VCard>
                 </VExpandTransition>
               </VSheet>
+
             </div>
           </VList>
 
