@@ -21,6 +21,7 @@ declare module 'vue' {
     HelloWorld: typeof import('./src/components/HelloWorld.vue')['default']
     PackageInfoBox: typeof import('./src/components/PackageInfoBox.vue')['default']
     ParticipantAccordion: typeof import('./src/components/ParticipantAccordion.vue')['default']
+    ParticipantData: typeof import('./src/components/ParticipantData.vue')['default']
     PopupSmall: typeof import('./src/components/modals/PopupSmall.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']

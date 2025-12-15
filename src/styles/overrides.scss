@@ -80,3 +80,7 @@
 .v-stepper.v-sheet {
   box-shadow: none;
 }
+
+.border-error-input {
+ border-color: $error !important;
+}

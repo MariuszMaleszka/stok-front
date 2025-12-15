@@ -167,7 +167,7 @@ defineExpose({
             <ParticipantAccordion
               ref="participantForms"
               v-for="(participant, index) in stayStore.participants"
-              :key="index"
+              :key="participant.dynamicId"
               :ref="el => participantForms[index] = el"
               class="ga-4"
               :index="index"

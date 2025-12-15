@@ -14,6 +14,7 @@ import CheckGreenIcon from "@/assets/check-circle.svg";
 import { useDebounceFn } from '@vueuse/core'
 import InsuranceIMG from "@/assets/insurance_img.png";
 import PopupSmall from "@/components/modals/PopupSmall.vue";
+import ParticipantData from "@/components/ParticipantData.vue";
 
 const {showSimpleToast, showActionToast} = useToast()
 const stayStore = useStayStore()
@@ -193,7 +194,7 @@ defineExpose({
           <div class="d-flex flex-column ga-4 pa-1">
             <SelectedParticipantClasses
               v-for="(participant, index) in stayStore.participants"
-              :key="index"
+              :key="participant.dynamicId"
               :ref="el => participantForms[index] = el"
               class="ga-4"
               :index="index"
@@ -461,7 +462,82 @@ defineExpose({
               {{ $t('enter_preferences_details') }}
             </p>
           </div>
+          <ParticipantData
+            v-for="(participant, index) in stayStore.participants"
+            :key="participant.dynamicId"
+            :ref="el => participantForms[index] = el"
+            class="ga-4"
+            :index="index"
+            :participant="participant"
+          />
 
+          <!--SUMMARY-->
+          <div class="my-4 px-1">
+            <p
+              :class="mobile? 'fs-16':'fs-20'"
+              class="fw-600 my-4"
+            >
+              {{ $t('summary') }}
+            </p>
+            <VSheet
+              :class="mobile ? 'fs-11 pa-4' : 'fs-14 pa-8'"
+              class="bg-dark-gray rounded-lg fc-white"
+            >
+              <ul class="list-style-none pa-0 ma-0">
+                <li
+                  v-for="(participant, idx) in stayStore.participants"
+                  :key="participant.dynamicId"
+                  class="pb-2 mb-2"
+                >
+                  <div class="d-flex justify-space-between">
+                    <span>{{ participant.name || '-' }}</span>
+                    <span class="ml-auto">
+                    {{ formatPrice(stayStore.participantClassesTotalPrice(participant.dynamicId) + stayStore.participantInsuranceTotalPrice(participant.dynamicId)) }}&nbsp;{{ stayStore.currency }}
+                  </span>
+                  </div>
+                  <VDivider class="mt-1 mb-2"/>
+                </li>
+              </ul>
+              <!--DISCOUNTS-->
+              <div
+                v-if="parseFloat(stayStore.discountGeneric) > 0"
+                class=" fw-600 mt-2"
+              >
+                <div class="d-flex justify-space-between fw-400">
+                  <div>
+                    <VIcon
+                      icon="mdi-information-slab-circle"
+                      @click="discountInfoDialog = true"
+                      class="mr-1"
+                      style="opacity: .4;"
+                    />
+                    {{ $t('discount') }}
+                  </div>
+                  <span class="fw-400">
+                -&nbsp;{{ stayStore.discountGeneric }}&nbsp;{{ stayStore.currency }}
+              </span>
+                </div>
+                <VDivider class="mt-1 mb-2"/>
+              </div>
+
+              <div class="d-flex  ga-2 justify-end mt-4">
+                <div class="d-flex flex-column">
+                  <div class="ml-auto">
+                  <span class="ml-auto">
+                    {{ $t('price_total') }}:
+                  </span>
+                    <span class="fs-16 ml-auto">
+                    {{ formatPrice(stayStore.allParticipantsTotalPrice) }}&nbsp;{{ stayStore.currency }}
+                  </span>
+                  </div>
+                  <div v-if="allInsurancesEnabled" class="fs-11">
+                    <span>{{ $t('including') }}</span>&nbsp;<span class="text-lowercase">{{ $t('aditional_options') }}: </span>
+                    <span>{{ formatPrice(sumTotalInsurancesForAll) }}&nbsp;{{ stayStore.currency }}</span>
+                  </div>
+                </div>
+              </div>
+            </VSheet>
+          </div>
         </div>
       </VStepperWindowItem>
 

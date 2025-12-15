@@ -204,7 +204,7 @@ defineExpose({
                 variant="outlined"
                 :class="[
                   mobile ? 'flex-1' : 'px-8',
-                  { 'border-error': showErrors && selectedClassType === null }
+                  { 'border-error-input border-2': showErrors && selectedClassType === null }
                 ]"
                 class="text-capitalize border rounded"
               >
@@ -216,7 +216,7 @@ defineExpose({
                 :disabled="isSnowboardDisabled"
                 :class="[
                   mobile ? 'flex-1' : 'px-8',
-                  { 'border-error border-2': showErrors && selectedClassType === null }
+                  { 'border-error-input border-2': showErrors && selectedClassType === null }
                 ]"
                 class="text-capitalize border rounded"
               >

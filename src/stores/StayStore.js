@@ -78,6 +78,9 @@ const DUMMY_SELECTED_CLASSES = [
 const blankParticipant = {
   dynamicId: '',
   name: '',
+  surname:'',
+  phone: null,
+  birthDate: null,
   participantType: '',
   age: null,
   activityType: '',
