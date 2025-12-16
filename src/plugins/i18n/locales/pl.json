@@ -121,6 +121,10 @@
   "price_total": "Cena razem",
   "discounts_title": "Informacje o rabatach",
   "discounts_info": "Rabaty (Karta klienta, happy hours, pakiety godiznowe) nie łączą się – zastosowano korzystniejszy.",
-  "discount": "Rabat"
+  "discount": "Rabat",
+  "phone_number": "Numer telefonu",
+  "birth_date": "Data urodzenia",
+  "childminder": "Opiekun dziecka",
+  "invalid_phone_number": "Nieprawidłowy numer telefonu"
 }
 

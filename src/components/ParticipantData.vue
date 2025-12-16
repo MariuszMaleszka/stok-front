@@ -2,6 +2,8 @@
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useStayStore } from '@/stores/StayStore.js'
+import UserIcon from '@/assets/user-circle-blue.svg'
+import { VDateInput } from 'vuetify/labs/VDateInput'
 
 const props = defineProps({
   participant: {
@@ -62,7 +64,7 @@ defineExpose({
         autocomplete="off"
         hide-details="auto"
         maxLength="50"
-        :placeholder="$t('enter_name')"
+        minLength="2"
         :rules="[rules.required]"
         @keydown="(e) => /\d/.test(e.key) && e.preventDefault()"
       >
@@ -83,7 +85,7 @@ defineExpose({
         autocomplete="off"
         hide-details="auto"
         maxLength="50"
-        :placeholder="$t('enter_surname')"
+        minLength="2"
         :rules="[rules.required]"
         @keydown="(e) => /\d/.test(e.key) && e.preventDefault()"
       >
@@ -103,8 +105,7 @@ defineExpose({
         clearIcon="mdi-close"
         autocomplete="off"
         hide-details="auto"
-        maxLength="15"
-        :placeholder="$t('enter_phone_number')"
+        maxLength="9"
         :rules="[rules.required, rules.phone]"
         @keydown="(e) => !/[\d+]/.test(e.key) && e.key !== 'Backspace' && e.preventDefault()"
       >
@@ -116,18 +117,19 @@ defineExpose({
 
     <div class="mb-4">
       <p class="custom-input-label mb-2">{{ $t('birth_date') }}</p>
-      <VTextField
+<!--      <input v-model="participant.birthDate" type="date"/>-->
+      <VDateInput
         v-model="participant.birthDate"
-        type="date"
         variant="outlined"
         density="default"
+        prepend-icon=""
         hide-details="auto"
         :rules="[rules.required]"
       >
         <template #prepend-inner>
           <VIcon size="18" icon="mdi-calendar"/>
         </template>
-      </VTextField>
+      </VDateInput>
     </div>
 
     <div v-if="participant.participantType === 'child'" class="mb-4">

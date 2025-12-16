@@ -121,5 +121,9 @@
   "price_total": "Price total",
   "discounts_title": "Discount information",
   "discounts_info": "Discounts (customer card, happy hours, hourly packages) cannot be combined – the most favourable one applies.",
-  "discount": "Discount"
+  "discount": "Discount",
+  "phone_number": "Phone number",
+  "birth_date": "Birth date",
+  "childminder": "Childminder",
+  "invalid_phone_number": "Invalid phone number"
 }
