@@ -4,32 +4,33 @@
   import { useDisplay } from 'vuetify'
   import { useStayStore } from '@/stores/StayStore.js'
 
-  const props = defineProps({
-    participant: {
-      type: Object,
-      required: true,
-    },
-    index: {
-      type: Number,
-      required: true,
-    },
-  })
+const props = defineProps({
+  participant: {
+    type: Object,
+    required: true
+  },
+  index: {
+    type: Number,
+    required: true
+  }
+})
+const stayStore = useStayStore()
+const {mobile} = useDisplay()
+const {t} = useI18n()
 
-  const CUSTOMER_SERVICE_LINK = 'https://szkolastok.pl/kontakt'
-  const { mobile } = useDisplay()
-  const stayStore = useStayStore()
-  const infoDialog = ref(false)
-  const selectedSkillLevel = ref(null)
-  const { t } = useI18n()
-  const panel = ref([0])
-  const form = ref(null)
-  const showErrors = ref(false)
+const CUSTOMER_SERVICE_LINK = "https://szkolastok.pl/kontakt"
+const infoDialog = ref(false)
+
+const panel = ref([0]) // To control expansion panel opened/closed state
+const form = ref(null) // Reference to the form (participant details)
+const showErrors = ref(false) // To control error display
 
   const rules = {
     required: value => !!value || t('fill_the_field_properly'),
   }
 
-  const classType = ref(null)
+const selectedSkillLevel = ref(null)
+const selectedClassType = ref(null)
 
   const availableSkillLevels = computed(() => {
     if (props.participant.participantType === 'adult') {
@@ -41,18 +42,23 @@
 
       const age = Number.parseInt(props.participant.age)
 
-      if (classType.value === 0) {
-        return stayStore.skillLevels_CHILDREN_SKI.filter(level =>
-          age >= level.ageRange[0] && age <= level.ageRange[1],
-        )
-      } else if (classType.value === 1) {
-        return stayStore.skillLevels_CHILDREN_SNOWBOARD.filter(level =>
-          age >= level.ageRange[0] && age <= level.ageRange[1],
-        )
-      }
+    // Use adult skill levels for children aged 14 and above
+    if (age >= 14) {
+      return stayStore.skillLevels_ADULTS
     }
-    return []
-  })
+
+    if (selectedClassType.value === 0) {
+      return stayStore.skillLevels_CHILDREN_SKI.filter(level =>
+        age >= level.ageRange[0] && age <= level.ageRange[1]
+      )
+    } else if (selectedClassType.value === 1) {
+      return stayStore.skillLevels_CHILDREN_SNOWBOARD.filter(level =>
+        age >= level.ageRange[0] && age <= level.ageRange[1]
+      )
+    }
+  }
+  return []
+})
 
   const currentSkillLevelInfo = computed(() => {
     if (!selectedSkillLevel.value || !selectedSkillLevel.value[0]) return null
@@ -77,14 +83,14 @@
     props.participant.skillLevel = newValue && newValue[0] ? newValue[0].name : ''
   })
 
-  watch(() => props.participant.age, newAge => {
-    if (props.participant.participantType === 'child' && newAge !== null && newAge < 8 && classType.value === 1) {
-      classType.value = null
-      props.participant.activityType = ''
-      selectedSkillLevel.value = null
-      props.participant.skillLevel = ''
-    }
-  })
+watch(() => props.participant.age, (newAge) => {
+  if (props.participant.participantType === 'child' && newAge !== null && newAge < 8 && selectedClassType.value === 1) {
+    selectedClassType.value = null
+    props.participant.activityType = ''
+    selectedSkillLevel.value = null
+    props.participant.skillLevel = ''
+  }
+})
 
   // Expose validate method for parent
   defineExpose({
@@ -92,9 +98,9 @@
       showErrors.value = true
       const formValid = await form.value?.validate()
 
-      // Additional validation for classType and skillLevel
-      const hasClassType = classType.value !== null
-      const hasSkillLevel = selectedSkillLevel.value !== null && selectedSkillLevel.value.length > 0
+    // Additional validation for classType and skillLevel
+    const hasClassType = selectedClassType.value !== null
+    const hasSkillLevel = selectedSkillLevel.value !== null && selectedSkillLevel.value.length > 0
 
       return {
         valid: formValid?.valid && hasClassType && hasSkillLevel,
@@ -104,8 +110,8 @@
 </script>
 
 <template>
-  <VExpansionPanels>
-    <VExpansionPanel v-model="panel">
+  <VExpansionPanels v-model="panel">
+    <VExpansionPanel >
       <VExpansionPanelTitle>
         <span class="fw-600">
           {{ index + 1 }} - {{ t(`${participant.participantType}`) || '-' }}
@@ -117,6 +123,11 @@
             <p class="custom-input-label mb-2">{{ $t('child_age') }}</p>
             <VNumberInput
               v-model="participant.age"
+              variant="outlined"
+              density="default"
+              :min="4"
+              :max="16"
+              :step="1"
               control-variant="split"
               density="default"
               hide-details="auto"
@@ -142,6 +153,7 @@
               clearable
               density="default"
               hide-details="auto"
+              maxLength="50"
               :placeholder="$t('enter_name')"
               :rules="[rules.required]"
               variant="outlined"
@@ -179,7 +191,7 @@
           <div class="mb-4">
             <p class="custom-input-label mb-2">{{ $t('classes_type') }}</p>
             <VBtnToggle
-              v-model="classType"
+              v-model="selectedClassType"
               class="ga-2 w-100"
               mandatory
               @update:model-value="(val) => {
@@ -190,7 +202,7 @@
                 class="text-capitalize border rounded"
                 :class="[
                   mobile ? 'flex-1' : 'px-8',
-                  { 'border-error': showErrors && classType === null }
+                  { 'border-error-input border-2': showErrors && selectedClassType === null }
                 ]"
                 :value="0"
                 variant="outlined"
@@ -201,7 +213,7 @@
                 class="text-capitalize border rounded"
                 :class="[
                   mobile ? 'flex-1' : 'px-8',
-                  { 'border-error border-2': showErrors && classType === null }
+                  { 'border-error-input border-2': showErrors && selectedClassType === null }
                 ]"
                 :disabled="isSnowboardDisabled"
                 :value="1"
@@ -210,12 +222,12 @@
                 {{ $t('snowboard') }}
               </VBtn>
             </VBtnToggle>
-            <small v-if="showErrors && classType === null" class="fs-12 fc-error pl-4 pt-2">
+            <small v-if="showErrors && selectedClassType === null" class="fs-12 fc-error pl-4 pt-2">
               {{ $t('select_class_type') }}
             </small>
           </div>
 
-          <div v-if="classType === 0 || classType === 1" class="mb-4">
+          <div class="mb-4" v-if="selectedClassType === 0 || selectedClassType === 1">
             <p class="custom-input-label mb-2">{{ $t('difficulty_level') }}</p>
             <VList
               v-model:selected="selectedSkillLevel"

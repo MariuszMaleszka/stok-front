@@ -1,115 +1,98 @@
 <script setup>
-  import { useCookies } from '@vueuse/integrations/useCookies'
-  import { computed, ref } from 'vue'
-  import { useI18n } from 'vue-i18n'
-  import { useDisplay } from 'vuetify'
-  import DatePickerResponsive from '@/components/DatePickerResponsive.vue'
-  import ParticipantAccordion from '@/components/ParticipantAccordion.vue'
-  import { useToast } from '@/composables/useToast'
-  import { useStayStore } from '@/stores/StayStore.js'
-  import { useViewControlStore } from '@/stores/ViewControlStore.js'
+import {computed, ref, watch} from "vue"
+import {useCookies} from "@vueuse/integrations/useCookies"
+import {useDisplay} from 'vuetify'
+import {useI18n} from "vue-i18n"
 
-  const { showSimpleToast, showActionToast } = useToast()
-  const stayStore = useStayStore()
-  const viewStore = useViewControlStore()
-  const cookies = useCookies(['locale'])
-  const { mobile } = useDisplay()
-  const currentLocale = computed(() => cookies.get('locale') || 'pl')
-  const { t } = useI18n()
+import DatePickerResponsive from "@/components/DatePickerResponsive.vue"
+import ParticipantAccordion from "@/components/ParticipantAccordion.vue"
+import {useStayStore} from '@/stores/StayStore.js'
+import {useViewControlStore} from "@/stores/ViewControlStore.js"
+import {useToast} from '@/composables/useToast'
 
-  // Form refs
-  const dataForm = ref(null)
-  const participantForms = ref([])
-  // Watch for changes in participants count and reset form refs
-  watch(() => stayStore.participants.length, () => {
-    participantForms.value = []
-  })
+const {t} = useI18n()
+const {showSimpleToast} = useToast()
+const stayStore = useStayStore()
+const viewStore = useViewControlStore()
+const cookies = useCookies(['locale'])
+const {mobile} = useDisplay()
+const currentLocale = computed(() => cookies.get('locale') || 'pl')
 
-  const classesModalOpen = ref(false)
-  const selectedParticipant = ref(null)
-  function openClassesModal (participant) {
-    selectedParticipant.value = participant
-    classesModalOpen.value = true
+const stepOneNestedRef = ref(null)
+const activeChildStep = ref(1)
+
+const dataForm = ref(null)
+const participantForms = ref([])
+
+const validateCurrentStep = async () => {
+  const results = await Promise.all(
+    participantForms.value.map(form => form?.validate())
+  )
+
+  const allValid = results.every(result => result?.valid === true)
+
+  if (!allValid) {
+    showSimpleToast(t('please_fill_required_fields'), 'error')
   }
-  function closeClassesModal () {
-    classesModalOpen.value = false
-    selectedParticipant.value = null
-  }
 
-  async function handleNextClick () {
-    if (viewStore.stepOneView === viewStore.STEP_ONE_DATA) {
-      const { valid } = await dataForm.value.validate()
-      if (!valid) {
-        showSimpleToast(t('please_fill_required_fields'), 'error')
-        return
-      }
+  return allValid
+}
 
-      viewStore.isStepOneDataCompleted = true
-      viewStore.stepOneView = viewStore.STEP_ONE_PREFERENCES
-    } else if (viewStore.stepOneView === viewStore.STEP_ONE_PREFERENCES) {
-      const validForms = participantForms.value.filter(form => form != null)
-      const validationResults = await Promise.all(validForms.map(form => form.validate()))
-      const allValid = validationResults.every(result => result?.valid)
 
-      if (!allValid) {
-        showSimpleToast(t('please_fill_required_fields'), 'error')
-        return
-      }
+watch(() => stayStore.participants.length, () => {
+  participantForms.value = []
+})
+watch(activeChildStep, async (newStep) => {
+  await nextTick()
+  viewStore.currentStep.child = newStep
+})
+defineExpose({
+  stepOneNestedRef,
+  validateCurrentStep
+})
 
-      viewStore.isStepOnePreferencesCompleted = true
-      viewStore.goToNextStep()
-    }
-  }
+
 </script>
 
 <template>
-  <div class="d-flex flex-column justify-space-between h-100 flex-1">
-    <!-- tabs navigation remains the same -->
-    <div class="tabs-holder-secondary">
-      <VTabs
-        v-model="viewStore.stepOneView"
-        align-tabs="center"
-        class="tabs-navigation"
-        density="compact"
-        hide-slider
+  <VStepper
+    ref="stepOneNestedRef"
+    v-model="activeChildStep"
+    class="child-stepper step-one-element d-flex flex-column flex-1"
+    hide-actions
+  >
+    <VStepperHeader class="mt-2">
+      <VStepperItem
+        :value="1"
+        :title="$t('stay_datails')"
+        class="px-1 py-0"
+        :complete="viewStore.isStepOneDataCompleted"
       >
-        <VTab
-          :aria-label="$t('participants')"
-          class="fs-11 text-capitalize ls-0 "
-          :class="mobile ? 'pr-0 pl-0 ml-2': 'justify-start'"
-          :value="viewStore.STEP_ONE_DATA"
-        >
-          1. {{ $t('stay_datails') }}
-        </VTab>
-        <VTab
-          :aria-label="$t('classes')"
-          class="fs-11 text-capitalize ls-0 "
-          :class="mobile ? 'pr-0 pl-0': ''"
-          :disabled="!stayStore.dateOfStay"
-          :value="viewStore.STEP_ONE_PREFERENCES"
-        >
-          2. {{ $t('participants_preferences') }}
-        </VTab>
-      </VTabs>
-    </div>
+        <template #icon>
+            1.
+        </template>
+      </VStepperItem>
+      <VStepperItem
+        :value="2"
+        class="px-1 py-0"
+        :title="$t('participants_preferences')"
+     >
+        <template #icon>
+            2.
+        </template>
+      </VStepperItem>
+    </VStepperHeader>
 
-    <VTabsWindow
-      v-model="viewStore.stepOneView"
-      class="d-flex flex-column h-100 flex-1"
-    >
-      <VTabsWindowItem
-        class="h-100 flex-1"
-        :class="viewStore.stepOneView === viewStore.STEP_ONE_DATA ? 'd-flex flex-column' : ''"
-        :value="viewStore.STEP_ONE_DATA"
-      >
+    <VStepperWindow class="flex-1">
+      <VStepperWindowItem :value="1">
         <div>
           <p class="fs-24 font-weight-bold my-4">
             {{ $t('booking_classes') }}:
           </p>
           <div class="my-4">
             <p
-              class="fs-18 font-weight-medium mb-n2"
               :class="mobile ? 'fs-18' : 'fs-20'"
+              class="font-weight-medium mb-n2"
             >
               {{ $t('provide_details_of_your_stay') }}:
             </p>
@@ -164,13 +147,9 @@
             </div>
           </VForm>
         </div>
-      </VTabsWindowItem>
+      </VStepperWindowItem>
 
-      <VTabsWindowItem
-        class="h-100 flex-1"
-        :class="viewStore.stepOneView === viewStore.STEP_ONE_PREFERENCES ? 'd-flex flex-column' : ''"
-        :value="viewStore.STEP_ONE_PREFERENCES"
-      >
+      <VStepperWindowItem :value="2">
         <div class="px-1">
           <p class="fs-20 font-weight-bold my-4">
             {{ $t('booking_classes') }}:
@@ -186,8 +165,9 @@
 
           <div class="d-flex flex-column ga-4 my-4">
             <ParticipantAccordion
+              ref="participantForms"
               v-for="(participant, index) in stayStore.participants"
-              :key="index"
+              :key="participant.dynamicId"
               :ref="el => participantForms[index] = el"
               class="ga-4"
               :index="index"
@@ -195,87 +175,18 @@
             />
           </div>
         </div>
-      </VTabsWindowItem>
-    </VTabsWindow>
-
-    <div class="navigation-tab-actions d-flex ga-4 justify-space-between ">
-      <VBtn
-        v-if="viewStore.stepOneView === viewStore.STEP_ONE_PREFERENCES"
-        class="fs-16 text-capitalize flex-1"
-        color="blue"
-        prepend-icon="mdi-arrow-left"
-        size="x-large"
-        variant="outlined"
-        @click="viewStore.stepOneView = viewStore.STEP_ONE_DATA"
-      >
-        {{ $t('previous') }}
-      </VBtn>
-      <VBtn
-        class="fs-16 text-capitalize flex-2"
-        color="blue"
-        :disabled="!stayStore.dateOfStay"
-        size="x-large"
-        variant="flat"
-        @click="handleNextClick"
-      >
-        <!--        :disabled="!isFormValid"-->
-        {{ $t('next') }}
-      </VBtn>
-    </div>
-
-    <VDialog
-      v-model="classesModalOpen"
-      content-class="under-app-bar"
-      fullscreen
-      scrollable
-    >
-      <VCard>
-        <VCardTitle>
-          <div class="d-flex justify-space-between align-center" :class="mobile ? 'fs-16 py-2':''">
-            <div class="d-flex align-center ga-3">
-              <VIcon icon="mdi-account" size="18" />
-              <span class="fw-600">{{ selectedParticipant?.name || '-' }}</span>
-            </div>
-            <VBtn icon="mdi-close" variant="text" @click="closeClassesModal" />
-          </div>
-        </VCardTitle>
-        <VCardText>
-          <div class="mb-4">
-            <p class="fw-500 mb-2" :class="mobile ? 'fs-14':'fs-16'">
-              {{ $t('select_day') || 'Wybór dnia' }}
-            </p>
-            <VCarousel height="260" hide-delimiter-background>
-              <VCarouselItem v-for="(day, idx) in 5" :key="idx">
-                <VCard class="ma-2" elevation="2">
-                  <VCardText>
-                    <div :class="mobile ? 'fs-12':'fs-14'">
-                      {{ $t('selected') }}: {{ idx + 1 }}/5
-                    </div>
-                    <div class="mt-4">
-                      {{ $t('add_classes') }}
-                    </div>
-                  </VCardText>
-                </VCard>
-              </VCarouselItem>
-            </VCarousel>
-          </div>
-        </VCardText>
-        <VCardActions class="border-t d-flex justify-between text-capitalize">
-          <VBtn prepend-icon="mdi-arrow-left" variant="outlined" @click="closeClassesModal">
-            {{ $t('previous') }}
-          </VBtn>
-          <VBtn class="px-4" color="blue" variant="flat" @click="closeClassesModal">
-            {{ $t('save') }} & {{ $t('next') }}
-          </VBtn>
-        </VCardActions>
-      </VCard>
-    </VDialog>
-  </div>
+      </VStepperWindowItem>
+    </VStepperWindow>
+  </VStepper>
 </template>
+<style lang="scss">
+//.step-one-element {
+//  .v-stepper-header {
+//    .v-avatar {
+//      display: none;
+//    }
+//  }
+//
+//}
 
-<style scoped>
-.under-app-bar {
-  top: 64px;
-  height: calc(100% - 64px);
-}
 </style>

@@ -12,8 +12,26 @@ import 'vuetify/styles'
 
 import '@fontsource/inter/index.css'
 
+// Composables
+import { createVuetify } from 'vuetify'
+import { createVueI18nAdapter } from 'vuetify/locale/adapters/vue-i18n'
+import DateFnsAdapter from '@date-io/date-fns'
+import { pl, enGB } from 'date-fns/locale'
+import { useI18n } from 'vue-i18n'
+import i18n from './i18n'
+
 // https://vuetifyjs.com/en/introduction/why-vuetify/#feature-guides
 export default createVuetify({
+  locale: {
+    adapter: createVueI18nAdapter({ i18n, useI18n })
+  },
+  date: {
+    adapter: DateFnsAdapter,
+    locale: {
+      en: enGB,
+      pl: pl
+    }
+  },
   theme: {
     defaultTheme: 'light',
     themes: {
@@ -26,7 +44,7 @@ export default createVuetify({
     },
   },
   display: {
-    mobileBreakpoint: 'md',
+    mobileBreakpoint: 'sm',
   },
   defaults: {
     global: {

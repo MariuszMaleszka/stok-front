@@ -44,15 +44,43 @@ const DUMMY_SELECTED_CLASSES = [
       price: 10,
       perDay: true,
       description: 'PAKIET NNW TURYSTYCZNO-SPORTOWY - Wariant 111 SWIJ indywidualnych podróży Kontynenty na terenie RP.',
-      imgSource: '',
-    },
+      imgSource: ''
+    }
   },
+  {
+    dynamicId: 'ff12126xs',
+    type: 'individual',
+    title: 'Zajęcia Specjalne - Mateusz',
+    classType: 'snowboard',
+    groupName: 'Grupa wieczorna - specjalna',
+    skillLevel: 'Nowicjusz',
+    instructor: 'Mateusz Zzaskakującymnazwiskiem',
+    dates: [
+      { date: '01.01.2025', time: '9:00 - 9:55' },
+      { date: '02.01.2025', time: '9:00 - 9:55' },
+      { date: '03.01.2025', time: '9:00 - 9:55' },
+      { date: '04.01.2025', time: '9:00 - 9:55' },
+      { date: '05.01.2025', time: '9:00 - 9:55' },
+    ],
+    price: 250.00,
+    insurance: {
+      title: 'NNW Turystyczno-Sportowe lorem ipsum amet dolor blabla tututut',
+      enabled: false,
+      price: 10.00,
+      perDay: true,
+      description: 'PAKIET NNW TURYSTYCZNO-SPORTOWY - Wariant Mateusz na terenie RP.',
+      imgSource: ''
+    }
+  }
 ]
 
 // Blank participant template
 const blankParticipant = {
   dynamicId: '',
   name: '',
+  surname: '',
+  phone: null,
+  birthDate: null,
   participantType: '',
   age: null,
   activityType: '',
@@ -62,6 +90,7 @@ const blankParticipant = {
   showGroupLessons: true,
   classLang: 'Polski',
   selectedClasses: DUMMY_SELECTED_CLASSES,
+  loyaltyProgram: {},
 }
 
 export const useStayStore = defineStore('stayStore', () => {
@@ -72,6 +101,13 @@ export const useStayStore = defineStore('stayStore', () => {
   const adultsNumber = ref(1)
   const childrenNumber = ref(0)
   const participants = ref([])
+  const hasLoyaltyCard = ref(false) // Loyalty card checkbox
+  const loyaltyProgram = ref({
+    loyaltyCard: false,
+    loyaltyCardOwnerName: '',
+    loyaltyCardOwnerSurname: '',
+    loyaltyCardNumber: null,
+  })
 
   // 👉 Computed event object
   const event = computed(() => ({
@@ -80,6 +116,13 @@ export const useStayStore = defineStore('stayStore', () => {
     adultsNumber: adultsNumber.value,
     childrenNumber: childrenNumber.value,
     participants: participants.value,
+    additionalOptions: {},
+    loyaltyProgram: {
+      loyaltyCard: hasLoyaltyCard.value,
+      loyaltyCardOwnerName: loyaltyProgram.value.loyaltyCardOwnerName,
+      loyaltyCardOwnerSurname: loyaltyProgram.value.loyaltyCardOwnerSurname,
+      loyaltyCardNumber: loyaltyProgram.value.loyaltyCardNumber,
+    }
   }))
 
   // Computed max values based on total constraint
@@ -87,41 +130,67 @@ export const useStayStore = defineStore('stayStore', () => {
   const maxChildren = computed(() => 12 - adultsNumber.value)
 
   // Participants number condition
-  const participantQuantityConditions = computed(() => {
+  const participantsNumberCondition = computed(() => {
     return adultsNumber.value > 0 || childrenNumber.value > 0
   })
 
-  // 👉 Participant classes total price
+  // 👉 Participant (singular) classes total price
   const participantClassesTotalPrice = computed(() => {
-    const priceMap = new Map()
-
-    for (const participant of participants.value) {
-      if (!participant.selectedClasses || participant.selectedClasses.length === 0) {
-        priceMap.set(participant.dynamicId, 0)
-        continue
+    return (participantId) => {
+      const participant = participants.value.find(p => p.dynamicId === participantId)
+      if (!participant?.selectedClasses || participant.selectedClasses.length === 0) {
+        return 0
       }
 
-      const total = participant.selectedClasses.reduce((sum, classItem) => {
-        let classTotal = classItem.price || 0
+      return participant.selectedClasses.reduce((sum, classItem) => {
+        return sum + (classItem.price || 0)
+      }, 0)
+    }
+  })
+  // 👉 Participant (singular) insurance total price
+  const participantInsuranceTotalPrice = computed(() => {
+    return (participantId) => {
+      const participant = participants.value.find(p => p.dynamicId === participantId)
+      if (!participant?.selectedClasses) {
+        return 0
+      }
 
-        if (classItem.insurance?.enabled) {
-          classTotal += classItem.insurance.perDay && classItem.dates ? (classItem.insurance.price * classItem.dates.length) : classItem.insurance.price
+      return participant.selectedClasses.reduce((sum, classItem) => {
+        // Skip insurance for child participants in group classes
+        if (participant.participantType === 'child' && classItem.type === 'group') {
+          return sum
         }
 
-        return sum + classTotal
+        if (!classItem.insurance?.enabled) return sum
+
+        const insurancePrice = classItem.insurance.price || 0
+        const dayMultiplier = classItem.insurance.perDay ? (classItem.dates?.length || 1) : 1
+        return sum + (insurancePrice * dayMultiplier)
       }, 0)
-
-      priceMap.set(participant.dynamicId, total)
     }
+  })
 
-    return priceMap
+  // 👉 All participants total price (combined classes + insurance)
+  const allParticipantsTotalPrice = computed(() => {
+    const classesTotal = participants.value.reduce((total, participant) => {
+      return total + participantClassesTotalPrice.value(participant.dynamicId)
+    }, 0)
+
+    const insuranceTotal = participants.value.reduce((total, participant) => {
+      return total + participantInsuranceTotalPrice.value(participant.dynamicId)
+    }, 0)
+
+    return Math.max(0, (classesTotal + insuranceTotal) - discountGeneric)
   })
 
   // 👉 Promotions/discounts/suggestions
-  const discountPackage_10 = ref(false)
-  const discountPackage_20 = ref(false)
-  const missingClassesForDiscount = ref(false)
-  const insuranceForAllCost = 200
+  const discountPackage_10 = ref(false) // not used for now
+  const discountPackage_20 = ref(false) // not used for now
+  const discountGeneric = 50 // a generic discount value for demonstration
+  const missingClassesForDiscount = ref(false) // not used for now
+
+  // Additional options
+  const insuranceSelected = ref({}) // selections per participant
 
   // CRUCIAL: Watchers to sync participants with adults/children numbers
   // This is responsible for adding/removing participant entries
@@ -131,16 +200,23 @@ export const useStayStore = defineStore('stayStore', () => {
 
     if (totalNeeded > currentLength) {
       const toAdd = totalNeeded - currentLength
-      const newParticipants = Array.from({ length: toAdd }, () =>
-        reactive({ ...blankParticipant, dynamicId: generateUniqueId() }),
-      )
+      const adultsToAdd = Math.max(0, newAdults - participants.value.filter(p => p.participantType === 'adult').length)
+
+      const newParticipants = Array.from({ length: toAdd }, (_, i) => {
+        const isAdult = i < adultsToAdd
+        return reactive({
+          ...blankParticipant,
+          dynamicId: generateUniqueId(),
+          participantType: isAdult ? 'adult' : 'child',
+          age: isAdult ? null : null, // Age will be set by user for children
+          selectedClasses: JSON.parse(JSON.stringify(blankParticipant.selectedClasses))
+        })
+      })
       participants.value.push(...newParticipants)
     } else if (totalNeeded < currentLength) {
-      participants.value = participants.value.slice(0, totalNeeded)
-    }
-
-    for (const [index, participant] of participants.value.entries()) {
-      participant.participantType = index < newAdults ? 'adult' : 'child'
+      // Remove excess participants from the end
+      const toRemove = currentLength - totalNeeded
+      participants.value.splice(-toRemove)
     }
   }, { immediate: true })
 
@@ -150,6 +226,22 @@ export const useStayStore = defineStore('stayStore', () => {
     adultsNumber.value = 1
     childrenNumber.value = 0
     participants.value = []
+  }
+
+  // Loyalty card number checking simulation
+  const checkingLoyaltyCardNumber = ref(false)
+  const isValidLoyaltyCardNumber = ref(null)
+  const checkLoyaltyCardNumber = (number) => {
+    checkingLoyaltyCardNumber.value = true
+    isValidLoyaltyCardNumber.value = null // Reset validation state
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const isValid = parseInt(number.slice(-1)) % 2 === 0
+        isValidLoyaltyCardNumber.value = isValid
+        checkingLoyaltyCardNumber.value = false
+        resolve(isValid)
+      }, 1000)
+    })
   }
 
   return {
@@ -162,13 +254,19 @@ export const useStayStore = defineStore('stayStore', () => {
     discountPackage_10,
     discountPackage_20,
     missingClassesForDiscount,
-    insuranceForAllCost,
-
+    insuranceSelected,
+    hasLoyaltyCard,
+    loyaltyProgram,
+    isValidLoyaltyCardNumber,
+    discountGeneric,
     // Computed
     maxAdults,
     maxChildren,
-    participantQuantityConditions,
+    participantsNumberCondition,
     participantClassesTotalPrice,
+    participantInsuranceTotalPrice,
+    allParticipantsTotalPrice,
+    checkingLoyaltyCardNumber,
 
     // Actions
     resetEvent,
@@ -183,5 +281,7 @@ export const useStayStore = defineStore('stayStore', () => {
 
     // Temporary
     DUMMY_SELECTED_CLASSES,
+    // Methods
+    checkLoyaltyCardNumber,
   }
 })

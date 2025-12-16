@@ -101,6 +101,10 @@
   background-color: $primary-bg !important;
 }
 
+.bg-white {
+  background-color: #ffff !important;
+}
+
 .bg-blue {
   background-color: $primary-blue !important;
 }
@@ -111,6 +115,9 @@
 
 .bg-light-gray {
   background-color: $bg-gray-light !important;
+}
+.bg-dark-gray {
+  background-color: $gray-dark !important;
 }
 .bg-gray-primary {
   background-color: #E5E7EB !important;
@@ -146,6 +153,9 @@
 // Width utility classes
 .w-fit-content {
   width: fit-content;
+}
+.max-w-10 {
+    max-width: 10px;
 }
 
 .w-max-content {
@@ -190,7 +200,9 @@
   }
 }
 
-
+.list-style-none {
+  list-style: none;
+}
 
 .package-card.green {
   background-color: #F3FAF7;

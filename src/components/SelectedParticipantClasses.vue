@@ -1,13 +1,13 @@
 <script setup>
-  import { useI18n } from 'vue-i18n'
-  import { useDisplay } from 'vuetify'
-  import InsuranceIMG from '@/assets/insurance_img.png'
-  import skiLOGO from '@/assets/ski-icon.svg'
-  import snowboardLOGO from '@/assets/snowboard-icon.svg'
-  import PopupSmall from '@/components/modals/PopupSmall.vue'
-  import PackageInfoBox from '@/components/PackageInfoBox.vue'
-  import { useStayStore } from '@/stores/StayStore.js'
-  import { formatPrice } from '@/utils/numbers.js'
+import skiLOGO from '@/assets/ski-icon.svg'
+import snowboardLOGO from '@/assets/snowboard-icon.svg'
+import GreenShield from '@/assets/shield-check-green.svg'
+import {useI18n} from "vue-i18n";
+import {formatPrice} from "@/utils/numbers.js";
+import {useStayStore} from "@/stores/StayStore.js";
+import {useDisplay} from 'vuetify';
+import PopupSmall from "@/components/modals/PopupSmall.vue";
+import InsuranceIMG from '@/assets/insurance_img.png'
 
   const props = defineProps({
     participant: {
@@ -26,46 +26,44 @@
   const expandedPanels = ref({})
   const panel = ref([0])// Expansion panel state (main)
 
-  const insuranceSelected = ref({}) // Holds the insurance selection state
-  const insuranceInfoDialog = ref(false) // Controls the insurance info dialog visibility
-  const additionalInsuranceSelected = ref(false) // Insurance for all option
-  const additionalInsuranceExpanded = ref(false) // Controls the expansion of insurance for all details
-
-  const currentInsurance = ref(null) // Holds the insurance info to display
+// const insuranceSelected = ref({}) // Holds the insurance selection state
+const insuranceInfoDialog = ref(false) // Controls the insurance info dialog visibility
+const currentInsurance = ref(null) // Holds the insurance info to display
 
   const classToDelete = ref(null) // Holds the class selected for deletion
   const confirmClassDeletationDialog = ref(false) // Controls the confirmation dialog visibility
 
-  function openInsuranceDialog (insurance) {
-    currentInsurance.value = insurance
-    insuranceInfoDialog.value = true
+const openInsuranceDialog = (insurance) => {
+  currentInsurance.value = insurance
+  insuranceInfoDialog.value = true
+}
+// Delete class
+const deleteClass = (dynamicId) => {
+  const item = props.participant.selectedClasses.find(c => c.dynamicId === dynamicId)
+  if (item) {
+    classToDelete.value = item
+    confirmClassDeletationDialog.value = true
   }
-  // Delete class
-  function deleteClass (dynamicId) {
-    const item = props.participant.selectedClasses.find(c => c.dynamicId === dynamicId)
-    if (item) {
-      classToDelete.value = item
-      confirmClassDeletationDialog.value = true
+}
+// Confirm deletion
+const confirmDeleteClass = () => {
+  if (classToDelete.value) {
+    const index = props.participant.selectedClasses.findIndex(
+      c => c.dynamicId === classToDelete.value.dynamicId
+    )
+    if (index !== -1) {
+      props.participant.selectedClasses.splice(index, 1)
     }
-  }
-  // Confirm deletion
-  function confirmDeleteClass () {
-    if (classToDelete.value) {
-      const index = props.participant.selectedClasses.findIndex(
-        c => c.dynamicId === classToDelete.value.dynamicId,
-      )
-      if (index !== -1) {
-        props.participant.selectedClasses.splice(index, 1)
-      }
-      classToDelete.value = null
-    }
-    confirmClassDeletationDialog.value = false
-  }
-  // Cancel deletion
-  function cancelDelete () {
     classToDelete.value = null
-    confirmClassDeletationDialog.value = false
   }
+  confirmClassDeletationDialog.value = false
+}
+// Cancel deletion
+const cancelDelete = () => {
+  classToDelete.value = null
+  confirmClassDeletationDialog.value = false
+}
+
 </script>
 
 <template>
@@ -83,7 +81,6 @@
             <div
               v-for="item in props.participant.selectedClasses"
               :key="item.dynamicId"
-              class="border-b"
             >
               <div
                 class="py-4 pb-0 d-flex justify-between"
@@ -106,7 +103,7 @@
                   >
                     <div class="d-flex align-center">
                       <p v-if="item.groupName" class="fc-gray">
-                        &#8226; <span class="ml-1">{{ item.groupName }},</span>
+                        &#8226; <span >{{ item.groupName }},</span>
                       </p>
                       <p v-if="item.skillLevel" class="fc-gray">
                         &#8226;<span class="ml-1">{{ item.skillLevel }}</span>
@@ -129,66 +126,56 @@
                 </div>
 
                 <div class="d-flex align-center">
-                  <span
-                    class="mr-2 fw-600"
-                    :class="mobile ? 'fs-12 ': 'fs-14'"
-                  >
-                    {{ formatPrice(item.price) }}
-                  </span>
-                  <VIcon color="grey" icon="mdi-close" size="small" @click="deleteClass(item.dynamicId)" />
+                <span
+                  :class="mobile ? 'fs-12 ': 'fs-14'"
+                  class="mr-2 fw-600"
+                >
+                  {{ formatPrice(item.price) }}&nbsp;{{ stayStore.currency }}
+                </span>
+                  <VIcon size="18" color="grey" icon="mdi-close" @click="deleteClass(item.dynamicId)"/>
                 </div>
               </div>
 
-              <VSheet class="rounded bg-light-gray mt-2 mb-4">
+              <VSheet
+                v-if="participant.participantType === 'child' && item.type === 'group'"
+                class="rounded mt-2 mb-4 bg-light-green"
+
+              >
                 <div
-                  class="pt-0 rounded d-flex align-center justify-between"
                   :class="mobile ? 'px-0': 'px-4'"
+                  class="pt-0 rounded d-flex align-center justify-between"
                 >
-                  <VCheckbox
-                    v-model="insuranceSelected[item.dynamicId]"
-                    color="info"
-                    density="compact"
-                    hide-details
-                  />
+                  <img width="16px" :src="GreenShield" alt="shield">
+
                   <div
-                    class="fw-400 d-flex align-center ml-2"
                     :class="mobile ? 'fs-10': 'fs-14'"
+                    class="fw-400 d-flex align-center ml-2"
                   >
-                    {{ t('add_insurance') }}
+                    {{ t('insurance_included') }}
 
                     <VBtn
-                      class="ma-2 text-capitalize px-2"
                       :class="mobile ? 'fs-10': 'fs-14'"
-                      color="grey"
-                      flat
-                      size="small"
+                      class="ma-2 text-capitalize px-2"
                       variant="text"
+                      size="small"
+                      flat
+                      color="grey"
                       @click="expandedPanels[item.dynamicId] = !expandedPanels[item.dynamicId]"
                     >
                       {{ expandedPanels[item.dynamicId] ? t('collapse') : t('expand') }}
-                      <VIcon :icon="expandedPanels[item.dynamicId] ? 'mdi-chevron-up' : 'mdi-chevron-down'" />
+                      <VIcon :icon="expandedPanels[item.dynamicId] ? 'mdi-chevron-up' : 'mdi-chevron-down'"/>
                     </VBtn>
                   </div>
 
-                  <div
-                    class="d-flex flex-column align-end ml-auto ma-0 fc-gray"
-                    :class="mobile ? 'fs-11 ': 'fs-14'"
-                  >
-                    <span class="fw-500">
-                      + {{ formatPrice(item.insurance.price) }}
-                    </span>
-                    <span class="fw-400 mt-n1 text-no-wrap">
-                      {{ item.insurance.perDay ? ` ( 1 ${t('day')})` : '' }}
-                    </span>
-                  </div>
+
                 </div>
 
                 <VExpandTransition>
                   <VCard
                     v-show="expandedPanels[item.dynamicId]"
+                    width="100%"
                     flat
                     style="background-color: transparent;"
-                    width="100%"
                   >
                     <VCardText class="px-8 pt-0">
                       <p :class="mobile ? 'fs-10' : 'fs-12'">
@@ -196,62 +183,108 @@
                       </p>
 
                       <div
-                        class="custom-badge gray mt-4"
                         :class="mobile ? 'fs-10' : 'fs-12'"
+                        class="custom-badge gray mt-4"
                         @click="openInsuranceDialog(item.insurance)"
                       >
-                        <VIcon class="mr-1" color="grey" icon="mdi-information-slab-circle" />
+                        <VIcon class="mr-1" color="grey" icon="mdi-information-slab-circle"/>
                         {{ $t('aditional_info') }}
                       </div>
                     </VCardText>
                   </VCard>
                 </VExpandTransition>
               </VSheet>
+
+              <VSheet
+                v-else
+                class="rounded bg-light-gray mt-2 mb-4"
+              >
+                <div
+                  :class="mobile ? 'px-0': 'px-4'"
+                  class="pt-0 rounded d-flex align-center justify-between"
+                >
+                  <VCheckbox
+                    density="compact"
+                    v-model="item.insurance.enabled"
+                    hide-details
+                    color="info"
+                  />
+                  <div
+                    :class="mobile ? 'fs-10': 'fs-14'"
+                    class="fw-400 d-flex align-center ml-2"
+                  >
+                    {{ t('insurance_included') }}
+
+                    <VBtn
+                      :class="mobile ? 'fs-10': 'fs-14'"
+                      class="ma-2 text-capitalize px-2"
+                      variant="text"
+                      size="small"
+                      flat
+                      color="grey"
+                      @click="expandedPanels[item.dynamicId] = !expandedPanels[item.dynamicId]"
+                    >
+                      {{ expandedPanels[item.dynamicId] ? t('collapse') : t('expand') }}
+                      <VIcon :icon="expandedPanels[item.dynamicId] ? 'mdi-chevron-up' : 'mdi-chevron-down'"/>
+                    </VBtn>
+                  </div>
+
+                  <div
+                    :class="mobile ? 'fs-11 ': 'fs-14'"
+                    class="d-flex flex-column align-end ml-auto ma-0 fc-gray"
+                  >
+                  <span class="fw-500">
+                    + {{ formatPrice(item.insurance.price) }}
+                  </span>
+                    <span class="fw-400 mt-n1 text-no-wrap">
+                    {{ item.insurance.perDay ? ` ( 1 ${t('day')})` : '' }}
+                  </span>
+                  </div>
+                </div>
+
+                <VExpandTransition>
+                  <VCard
+                    v-show="expandedPanels[item.dynamicId]"
+                    width="100%"
+                    flat
+                    style="background-color: transparent;"
+                  >
+                    <VCardText class="px-8 pt-0">
+                      <p :class="mobile ? 'fs-10' : 'fs-12'">
+                        {{ item.insurance.description }}
+                      </p>
+
+                      <div
+                        :class="mobile ? 'fs-10' : 'fs-12'"
+                        class="custom-badge gray mt-4"
+                        @click="openInsuranceDialog(item.insurance)"
+                      >
+                        <VIcon class="mr-1" color="grey" icon="mdi-information-slab-circle"/>
+                        {{ $t('aditional_info') }}
+                      </div>
+                    </VCardText>
+                  </VCard>
+                </VExpandTransition>
+              </VSheet>
+
             </div>
           </VList>
-          <!--INFO BOX-->
-          <PackageInfoBox class="my-4" color="yellow">
-            <span class="fw-500">11 / 10h w pakiecie.</span>
-            <p class="mb-2">Aktywowano niższy pakiet cenowy <span>-100,00zł</span></p>
-            <div class="custom-badge info" :class="mobile? 'fs-10':'fs-12'">
-              Oszczędzasz -10%
-            </div>
-          </PackageInfoBox>
-          <!--INFO BOX-->
-          <PackageInfoBox class="my-4" color="green" :show-icon="false">
-            <div class="d-flex justify-space-between mb-2">
-              <p class="fw-500">Brakuje Ci 2h zajęć, by aktywować tańszy pakiet cenowy.</p>
-              <VBtn
-                class="text-capitalize pa-2 mt-4 mb-2 ml-2"
-                :class="mobile? 'fs-12':'fs-14'"
-                color="green"
-                variant="outlined"
-              >
-                {{ $t('add_classes') }}
-              </VBtn>
-            </div>
-            <div class="custom-badge green" :class="mobile ? 'fs-10' : 'fs-12'">
-              {{ $t('you_gain') }}-10%
-            </div>
-          </PackageInfoBox>
-          <!--INFO BOX-->
-          <PackageInfoBox class="my-4" color="orange">
-            <span class="fw-500">11 / 10h w pakiecie.</span>
-            <p class="mb-2">Aktywowano niższy pakiet cenowy <span>-200,00zł</span></p>
-            <div class="custom-badge orange" :class="mobile? 'fs-10':'fs-12'">
-              {{ $t('you_save') }} -20%
-            </div>
-          </PackageInfoBox>
 
           <VSheet
             class="participant-selected-classes-summary rounded-lg bg-gray-primary pa-4"
           >
             <p class="text-right ml-auto">
-              <span class="fw-600" :class="mobile ? 'fs-12 ': 'fs-14'">
+              <span :class="mobile ? 'fs-12 ': 'fs-14'" class="fw-600">
                 {{ $t('total') }}
               </span>
-              <span class="fw-500 ml-2">
-                {{ formatPrice(stayStore.participantClassesTotalPrice.get(participant.dynamicId)) }}&nbsp;{{ stayStore.currency }}
+                        <span :class="mobile ? 'fs-14 ': 'fs-16'" class="fw-500 ml-2">
+                {{ formatPrice(stayStore.participantClassesTotalPrice(participant.dynamicId) + stayStore.participantInsuranceTotalPrice(participant.dynamicId)) }}&nbsp;{{ stayStore.currency }}
+                <br>
+                <p v-if="stayStore.participantInsuranceTotalPrice(participant.dynamicId) > 0" class="fs-10 mt-n1">
+                  {{ $t('including') }}
+                  {{ formatPrice(stayStore.participantInsuranceTotalPrice(participant.dynamicId)) }}&nbsp;{{ stayStore.currency }}
+                  {{ $t('insurance') }}
+                </p>
               </span>
             </p>
           </VSheet>
@@ -260,81 +293,7 @@
       </VExpansionPanel>
     </VExpansionPanels>
 
-    <!--ADITIONAL OPTIONS-->
-    <!--ADITIONAL OPTIONS-->
-    <div class="aditional-options w-100">
-      <p class="fc-smoked fw-500 my-4" :class="mobile ? 'fs-16' : 'fs-20'">
-        {{ $t('aditional_options') }}:
-      </p>
-      <VSheet class="rounded bg-light-gray mt-2 mb-4">
-        <div
-          class="pt-0 rounded d-flex align-center justify-between"
-          :class="mobile ? 'px-0': 'px-4'"
-        >
-          <VCheckbox
-            v-model="additionalInsuranceSelected"
-            class="mb-auto"
-            color="info"
-            density="compact"
-            hide-details
-          />
-          <div
-            class="fw-400 d-flex flex-column align-center ml-2"
-            :class="mobile ? 'fs-10': 'fs-14'"
-          >
-            <p class="mt-2">
-              {{ t('insurance_for_all_option') }}
-            </p>
 
-            <VBtn
-              class="text-capitalize px-0 mr-auto"
-              :class="mobile ? 'fs-10': 'fs-14'"
-              color="grey"
-              flat
-              size="small"
-              variant="text"
-              @click="additionalInsuranceExpanded = !additionalInsuranceExpanded"
-            >
-              {{ additionalInsuranceExpanded ? t('collapse') : t('expand') }}
-              <VIcon :icon="additionalInsuranceExpanded ? 'mdi-chevron-up' : 'mdi-chevron-down'" />
-            </VBtn>
-          </div>
-
-          <div
-            class="d-flex flex-column align-end ml-auto fc-gray mb-auto mt-2"
-            :class="mobile ? 'fs-11 ': 'fs-14'"
-          >
-            <span class="fw-500">
-              -&nbsp;{{ formatPrice(stayStore.insuranceForAllCost) }}&nbsp;{{ stayStore.currency }}
-            </span>
-          </div>
-        </div>
-
-        <VExpandTransition>
-          <VCard
-            v-show="additionalInsuranceExpanded"
-            flat
-            style="background-color: transparent;"
-            width="100%"
-          >
-            <VCardText class="px-8">
-              <p :class="mobile ? 'fs-10' : 'fs-12'">
-                <!-- Add insurance description here -->
-                Lorem ipsum dolor sit amet, consectetur adipisicing elit. Cum cupiditate ipsa ipsum laborum libero tempore ut voluptatem? Dolorem ex libero maiores necessitatibus quaerat. Adipisci, culpa doloribus illum odit quod tempore.
-              </p>
-
-              <div
-                class="custom-badge gray mt-4"
-                :class="mobile ? 'fs-10' : 'fs-12'"
-              >
-                <VIcon class="mr-1" color="grey" icon="mdi-information-slab-circle" />
-                {{ $t('aditional_info') }}
-              </div>
-            </VCardText>
-          </VCard>
-        </VExpandTransition>
-      </VSheet>
-    </div>
 
     <!--POPUPS-->
     <PopupSmall
@@ -387,7 +346,7 @@
               >
                 <div class="d-flex align-center">
                   <p v-if="classToDelete.groupName" class="fc-gray">
-                    &#8226; <span class="ml-1">{{ classToDelete.groupName }},</span>
+                    &#8226; <span >{{ classToDelete.groupName }},</span>
                   </p>
                   <p v-if="classToDelete.skillLevel" class="fc-gray">
                     &#8226;<span class="ml-1">{{ classToDelete.skillLevel }}</span>
@@ -414,7 +373,7 @@
                 class="fw-600"
                 :class="mobile ? 'fs-12 ': 'fs-14'"
               >
-                {{ formatPrice(classToDelete.price) }}
+                {{ formatPrice(classToDelete.price) }}&nbsp;{{ stayStore.currency }}
               </span>
             </div>
           </div>

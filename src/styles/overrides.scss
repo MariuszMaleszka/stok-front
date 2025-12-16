@@ -63,6 +63,7 @@
   }
 }
 
+
 .v-expansion-panel {
   border-radius: $border-radius-accordion !important;
   .v-list-item__prepend {
@@ -76,3 +77,10 @@
   border-color: $green-dark !important;
 }
 
+.v-stepper.v-sheet {
+  box-shadow: none;
+}
+
+.border-error-input {
+ border-color: $error !important;
+}
