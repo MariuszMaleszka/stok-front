@@ -90,11 +90,9 @@
             <span class="fs-16 font-weight-medium text-gray-900">{{ t('select_day') || 'Wybór dnia' }}</span>
             <VIcon class="nav-icon" color="primary" icon="mdi-chevron-right" @click="nextDay" />
           </div>
-          <VCarousel v-model="carouselIndex" height="260" hide-delimiter-background>
-            <template #prev />
-            <template #next />
-            <VCarouselItem v-for="(day, idx) in days" :key="idx">
-              <VCard class="ma-2 day-card" elevation="0">
+          <VSlideGroup v-model="carouselIndex" center-active class="day-slider">
+            <VSlideGroupItem v-for="(day, idx) in days" :key="idx" :value="idx">
+              <VCard class="ma-2 day-card" elevation="0" :style="{ minWidth: mobile ? '88%' : '60%' }">
                 <VCardText>
                   <div class="d-flex justify-space-between align-center">
                     <div class="d-flex align-center ga-2">
@@ -112,8 +110,8 @@
                   </div>
                 </VCardText>
               </VCard>
-            </VCarouselItem>
-          </VCarousel>
+            </VSlideGroupItem>
+          </VSlideGroup>
         </div>
       </VCardText>
       <VCardActions class="d-flex justify-between text-capitalize">
@@ -195,8 +193,8 @@
   cursor: pointer;
 }
 
-.v-carousel {
-      height: auto!important;
+.day-slider :deep(.v-slide-group__content) {
+  gap: 12px;
 }
 
 </style>
