@@ -10,6 +10,7 @@
     "lint": "eslint . --fix"
   },
   "dependencies": {
+    "@date-io/date-fns": "^3.2.1",
     "@fontsource/inter": "^5.2.8",
     "@fontsource/roboto": "5.2.7",
     "@mdi/font": "7.4.47",
