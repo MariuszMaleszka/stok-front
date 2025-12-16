@@ -85,7 +85,7 @@ defineExpose({
 
     <VStepperWindow class="flex-1">
       <VStepperWindowItem :value="1">
-        <div>
+        <div  class="container-narrow">
           <p class="fs-24 font-weight-bold my-4">
             {{ $t('booking_classes') }}:
           </p>
@@ -150,7 +150,7 @@ defineExpose({
       </VStepperWindowItem>
 
       <VStepperWindowItem :value="2">
-        <div class="px-1">
+        <div class="container-narrow px-1">
           <p class="fs-20 font-weight-bold my-4">
             {{ $t('booking_classes') }}:
           </p>

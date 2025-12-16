@@ -50,3 +50,32 @@ export function formatDateRange(input, locale = pl) {
   const days = differenceInCalendarDays(endDate, startDate)
   return `${startFormatted} - ${endFormatted} (${days}dni)`
 }
+
+export function formatDateRangeSimple(input, locale = pl) {
+  let startDate, endDate
+
+  if (Array.isArray(input)) {
+    [startDate, endDate] = input.map(d => typeof d === 'string' ? new Date(d) : d)
+  } else if (typeof input === 'string' && input.includes(',')) {
+    const [startStr, endStr] = input.split(',')
+    startDate = new Date(startStr)
+    endDate = endStr ? new Date(endStr) : null
+  } else if (typeof input === 'string') {
+    startDate = new Date(input)
+    endDate = null
+  } else if (input instanceof Date) {
+    startDate = input
+    endDate = null
+  } else {
+    return ''
+  }
+
+  if (!startDate || isNaN(startDate)) return ''
+
+  const startFormatted = format(startDate, 'd MMMM', { locale })
+  if (!endDate || isNaN(endDate)) return startFormatted
+
+  const endFormatted = format(endDate, 'd MMMM', { locale })
+  const days = differenceInCalendarDays(endDate, startDate)
+  return `${startFormatted} - ${endFormatted}`
+}

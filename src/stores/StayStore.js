@@ -90,7 +90,6 @@ const blankParticipant = {
   showGroupLessons: true,
   classLang: 'Polski',
   selectedClasses: DUMMY_SELECTED_CLASSES,
-  loyaltyProgram: {},
 }
 
 export const useStayStore = defineStore('stayStore', () => {
@@ -122,8 +121,17 @@ export const useStayStore = defineStore('stayStore', () => {
       loyaltyCardOwnerName: loyaltyProgram.value.loyaltyCardOwnerName,
       loyaltyCardOwnerSurname: loyaltyProgram.value.loyaltyCardOwnerSurname,
       loyaltyCardNumber: loyaltyProgram.value.loyaltyCardNumber,
-    }
+    },
+    bookingManagerData: bookingManagerData.value,
   }))
+
+  const bookingManagerData = ref({
+    managerId: null,
+    name: '',
+    surname: '',
+    phone: '',
+    email: ''
+  })
 
   // Computed max values based on total constraint
   const maxAdults = computed(() => 12 - childrenNumber.value)
@@ -259,6 +267,7 @@ export const useStayStore = defineStore('stayStore', () => {
     loyaltyProgram,
     isValidLoyaltyCardNumber,
     discountGeneric,
+    bookingManagerData,
     // Computed
     maxAdults,
     maxChildren,

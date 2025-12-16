@@ -125,6 +125,16 @@
   "phone_number": "Numer telefonu",
   "birth_date": "Data urodzenia",
   "childminder": "Opiekun dziecka",
-  "invalid_phone_number": "Nieprawidłowy numer telefonu"
+  "invalid_phone_number": "Nieprawidłowy numer telefonu",
+  "stay": "Pobyt",
+  "select_childminder": "Wybierz opiekuna",
+  "another_childminder": "Inny opiekun",
+  "childminder_name": "Imię opiekuna",
+  "childminder_phone": "Telefon opiekuna",
+  "booking_manager_data": "Dane osoby dokonującej rezerwacji",
+  "enter_participants_data": "Wprowadź dane uczestników",
+  "select_booking_manager": "Wybierz osobę dokonującą rezerwacji",
+  "invalid_email": "Nieprawidłowy adres e-mail",
+  "invalid_phone": "Invalid phone number"
 }
 

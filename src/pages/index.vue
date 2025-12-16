@@ -76,20 +76,23 @@ watch(parentActiveStep, (newStep) => {
 
 <template>
   {{ viewStore.currentStep }}
+
+
   <VContainer
-    max-width="800"
+    max-width="990"
     :class="mobile ? 'px-2': ''"
-    class="d-flex flex-column flex-1 mt-4"
+    class="d-flex flex-column flex-1 mt-4 "
   >
     <VStepper
       ref="parentStepperRef"
       v-model="parentActiveStep"
       class="parent-stepper pa-0 fs-11 d-flex flex-column flex-1 "
       min-height="100%"
+
     >
       <VStepperHeader
         :class="mobile ? 'px-2 py-4' : ''"
-        class="pa-4 box-shadow-sm"
+        class="container-narrow pa-4 box-shadow-sm"
       >
         <VStepperItem
           :value="1"
@@ -114,11 +117,16 @@ watch(parentActiveStep, (newStep) => {
       </VStepperHeader>
 
       <VStepperWindow class="flex-1">
-        <VStepperWindowItem :value="1">
+        <VStepperWindowItem
+          :value="1"
+        >
           <StepOne ref="stepOneComponentRef"/>
         </VStepperWindowItem>
 
-        <VStepperWindowItem :value="2">
+        <VStepperWindowItem
+          :value="2"
+          class="container-narrow"
+        >
           <StepTwo ref="stepTwoComponentRef"/>
         </VStepperWindowItem>
 
@@ -128,12 +136,15 @@ watch(parentActiveStep, (newStep) => {
       </VStepperWindow>
 
       <template #actions>
-        <div class="d-flex justify-space-between mt-4 mb-2">
+        <div
+          class="container-actions d-flex ga-4 mt-8 mb-2"
+        >
           <VBtn
             v-if="viewStore.currentStep.parent !== 1 || viewStore.currentStep.child !== 1"
             variant="outlined"
             color="blue"
-            class="fs-16 text-capitalize"
+            size="large"
+            class="fs-16 text-capitalize flex-1"
             prepend-icon="mdi-arrow-left"
             @click="handlePrev"
           >
@@ -144,7 +155,8 @@ watch(parentActiveStep, (newStep) => {
             v-if="viewStore.currentStep.parent !== 3 || viewStore.currentStep.child !== 3"
             variant="flat"
             color="blue"
-            class="fs-16 text-capitalize px-8 ml-auto"
+            size="large"
+            class="fs-16 text-capitalize px-8 ml-auto flex-2"
             :disabled="!stayStore.dateOfStay"
             @click="handleNext"
           >
@@ -154,7 +166,8 @@ watch(parentActiveStep, (newStep) => {
             v-else
             variant="flat"
             color="blue"
-            class="fs-16 text-capitalize px-8 ml-auto"
+            size="large"
+            class="fs-16 text-capitalize px-8 ml-auto flex-2"
             :disabled="false"
             @click="console.log('Finish clicked')"
           >

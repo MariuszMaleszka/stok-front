@@ -125,5 +125,15 @@
   "phone_number": "Phone number",
   "birth_date": "Birth date",
   "childminder": "Childminder",
-  "invalid_phone_number": "Invalid phone number"
+  "invalid_phone_number": "Invalid phone number",
+  "stay": "Stay",
+  "select_childminder": "Select childminder",
+  "another_childminder": "Another childminder",
+  "childminder_name": "Childminder name",
+  "childminder_phone": "Childminder phone",
+  "booking_manager_data": "Details of the person making the reservation",
+  "enter_participants_data": "Enter participants' data",
+  "select_booking_manager": "Select the person making the reservation",
+  "invalid_email": "Invalid email address",
+  "invalid_phone": "Invalid phone number"
 }

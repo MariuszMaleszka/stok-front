@@ -26,6 +26,7 @@ declare module 'vue' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     SelectedParticipantClasses: typeof import('./src/components/SelectedParticipantClasses.vue')['default']
+    StayDateDisplay: typeof import('./src/components/StayDateDisplay.vue')['default']
     StepOne: typeof import('./src/components/StepOne.vue')['default']
     StepThree: typeof import('./src/components/StepThree.vue')['default']
     StepTwo: typeof import('./src/components/StepTwo.vue')['default']
