@@ -6,6 +6,7 @@
   import skiLOGO from '@/assets/ski-icon.svg'
   import snowboardLOGO from '@/assets/snowboard-icon.svg'
   import AddClassesModal from '@/components/modals/AddClassesModal.vue'
+  import { useStayStore } from '@/stores/StayStore.js'
 
   const props = defineProps({
     modelValue: { type: Boolean, default: false },
@@ -23,6 +24,8 @@
   const emit = defineEmits(['update:modelValue', 'save'])
   const { mobile } = useDisplay()
   const { t, locale } = useI18n()
+  const stayStore = useStayStore()
+
   function close () {
     emit('update:modelValue', false)
   }
@@ -34,15 +37,29 @@
   })
 
   const carouselIndex = ref(0)
-  const daysCount = 5
-  const baseDate = computed(() => {
-    const d = props.participant?.dateOfStay
-    return d ? new Date(d) : new Date()
-  })
   const days = computed(() => {
     const result = []
-    for (let i = 0; i < daysCount; i++) {
-      const d = new Date(baseDate.value)
+    let startDate, endDate
+
+    if (Array.isArray(stayStore.dateOfStay) && stayStore.dateOfStay.length > 0) {
+      startDate = new Date(stayStore.dateOfStay[0])
+      endDate = stayStore.dateOfStay[1] ? new Date(stayStore.dateOfStay[1]) : new Date(startDate)
+    } else if (stayStore.dateOfStay) {
+      startDate = new Date(stayStore.dateOfStay)
+      endDate = new Date(startDate)
+    } else {
+      // Fallback
+      startDate = new Date()
+      endDate = new Date()
+      endDate.setDate(startDate.getDate() + 4)
+    }
+
+    // Calculate number of days
+    const diffTime = Math.abs(endDate - startDate)
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
+
+    for (let i = 0; i < diffDays; i++) {
+      const d = new Date(startDate)
       d.setDate(d.getDate() + i)
       const dayName = d.toLocaleDateString(locale.value === 'pl' ? 'pl-PL' : 'en-US', { weekday: 'long' })
       const dateStr = d.toLocaleDateString(locale.value === 'pl' ? 'pl-PL' : 'en-US', { day: '2-digit', month: 'long', year: 'numeric' })
@@ -50,6 +67,7 @@
     }
     return result
   })
+
   function prevDay () {
     carouselIndex.value = Math.max(0, carouselIndex.value - 1)
   }
