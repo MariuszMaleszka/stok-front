@@ -81,7 +81,7 @@ watch(parentActiveStep, (newStep) => {
   <VContainer
     max-width="990"
     :class="mobile ? 'px-2': ''"
-    class="d-flex flex-column flex-1 mt-4 "
+    class="d-flex flex-column flex-1 mt-4 mb-12"
   >
     <VStepper
       ref="parentStepperRef"
@@ -136,44 +136,47 @@ watch(parentActiveStep, (newStep) => {
       </VStepperWindow>
 
       <template #actions>
-        <div
-          class="container-actions d-flex ga-4 mt-8 mb-2"
-        >
-          <VBtn
-            v-if="viewStore.currentStep.parent !== 1 || viewStore.currentStep.child !== 1"
-            variant="outlined"
-            color="blue"
-            size="large"
-            class="fs-16 text-capitalize flex-1"
-            prepend-icon="mdi-arrow-left"
-            @click="handlePrev"
+        <div class="fixed-bar box-shadow-sm">
+          <div
+            class=" container-actions d-flex ga-4"
           >
-            {{ t('previous') }}
-          </VBtn>
+            <VBtn
+              v-if="viewStore.currentStep.parent !== 1 || viewStore.currentStep.child !== 1"
+              variant="outlined"
+              color="blue"
+              size="large"
+              class="fs-16 text-capitalize flex-1 bg-light-gray"
+              prepend-icon="mdi-arrow-left"
+              @click="handlePrev"
+            >
+              {{ t('previous') }}
+            </VBtn>
 
-          <VBtn
-            v-if="viewStore.currentStep.parent !== 3 || viewStore.currentStep.child !== 3"
-            variant="flat"
-            color="blue"
-            size="large"
-            class="fs-16 text-capitalize px-8 ml-auto flex-2"
-            :disabled="!stayStore.dateOfStay"
-            @click="handleNext"
-          >
-            {{ t('next') }}
-          </VBtn>
-          <VBtn
-            v-else
-            variant="flat"
-            color="blue"
-            size="large"
-            class="fs-16 text-capitalize px-8 ml-auto flex-2"
-            :disabled="false"
-            @click="console.log('Finish clicked')"
-          >
-            {{ t('finalize') }}
-          </VBtn>
+            <VBtn
+              v-if="viewStore.currentStep.parent !== 3 || viewStore.currentStep.child !== 3"
+              variant="flat"
+              color="blue"
+              size="large"
+              class="fs-16 text-capitalize px-8 ml-auto flex-2"
+              :disabled="!stayStore.dateOfStay"
+              @click="handleNext"
+            >
+              {{ t('next') }}
+            </VBtn>
+            <VBtn
+              v-else
+              variant="flat"
+              color="blue"
+              size="large"
+              class="fs-16 text-capitalize px-8 ml-auto flex-2"
+              :disabled="false"
+              @click="console.log('Finish clicked')"
+            >
+              {{ t('proceed_to_payment') }}
+            </VBtn>
 
+
+          </div>
 
         </div>
       </template>
@@ -291,5 +294,15 @@ watch(parentActiveStep, (newStep) => {
       border-color: $blue;
     }
   }
+}
+.fixed-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  z-index: 10;
+  padding: .5rem;
+  background-color: $bg-gray-light;
 }
 </style>

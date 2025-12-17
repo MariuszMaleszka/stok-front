@@ -21,7 +21,7 @@ const {t} = useI18n()
 const CUSTOMER_SERVICE_LINK = "https://szkolastok.pl/kontakt"
 const infoDialog = ref(false)
 
-const panel = ref([0]) // To control expansion panel opened/closed state
+const panel = ref(props.index === 0 ? [0] : []) // To control expansion panel opened/closed state
 const form = ref(null) // Reference to the form (participant details)
 const showErrors = ref(false) // To control error display
 
@@ -60,10 +60,7 @@ const availableSkillLevels = computed(() => {
   return []
 })
 
-const currentSkillLevelInfo = computed(() => {
-  if (!selectedSkillLevel.value || !selectedSkillLevel.value[0]) return null
-  return availableSkillLevels.value.find(level => level === selectedSkillLevel.value[0])
-})
+const currentSkillLevelInfo = ref(null)
 
 const isSnowboardDisabled = computed(() => {
   return props.participant.participantType === 'child' &&
@@ -240,6 +237,7 @@ defineExpose({
                 :key="i"
                 :value="item"
                 color="primary"
+                :ripple="false"
                 class="border rounded-lg mb-2"
                 @click="selectSkillLevel(item)"
               >
@@ -249,19 +247,25 @@ defineExpose({
                     :icon="isSelected ? 'mdi-circle-slice-8' : 'mdi-circle-outline'"
                   />
                 </template>
-                <VListItemTitle>
-                  <p class="mb-0 fs-14 text-pre-wrap lh-normal">
-                    {{ item.name }}
-                  </p>
-                </VListItemTitle>
-                <p class="mb-0 fs-11 text-pre-wrap">
-                  {{ item.description }}
-                </p>
+
+                <template v-slot:default>
+                  <VListItemTitle>
+                    <p class="mb-0 fs-14 text-pre-wrap lh-normal">
+                      {{ item.name }}
+                    </p>
+                  </VListItemTitle>
+                  <VListItemSubtitle>
+                    <p class="mb-0 fs-11 text-pre-wrap">
+                      {{ item.description }}
+                    </p>
+                  </VListItemSubtitle>
+                </template>
+
                 <template #append>
                   <VIcon
-                    size="16"
+                    size="18"
                     icon="mdi-information-slab-circle"
-                    @click.stop="selectedSkillLevel = [item]; infoDialog = true"
+                    @click.stop="currentSkillLevelInfo = item; infoDialog = true"
                   />
                 </template>
               </VListItem>
@@ -278,17 +282,15 @@ defineExpose({
       <VCard v-if="currentSkillLevelInfo">
         <VCardTitle>
           <div :class="mobile ? 'py-2':''" class="d-flex justify-space-between">
-            <span :class="mobile ? 'fs-14':'fs-16'">
-              {{ currentSkillLevelInfo.name }}
-            </span>
+        <span :class="mobile ? 'fs-14':'fs-16'">
+          {{ currentSkillLevelInfo.name }}
+        </span>
             <button class="close-btn" aria-label="Close" @click="infoDialog = false">
               <VIcon size="18" icon="mdi-close"/>
             </button>
           </div>
         </VCardTitle>
-        <VCardText
-          :class="mobile ? 'pt-0':''"
-        >
+        <VCardText :class="mobile ? 'pt-0':''">
           <p :class="mobile ? 'fs-12':'fs-14'">
             {{ currentSkillLevelInfo.additionalInfo }}
           </p>

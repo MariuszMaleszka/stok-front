@@ -116,10 +116,11 @@ defineExpose({
       <VCol :cols="mobile ? 12 : 6">
         <p class="custom-input-label mb-2">{{ $t('phone_number') }}</p>
         <VTextField
-          v-model="participant.phoneNumber"
+          v-model="participant.phone"
           variant="outlined"
           density="default"
           clearable
+          clearIcon="mdi-close"
           autocomplete="off"
           hide-details="auto"
           maxLength="11"
@@ -157,6 +158,7 @@ defineExpose({
           item-title="name"
           item-value="dynamicId"
           clearable
+          clearIcon="mdi-close"
           variant="outlined"
           density="default"
           :placeholder="$t('select_childminder')"
@@ -179,6 +181,8 @@ defineExpose({
             density="default"
             clearable
             clearIcon="mdi-close"
+            maxLength="50"
+            minLength="2"
             autocomplete="off"
             hide-details="auto"
             :rules="[rules.required]"
@@ -192,6 +196,8 @@ defineExpose({
             variant="outlined"
             density="default"
             clearable
+            maxLength="50"
+            minLength="2"
             clearIcon="mdi-close"
             autocomplete="off"
             hide-details="auto"
@@ -207,11 +213,15 @@ defineExpose({
             density="default"
             clearable
             maxLength="11"
+            clearIcon="mdi-close"
             autocomplete="off"
             hide-details="auto"
             :rules="[rules.required, rules.phone]"
             @keydown="(e) => !/[\d+]/.test(e.key) && e.key !== 'Backspace' && e.preventDefault()"
           />
+          <p class="fs-12 px-4 fc-gray">
+            {{ $t('enter_only_numbers') }}
+          </p>
         </VCol>
       </template>
 

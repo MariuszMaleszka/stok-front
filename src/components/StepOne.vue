@@ -92,7 +92,7 @@ defineExpose({
           <div class="my-4">
             <p
               :class="mobile ? 'fs-18' : 'fs-20'"
-              class="font-weight-medium mb-n2"
+              class="font-weight-medium"
             >
               {{ $t('provide_details_of_your_stay') }}:
             </p>

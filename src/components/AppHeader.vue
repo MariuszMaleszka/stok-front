@@ -3,7 +3,8 @@ import { ref } from 'vue'
 import Logo from '@/assets/stok-logo.svg'
 import {useI18n} from "vue-i18n";
 import {useCookies} from "@vueuse/integrations/useCookies";
-
+import plFlag from '@/assets/pl-flag.svg'
+import enFlag from '@/assets/en-flag.svg'
 const { locale } = useI18n()
 const menu = ref(false)
 const cookies = useCookies(['locale'])
@@ -31,12 +32,18 @@ const changeLanguage = (lang) => {
         <VAppBarNavIcon v-bind="props" />
       </template>
 
-      <VList>
-        <VListItem>
-          <VBtn @click="changeLanguage('pl')">pl</VBtn>
+      <VList density="compact">
+        <VListItem  @click="changeLanguage('pl')">
+          <template #prepend>
+            <img class="mr-2" :src="plFlag" alt="pl">
+          </template>
+          PL
         </VListItem>
-        <VListItem>
-          <VBtn @click="changeLanguage('en')">en</VBtn>
+        <VListItem @click="changeLanguage('en')">
+          <template #prepend>
+            <img class="mr-2" :src="enFlag" alt="en">
+          </template>
+          EN
         </VListItem>
       </VList>
     </VMenu>

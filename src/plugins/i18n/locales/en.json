@@ -131,9 +131,22 @@
   "another_childminder": "Another childminder",
   "childminder_name": "Childminder name",
   "childminder_phone": "Childminder phone",
-  "booking_manager_data": "Details of the person making the reservation",
+  "stay_manager_data": "Details of the person making the reservation",
   "enter_participants_data": "Enter participants' data",
-  "select_booking_manager": "Select the person making the reservation",
+  "select_stay_manager": "Select the person making the reservation",
+  "another_stay_manager": "Another stay manager",
   "invalid_email": "Invalid email address",
-  "invalid_phone": "Invalid phone number"
+  "invalid_phone": "Invalid phone number",
+  "payers_name": "Payer's name",
+  "payers_surname": "Payer's surname",
+  "payers_email": "Payer's email",
+  "receive_invoice": "I want to receive a VAT invoice",
+  "company_name": "Company name",
+  "tax_id": "Tax ID",
+  "company_address": "Adress",
+  "enter_street_and_number": "Enter zip code, street and city",
+  "another_payers_data": "Another payer's data",
+  "enter_only_numbers": "Enter numbers only, minimum 9",
+  "proceed_to_payment": "Proceed to payment"
+
 }

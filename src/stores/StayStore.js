@@ -122,15 +122,33 @@ export const useStayStore = defineStore('stayStore', () => {
       loyaltyCardOwnerSurname: loyaltyProgram.value.loyaltyCardOwnerSurname,
       loyaltyCardNumber: loyaltyProgram.value.loyaltyCardNumber,
     },
-    bookingManagerData: bookingManagerData.value,
+    stayManagerData: stayManagerData.value,
+    anotherPayerData: anotherPayerData.value,
+    payerData: anotherPayerData.value ? payerData.value : null,
+    receiveInvoice: receiveInvoice.value,
+    invoiceData: receiveInvoice.value ? invoiceData.value : null,
   }))
 
-  const bookingManagerData = ref({
+  const stayManagerData = ref({
     managerId: null,
     name: '',
     surname: '',
     phone: '',
     email: ''
+  })
+
+  const anotherPayerData = ref(false) // checkbox for another payer's data
+  const payerData = ref({
+    name: '',
+    surname: '',
+    email: ''
+  })
+
+  const receiveInvoice = ref(false) // checkbox for receiving invoice
+  const invoiceData = ref({
+    companyName: '',
+    taxId: '',
+    companyAddress: ''
   })
 
   // Computed max values based on total constraint
@@ -267,7 +285,11 @@ export const useStayStore = defineStore('stayStore', () => {
     loyaltyProgram,
     isValidLoyaltyCardNumber,
     discountGeneric,
-    bookingManagerData,
+    stayManagerData,
+    anotherPayerData,
+    payerData,
+    receiveInvoice,
+    invoiceData,
     // Computed
     maxAdults,
     maxChildren,

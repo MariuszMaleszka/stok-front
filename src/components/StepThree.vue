@@ -8,22 +8,18 @@ import {useViewControlStore} from "@/stores/ViewControlStore.js";
 import {useDisplay} from 'vuetify'
 import SelectedParticipantClasses from "@/components/SelectedParticipantClasses.vue";
 import {useI18n} from "vue-i18n";
-import ParticipantAccordion from "@/components/ParticipantAccordion.vue";
 import {formatPrice} from "@/utils/numbers.js";
 import CheckGreenIcon from "@/assets/check-circle.svg";
 import { useDebounceFn } from '@vueuse/core'
-import InsuranceIMG from "@/assets/insurance_img.png";
 import PopupSmall from "@/components/modals/PopupSmall.vue";
 import ParticipantData from "@/components/ParticipantData.vue";
 import WalletIcon from "@/assets/wallet.svg";
-import UserIcon from "@/assets/user-circle-blue.svg";
 
 const {showSimpleToast, showActionToast} = useToast()
 const stayStore = useStayStore()
 const viewStore = useViewControlStore()
 const cookies = useCookies(['locale'])
 const {mobile, lgAndUp} = useDisplay()
-const currentLocale = computed(() => cookies.get('locale') || 'pl')
 const {t} = useI18n()
 
 // Form refs
@@ -118,33 +114,49 @@ const handleCardNumberValidation = useDebounceFn(async () => {
 }, 1500)
 
 
-// Get adult participants for booking manager select
-const adultParticipants = computed(() =>
-  stayStore.participants.filter(p => p.participantType === 'adult')
-)
+// Get adult participants for stay manager select
+const adultParticipants = computed(() => {
+  const adults = stayStore.participants.filter(p => p.participantType === 'adult')
+  return [
+    ...adults,
+    { dynamicId: 'another', name: t('another_stay_manager'), surname: '' }
+  ]
+})
 
 // Auto-select first adult and populate fields
 watch(adultParticipants, (adults) => {
-  if (adults.length > 0 && !stayStore.bookingManagerData.managerId) {
-    const firstAdult = adults[0]
-    stayStore.bookingManagerData.managerId = firstAdult.dynamicId
-    stayStore.bookingManagerData.name = firstAdult.name || ''
-    stayStore.bookingManagerData.surname = firstAdult.surname || ''
-    stayStore.bookingManagerData.phone = firstAdult.phone || ''
-    stayStore.bookingManagerData.email = firstAdult.email || ''
+  const actualAdults = adults.filter(a => a.dynamicId !== 'another')
+  if (actualAdults.length > 0 && !stayStore.stayManagerData.managerId) {
+    const firstAdult = actualAdults[0]
+    stayStore.stayManagerData.managerId = firstAdult.dynamicId
+    stayStore.stayManagerData.name = firstAdult.name || ''
+    stayStore.stayManagerData.surname = firstAdult.surname || ''
+    stayStore.stayManagerData.phone = firstAdult.phone || ''
+    stayStore.stayManagerData.email = firstAdult.email || ''
   }
 }, { immediate: true })
 
 // Update fields when selection changes
-watch(() => stayStore.bookingManagerData.managerId, (managerId) => {
-  const manager = stayStore.participants.find(p => p.dynamicId === managerId)
-  if (manager) {
-    stayStore.bookingManagerData.name = manager.name || ''
-    stayStore.bookingManagerData.surname = manager.surname || ''
-    stayStore.bookingManagerData.phone = manager.phone || ''
-    stayStore.bookingManagerData.email = manager.email || ''
+watch(() => stayStore.stayManagerData.managerId, (managerId) => {
+  if (managerId === 'another') {
+    // Clear fields when "another" is selected
+    stayStore.stayManagerData.name = ''
+    stayStore.stayManagerData.surname = ''
+    stayStore.stayManagerData.phone = ''
+    stayStore.stayManagerData.email = ''
+  } else {
+    const manager = stayStore.participants.find(p => p.dynamicId === managerId)
+    if (manager) {
+      stayStore.stayManagerData.name = manager.name || ''
+      stayStore.stayManagerData.surname = manager.surname || ''
+      stayStore.stayManagerData.phone = manager.phone || ''
+      stayStore.stayManagerData.email = manager.email || ''
+    }
   }
 })
+
+// Check if "another stay manager" is selected
+const isAnotherStayManager = computed(() => stayStore.stayManagerData.managerId === 'another')
 
 // Expose for parent access
 defineExpose({
@@ -259,15 +271,14 @@ defineExpose({
               </p>
               <VSheet class="rounded bg-light-gray mt-2 mb-4">
                 <div
-                  :class="mobile ? 'px-0': 'px-1'"
-                  class="pt-0 rounded d-flex align-center justify-between"
+                  class="pa-1 rounded d-flex align-center justify-between"
                 >
                   <VCheckbox
                     density="compact"
                     v-model="allInsurancesEnabled"
                     hide-details
                     color="info"
-                    class="mb-auto mt-1"
+                    class="mb-auto mt-1 "
                   />
                   <div
                     :class="mobile ? 'fs-10': 'fs-14'"
@@ -298,11 +309,11 @@ defineExpose({
 
                   <div
                     :class="mobile ? 'fs-11 ': 'fs-14'"
-                    class="d-flex flex-column align-end ml-auto ma-0 fc-gray"
+                    class="d-flex flex-column align-end ml-auto fc-gray px-1 mb-auto"
                   >
-                  <span class="fw-500">
-                    +&nbsp;{{ formatPrice(sumTotalInsurancesForAll) }}&nbsp;{{ stayStore.currency }}
-                  </span>
+                    <span class="fw-500 mb-auto">
+                      +&nbsp;{{ formatPrice(sumTotalInsurancesForAll) }}&nbsp;{{ stayStore.currency }}
+                    </span>
 
                   </div>
                 </div>
@@ -516,49 +527,60 @@ defineExpose({
             :participant="participant"
           />
 
-          <!--BOOKING MANAGER DATA-->
+          <!--stay MANAGER DATA-->
           <div class="mt-8 mb-4 px-1">
             <p
               :class="mobile? 'fs-16':'fs-20'"
               class="fw-600 my-4"
             >
-              {{ $t('booking_manager_data') }}:
+              {{ $t('stay_manager_data') }}:
             </p>
             <VSheet
               :class="mobile ? 'fs-11 pa-4' : 'fs-14 pa-8'"
               class="bg-white rounded-lg box-shadow-sm"
             >
-              <div class="mb-4 pb-4">
+              <div class="mb-2">
                 <img :src="WalletIcon" alt="wallet">
                 <div class="d-flex align-center fs-16 fw-500 mt-2">
-                  {{ $t('select_booking_manager') }}:
+                  {{ $t('select_stay_manager') }}:
                 </div>
               </div>
 
               <VSelect
-                v-model="stayStore.bookingManagerData.managerId"
+                v-model="stayStore.stayManagerData.managerId"
                 :items="adultParticipants"
                 item-title="name"
                 item-value="dynamicId"
+                clearIcon="mdi-close"
                 variant="outlined"
                 clearable
                 hide-details="auto"
-                :placeholder="$t('select_booking_manager')"
+                :placeholder="$t('select_stay_manager')"
                 :rules="[rules.required]"
               >
-                <template #selection>
-<!--                  {{ (item.name) }}-->
+                <template #selection="{ item }">
+                  {{ item.raw.name }}{{ item.raw.surname ? ' ' + item.raw.surname : '' }}
+                </template>
+                <template #item="{ item, props }">
+                  <v-list-item v-bind="props">
+                    <template #title>
+                      {{ item.raw.name }}{{ item.raw.surname ? ' ' + item.raw.surname : '' }}
+                    </template>
+                  </v-list-item>
                 </template>
               </VSelect>
               <VDivider class="my-4"/>
 
               <VRow class="mt-4">
                 <VCol :cols="mobile ? 12 : 6">
-                  <p class="custom-input-label mb-2">{{ $t('name') }}</p>
+                  <p class="custom-input-label mb-2">{{ isAnotherStayManager ? $t('payers_name') : $t('name') }}</p>
                   <VTextField
-                    v-model="stayStore.bookingManagerData.name"
+                    v-model="stayStore.stayManagerData.name"
                     variant="outlined"
                     density="default"
+                    clearIcon="mdi-close"
+                    maxLength="50"
+                    minLength="2"
                     clearable
                     hide-details="auto"
                     :rules="[rules.required]"
@@ -566,11 +588,14 @@ defineExpose({
                 </VCol>
 
                 <VCol :cols="mobile ? 12 : 6">
-                  <p class="custom-input-label mb-2">{{ $t('surname') }}</p>
+                  <p class="custom-input-label mb-2">{{ isAnotherStayManager ? $t('payers_surname') : $t('surname') }}</p>
                   <VTextField
-                    v-model="stayStore.bookingManagerData.surname"
+                    v-model="stayStore.stayManagerData.surname"
                     variant="outlined"
                     density="default"
+                    maxLength="50"
+                    minLength="2"
+                    clearIcon="mdi-close"
                     clearable
                     hide-details="auto"
                     :rules="[rules.required]"
@@ -580,22 +605,29 @@ defineExpose({
                 <VCol :cols="mobile ? 12 : 6">
                   <p class="custom-input-label mb-2">{{ $t('phone_number') }}</p>
                   <VTextField
-                    v-model="stayStore.bookingManagerData.phone"
+                    v-model="stayStore.stayManagerData.phone"
                     variant="outlined"
                     density="default"
+                    clearIcon="mdi-close"
                     clearable
+                    maxLength="11"
                     hide-details="auto"
                     :rules="[rules.required, rules.phone]"
                     @keydown="(e) => !/[\d+]/.test(e.key) && e.key !== 'Backspace' && e.preventDefault()"
-                  />
+                  >
+                  </VTextField>
+                    <p class="fs-12 px-4 fc-gray">
+                      {{ $t('enter_only_numbers') }}
+                    </p>
                 </VCol>
 
                 <VCol :cols="mobile ? 12 : 6">
-                  <p class="custom-input-label mb-2">Email</p>
+                  <p class="custom-input-label mb-2">{{ isAnotherStayManager ? $t('payers_email') : 'Email' }}</p>
                   <VTextField
-                    v-model="stayStore.bookingManagerData.email"
+                    v-model="stayStore.stayManagerData.email"
                     variant="outlined"
                     density="default"
+                    clearIcon="mdi-close"
                     clearable
                     hide-details="auto"
                     type="email"
@@ -603,6 +635,132 @@ defineExpose({
                   />
                 </VCol>
               </VRow>
+              <VDivider class="mt-8 mb-4"/>
+              <div class="my-4 w-100">
+               <VCheckbox
+                v-model="stayStore.anotherPayerData"
+                density="compact"
+                color="info"
+                hide-details="auto"
+               >
+                 <template #label>
+                 {{ $t('another_payers_data') }}
+                 </template>
+               </VCheckbox>
+              </div>
+
+              <VExpandTransition>
+                <VRow v-show="stayStore.anotherPayerData" class="mt-2">
+                  <VCol :cols="mobile ? 12 : 6">
+                    <p class="custom-input-label mb-2">{{ $t('payers_name') }}</p>
+                    <VTextField
+                      v-model="stayStore.payerData.name"
+                      variant="outlined"
+                      density="default"
+                      clearIcon="mdi-close"
+                      maxLength="50"
+                      minLength="2"
+                      clearable
+                      hide-details="auto"
+                      :rules="stayStore.anotherPayerData ? [rules.required] : []"
+                    />
+                  </VCol>
+
+                  <VCol :cols="mobile ? 12 : 6">
+                    <p class="custom-input-label mb-2">{{ $t('payers_surname') }}</p>
+                    <VTextField
+                      v-model="stayStore.payerData.surname"
+                      variant="outlined"
+                      density="default"
+                      maxLength="50"
+                      clearIcon="mdi-close"
+                      minLength="2"
+                      clearable
+                      hide-details="auto"
+                      :rules="stayStore.anotherPayerData ? [rules.required] : []"
+                    />
+                  </VCol>
+
+                  <VCol :cols="mobile ? 12 : 6">
+                    <p class="custom-input-label mb-2">{{ $t('payers_email') }}</p>
+                    <VTextField
+                      v-model="stayStore.payerData.email"
+                      variant="outlined"
+                      density="default"
+                      clearIcon="mdi-close"
+                      clearable
+                      hide-details="auto"
+                      type="email"
+                      :rules="stayStore.anotherPayerData ? [rules.required, rules.email] : []"
+                    />
+                  </VCol>
+                </VRow>
+              </VExpandTransition>
+
+              <VDivider class="my-4"/>
+
+              <div class="my-4 w-100">
+                <VCheckbox
+                  v-model="stayStore.receiveInvoice"
+                  density="compact"
+                  color="info"
+                  hide-details="auto"
+                >
+                  <template #label>
+                    {{ $t('receive_invoice') }}
+                  </template>
+                </VCheckbox>
+              </div>
+
+              <VExpandTransition>
+                <VRow v-show="stayStore.receiveInvoice" class="mt-2">
+                  <VCol :cols="mobile ? 12 : 6">
+                    <p class="custom-input-label mb-2">{{ $t('company_name') }}</p>
+                    <VTextField
+                      v-model="stayStore.invoiceData.companyName"
+                      variant="outlined"
+                      density="default"
+                      clearIcon="mdi-close"
+                      maxLength="100"
+                      clearable
+                      hide-details="auto"
+                      :rules="stayStore.receiveInvoice ? [rules.required] : []"
+                    />
+                  </VCol>
+
+                  <VCol :cols="mobile ? 12 : 6">
+                    <p class="custom-input-label mb-2">{{ $t('tax_id') }}</p>
+                    <VTextField
+                      v-model="stayStore.invoiceData.taxId"
+                      variant="outlined"
+                      density="default"
+                      clearIcon="mdi-close"
+                      maxLength="10"
+                      clearable
+                      hide-details="auto"
+                      :rules="stayStore.receiveInvoice ? [rules.required] : []"
+                      :placeholder="$t('enter_only_numbers')"
+                      @keydown="(e) => !/[\d]/.test(e.key) && e.key !== 'Backspace' && e.key !== 'Tab' && e.key !== 'Delete' && e.key !== 'ArrowLeft' && e.key !== 'ArrowRight' && e.preventDefault()"
+                    />
+                  </VCol>
+
+                  <VCol cols="12">
+                    <p class="custom-input-label mb-2">{{ $t('company_address') }}</p>
+                    <VTextField
+                      v-model="stayStore.invoiceData.companyAddress"
+                      variant="outlined"
+                      density="default"
+                      clearIcon="mdi-close"
+                      maxLength="200"
+                      clearable
+                      hide-details="auto"
+                      :rules="stayStore.receiveInvoice ? [rules.required] : []"
+                      :placeholder="$t('enter_street_and_number')"
+                    />
+                  </VCol>
+                </VRow>
+              </VExpandTransition>
+
             </VSheet>
           </div>
 
