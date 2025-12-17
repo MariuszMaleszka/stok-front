@@ -1,19 +1,24 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import Logo from '@/assets/stok-logo.svg'
 import {useI18n} from "vue-i18n";
 import {useCookies} from "@vueuse/integrations/useCookies";
 import plFlag from '@/assets/pl-flag.svg'
 import enFlag from '@/assets/en-flag.svg'
+
 const { locale } = useI18n()
 const menu = ref(false)
 const cookies = useCookies(['locale'])
+
+const currentFlag = computed(() => {
+  return locale.value === 'pl' ? plFlag : enFlag
+})
+
 // Switch language
 const changeLanguage = (lang) => {
   locale.value = lang
   cookies.set('locale', lang, { path: '/', maxAge: 60 * 60 * 24 * 365 }) // 1 year
 }
-
 </script>
 
 <template>
@@ -29,11 +34,13 @@ const changeLanguage = (lang) => {
 
     <VMenu v-model="menu">
       <template v-slot:activator="{ props }">
-        <VAppBarNavIcon v-bind="props" />
+        <VBtn v-bind="props" icon variant="text">
+          <img :src="currentFlag" :alt="locale" style="width: 24px; height: 24px;">
+        </VBtn>
       </template>
 
       <VList density="compact">
-        <VListItem  @click="changeLanguage('pl')">
+        <VListItem @click="changeLanguage('pl')">
           <template #prepend>
             <img class="mr-2" :src="plFlag" alt="pl">
           </template>
@@ -49,7 +56,3 @@ const changeLanguage = (lang) => {
     </VMenu>
   </VAppBar>
 </template>
-
-<style scoped lang="scss">
-
-</style>

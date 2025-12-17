@@ -3,16 +3,18 @@ import {computed, ref, watch} from "vue"
 import {useCookies} from "@vueuse/integrations/useCookies"
 import {useDisplay} from 'vuetify'
 import {useI18n} from "vue-i18n"
-
+import UserPlusIcon from '@/assets/user-plus.svg'
 import DatePickerResponsive from "@/components/DatePickerResponsive.vue"
 import ParticipantAccordion from "@/components/ParticipantAccordion.vue"
 import {useStayStore} from '@/stores/StayStore.js'
+import {useStayConfigStore} from "@/stores/StayConfigStore.js";
 import {useViewControlStore} from "@/stores/ViewControlStore.js"
 import {useToast} from '@/composables/useToast'
 
 const {t} = useI18n()
 const {showSimpleToast} = useToast()
 const stayStore = useStayStore()
+const configStore = useStayConfigStore()
 const viewStore = useViewControlStore()
 const cookies = useCookies(['locale'])
 const {mobile} = useDisplay()
@@ -145,6 +147,18 @@ defineExpose({
                 {{ $t('enter_number_of_participants_children') }}
               </p>
             </div>
+            <VSheet class="rounded-lg pa-4">
+              <div
+                :class="mobile ? 'align-start' : 'align-center'"
+                class="d-flex ga-2 "
+              >
+                <img class="mt-1" :src="UserPlusIcon" alt="user">
+              <p class="fs-12 fc-gray">
+                {{ $t('book_more_info') }}
+                <a class="fc-gray" target="_blank" :href="configStore.CUSTOMER_SERVICE_LINK">{{ $t('with_customers_service') }}</a>
+              </p>
+              </div>
+            </VSheet>
           </VForm>
         </div>
       </VStepperWindowItem>
@@ -155,7 +169,7 @@ defineExpose({
             {{ $t('booking_classes') }}:
           </p>
           <div class="my-4">
-            <p class="fs-18 fc-blue font-weight-medium mb-n2">
+            <p class="fs-18 fc-blue font-weight-medium">
               {{ $t('participants_preferences') }}:
             </p>
             <small class="fs-11">

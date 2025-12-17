@@ -67,7 +67,6 @@ const handleNext = async () => {
   }
 }
 
-
 watch(parentActiveStep, (newStep) => {
   viewStore.currentStep.parent = newStep
 
@@ -75,8 +74,6 @@ watch(parentActiveStep, (newStep) => {
 </script>
 
 <template>
-  {{ viewStore.currentStep }}
-
 
   <VContainer
     max-width="990"

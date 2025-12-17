@@ -3,6 +3,7 @@ import {computed, ref} from 'vue'
 import {useDisplay} from 'vuetify';
 import {useI18n} from "vue-i18n";
 import {useStayStore} from "@/stores/StayStore.js";
+import {useStayConfigStore} from "@/stores/StayConfigStore.js";
 
 const props = defineProps({
   participant: {
@@ -15,6 +16,7 @@ const props = defineProps({
   }
 })
 const stayStore = useStayStore()
+const configStore = useStayConfigStore()
 const {mobile} = useDisplay()
 const {t} = useI18n()
 
@@ -136,7 +138,7 @@ defineExpose({
             />
             <p class="fs-12 fc-gray">
               {{ $t('min_child_age') }}
-              <a class="fc-gray" target="_blank" :href="CUSTOMER_SERVICE_LINK">{{ $t('with_customers_service') }}</a>
+              <a class="fc-gray" target="_blank" :href="configStore.CUSTOMER_SERVICE_LINK">{{ $t('with_customers_service') }}</a>
             </p>
           </div>
 

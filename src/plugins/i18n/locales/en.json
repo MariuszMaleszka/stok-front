@@ -147,6 +147,8 @@
   "enter_street_and_number": "Enter zip code, street and city",
   "another_payers_data": "Another payer's data",
   "enter_only_numbers": "Enter numbers only, minimum 9",
-  "proceed_to_payment": "Proceed to payment"
+  "proceed_to_payment": "Proceed to payment",
+  "begginer": "Begginer",
+  "book_more_info": "To book classes for more than 8 people, please contact"
 
 }

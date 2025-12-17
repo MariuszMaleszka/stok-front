@@ -5,6 +5,8 @@ import { useI18n } from 'vue-i18n'
 export const useStayConfigStore = defineStore('stayConfig', () => {
   const { t } = useI18n()
 
+  const CUSTOMER_SERVICE_LINK = 'https://example.com/contact'
+
   const currency = 'zł'
 
   const activityTypes = reactive([
@@ -13,14 +15,14 @@ export const useStayConfigStore = defineStore('stayConfig', () => {
   ])
 
   const skillLevels_ADULTS = reactive([
+    // {
+    //   name: t('firstime'),
+    //   description: t('firstime_desc'),
+    //   additionalInfo: t('firstime_info'),
+    //   selected: false
+    // },
     {
-      name: t('firstime'),
-      description: t('firstime_desc'),
-      additionalInfo: t('firstime_info'),
-      selected: false
-    },
-    {
-      name: t('novice'),
+      name: t('begginer'),
       description: t('novice_desc'),
       additionalInfo: t('novice_info'),
       selected: false
@@ -113,5 +115,6 @@ export const useStayConfigStore = defineStore('stayConfig', () => {
     skillLevels_CHILDREN_SNOWBOARD,
     availableLanguages,
     currency,
+    CUSTOMER_SERVICE_LINK,
   }
 })
