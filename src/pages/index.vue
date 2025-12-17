@@ -1,85 +1,81 @@
 <script setup>
-import {computed, ref} from 'vue'
-import {useDisplay} from 'vuetify'
-import {useViewControlStore} from "@/stores/ViewControlStore.js"
-import {useStayStore} from '@/stores/StayStore.js'
-import {useI18n} from "vue-i18n"
-import {useToast} from "@/composables/useToast.js"
+  import { computed, ref } from 'vue'
+  import { useI18n } from 'vue-i18n'
+  import { useDisplay } from 'vuetify'
+  import StepOne from '@/components/StepOne.vue'
+  import StepThree from '@/components/StepThree.vue'
+  import StepTwo from '@/components/StepTwo.vue'
 
-import StepOne from "@/components/StepOne.vue"
-import StepTwo from "@/components/StepTwo.vue"
-import StepThree from "@/components/StepThree.vue"
+  import { useToast } from '@/composables/useToast.js'
+  import { useStayStore } from '@/stores/StayStore.js'
+  import { useViewControlStore } from '@/stores/ViewControlStore.js'
 
-const viewStore = useViewControlStore()
-const stayStore = useStayStore()
-const {showSimpleToast} = useToast()
-const {mobile} = useDisplay()
-const {t} = useI18n()
+  const viewStore = useViewControlStore()
+  const stayStore = useStayStore()
+  const { showSimpleToast } = useToast()
+  const { mobile } = useDisplay()
+  const { t } = useI18n()
 
-const parentStepperRef = ref(null)
-const parentActiveStep = ref(1)
+  const parentStepperRef = ref(null)
+  const parentActiveStep = ref(1)
 
-const stepOneComponentRef = ref(null)
-const stepTwoComponentRef = ref(null)
-const stepThreeComponentRef = ref(null)
+  const stepOneComponentRef = ref(null)
+  const stepTwoComponentRef = ref(null)
+  const stepThreeComponentRef = ref(null)
 
-const handlePrev = () => {
-  if (viewStore.currentStep.parent === 3 && viewStore.currentStep.child === 3) {
-    stepThreeComponentRef.value.stepThreeNestedRef.prev()
-  }
-  if (viewStore.currentStep.parent === 3 && viewStore.currentStep.child === 2) {
-    stepThreeComponentRef.value.stepThreeNestedRef.prev()
-  }
-  if (viewStore.currentStep.parent === 3 && viewStore.currentStep.child === 1) {
-    viewStore.currentStep = {parent: 2, child: 2} // reset child step to 2 to remain flow
-    parentStepperRef.value.prev()
-  }
-  if (viewStore.currentStep.parent === 2) {
-    parentStepperRef.value.prev()
-  }
-  if (viewStore.currentStep.parent === 1 && viewStore.currentStep.child === 2) {
-    stepOneComponentRef.value.stepOneNestedRef.prev()
-  }
-
-}
-
-const handleNext = async () => {
-
-  if (viewStore.currentStep.parent === 1 && viewStore.currentStep.child === 1) {
-    stepOneComponentRef.value.stepOneNestedRef.next()
-  }
-  if (viewStore.currentStep.parent === 1 && viewStore.currentStep.child === 2) {
-    const isValid = await stepOneComponentRef.value?.validateCurrentStep()
-    if (isValid) {
-      viewStore.isStepOneCompleted = true
-      parentStepperRef.value.next()
-    } else {
-      viewStore.isStepOneCompleted = false
+  function handlePrev () {
+    if (viewStore.currentStep.parent === 3 && viewStore.currentStep.child === 3) {
+      stepThreeComponentRef.value.stepThreeNestedRef.prev()
     }
-    return
+    if (viewStore.currentStep.parent === 3 && viewStore.currentStep.child === 2) {
+      stepThreeComponentRef.value.stepThreeNestedRef.prev()
+    }
+    if (viewStore.currentStep.parent === 3 && viewStore.currentStep.child === 1) {
+      viewStore.currentStep = { parent: 2, child: 2 } // reset child step to 2 to remain flow
+      parentStepperRef.value.prev()
+    }
+    if (viewStore.currentStep.parent === 2) {
+      parentStepperRef.value.prev()
+    }
+    if (viewStore.currentStep.parent === 1 && viewStore.currentStep.child === 2) {
+      stepOneComponentRef.value.stepOneNestedRef.prev()
+    }
   }
-  if (viewStore.currentStep.parent === 2) {
-    viewStore.currentStep = {parent: 2, child: 1} // reset child step to 1 to remain flow
-    parentStepperRef.value.next()
+
+  async function handleNext () {
+    if (viewStore.currentStep.parent === 1 && viewStore.currentStep.child === 1) {
+      stepOneComponentRef.value.stepOneNestedRef.next()
+    }
+    if (viewStore.currentStep.parent === 1 && viewStore.currentStep.child === 2) {
+      const isValid = await stepOneComponentRef.value?.validateCurrentStep()
+      if (isValid) {
+        viewStore.isStepOneCompleted = true
+        parentStepperRef.value.next()
+      } else {
+        viewStore.isStepOneCompleted = false
+      }
+      return
+    }
+    if (viewStore.currentStep.parent === 2) {
+      viewStore.currentStep = { parent: 2, child: 1 } // reset child step to 1 to remain flow
+      parentStepperRef.value.next()
+    }
+    if (viewStore.currentStep.parent === 3) {
+      stepThreeComponentRef.value.stepThreeNestedRef.next()
+    }
   }
-  if (viewStore.currentStep.parent === 3) {
-    stepThreeComponentRef.value.stepThreeNestedRef.next()
-  }
-}
 
-
-watch(parentActiveStep, (newStep) => {
-  viewStore.currentStep.parent = newStep
-
-})
+  watch(parentActiveStep, newStep => {
+    viewStore.currentStep.parent = newStep
+  })
 </script>
 
 <template>
   {{ viewStore.currentStep }}
   <VContainer
-    max-width="800"
-    :class="mobile ? 'px-2': ''"
     class="d-flex flex-column flex-1 mt-4"
+    :class="mobile ? 'px-2': ''"
+    max-width="800"
   >
     <VStepper
       ref="parentStepperRef"
@@ -88,42 +84,40 @@ watch(parentActiveStep, (newStep) => {
       min-height="100%"
     >
       <VStepperHeader
-        :class="mobile ? 'px-2 py-4' : ''"
         class="pa-4 box-shadow-sm"
+        :class="mobile ? 'px-2 py-4' : ''"
       >
         <VStepperItem
-          :value="1"
-          :title="$t('participants')"
           class="pa-1"
           :complete="viewStore.isStepOneCompleted"
-
-        >
-        </VStepperItem>
-        <VDivider :style="mobile ? 'max-width: 10px' : ''"></VDivider>
+          :title="$t('participants')"
+          :value="1"
+        />
+        <VDivider :style="mobile ? 'max-width: 10px' : ''" />
         <VStepperItem
-          :value="2"
           class="pa-1"
           :title="$t('classes')"
+          :value="2"
         />
-        <VDivider :style="mobile ? 'max-width: 10px' : ''"></VDivider>
+        <VDivider :style="mobile ? 'max-width: 10px' : ''" />
         <VStepperItem
-          :value="3"
           class="pa-1"
           :title="$t('details')"
+          :value="3"
         />
       </VStepperHeader>
 
       <VStepperWindow class="flex-1">
         <VStepperWindowItem :value="1">
-          <StepOne ref="stepOneComponentRef"/>
+          <StepOne ref="stepOneComponentRef" />
         </VStepperWindowItem>
 
         <VStepperWindowItem :value="2">
-          <StepTwo ref="stepTwoComponentRef"/>
+          <StepTwo ref="stepTwoComponentRef" />
         </VStepperWindowItem>
 
         <VStepperWindowItem :value="3">
-          <StepThree ref="stepThreeComponentRef"/>
+          <StepThree ref="stepThreeComponentRef" />
         </VStepperWindowItem>
       </VStepperWindow>
 
@@ -131,10 +125,10 @@ watch(parentActiveStep, (newStep) => {
         <div class="d-flex justify-space-between mt-4 mb-2">
           <VBtn
             v-if="viewStore.currentStep.parent !== 1 || viewStore.currentStep.child !== 1"
-            variant="outlined"
-            color="blue"
             class="fs-16 text-capitalize"
+            color="blue"
             prepend-icon="mdi-arrow-left"
+            variant="outlined"
             @click="handlePrev"
           >
             {{ t('previous') }}
@@ -142,25 +136,24 @@ watch(parentActiveStep, (newStep) => {
 
           <VBtn
             v-if="viewStore.currentStep.parent !== 3 || viewStore.currentStep.child !== 3"
-            variant="flat"
-            color="blue"
             class="fs-16 text-capitalize px-8 ml-auto"
+            color="blue"
             :disabled="!stayStore.dateOfStay"
+            variant="flat"
             @click="handleNext"
           >
             {{ t('next') }}
           </VBtn>
           <VBtn
             v-else
-            variant="flat"
-            color="blue"
             class="fs-16 text-capitalize px-8 ml-auto"
+            color="blue"
             :disabled="false"
+            variant="flat"
             @click="console.log('Finish clicked')"
           >
             {{ t('finalize') }}
           </VBtn>
-
 
         </div>
       </template>
@@ -196,7 +189,6 @@ watch(parentActiveStep, (newStep) => {
     border: 1px solid;
     border-color: #000;
   }
-
 
 }
 

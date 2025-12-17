@@ -20,7 +20,7 @@
     <VImg
       class="ml-2"
       contain
-      max-width="120"
+      max-width="78"
       :src="Logo"
     />
 

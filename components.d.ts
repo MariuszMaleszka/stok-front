@@ -12,6 +12,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     ActionToast: typeof import('./src/components/toasts/ActionToast.vue')['default']
+    AddClassesModal: typeof import('./src/components/modals/AddClassesModal.vue')['default']
     AppFooter: typeof import('./src/components/AppFooter.vue')['default']
     AppHeader: typeof import('./src/components/AppHeader.vue')['default']
     ClassesModal: typeof import('./src/components/modals/ClassesModal.vue')['default']

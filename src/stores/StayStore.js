@@ -44,8 +44,8 @@ const DUMMY_SELECTED_CLASSES = [
       price: 10,
       perDay: true,
       description: 'PAKIET NNW TURYSTYCZNO-SPORTOWY - Wariant 111 SWIJ indywidualnych podróży Kontynenty na terenie RP.',
-      imgSource: ''
-    }
+      imgSource: '',
+    },
   },
   {
     dynamicId: 'ff12126xs',
@@ -62,16 +62,16 @@ const DUMMY_SELECTED_CLASSES = [
       { date: '04.01.2025', time: '9:00 - 9:55' },
       { date: '05.01.2025', time: '9:00 - 9:55' },
     ],
-    price: 250.00,
+    price: 250,
     insurance: {
       title: 'NNW Turystyczno-Sportowe lorem ipsum amet dolor blabla tututut',
       enabled: false,
-      price: 10.00,
+      price: 10,
       perDay: true,
       description: 'PAKIET NNW TURYSTYCZNO-SPORTOWY - Wariant Mateusz na terenie RP.',
-      imgSource: ''
-    }
-  }
+      imgSource: '',
+    },
+  },
 ]
 
 // Blank participant template
@@ -122,7 +122,7 @@ export const useStayStore = defineStore('stayStore', () => {
       loyaltyCardOwnerName: loyaltyProgram.value.loyaltyCardOwnerName,
       loyaltyCardOwnerSurname: loyaltyProgram.value.loyaltyCardOwnerSurname,
       loyaltyCardNumber: loyaltyProgram.value.loyaltyCardNumber,
-    }
+    },
   }))
 
   // Computed max values based on total constraint
@@ -136,7 +136,7 @@ export const useStayStore = defineStore('stayStore', () => {
 
   // 👉 Participant (singular) classes total price
   const participantClassesTotalPrice = computed(() => {
-    return (participantId) => {
+    return participantId => {
       const participant = participants.value.find(p => p.dynamicId === participantId)
       if (!participant?.selectedClasses || participant.selectedClasses.length === 0) {
         return 0
@@ -149,7 +149,7 @@ export const useStayStore = defineStore('stayStore', () => {
   })
   // 👉 Participant (singular) insurance total price
   const participantInsuranceTotalPrice = computed(() => {
-    return (participantId) => {
+    return participantId => {
       const participant = participants.value.find(p => p.dynamicId === participantId)
       if (!participant?.selectedClasses) {
         return 0
@@ -161,7 +161,9 @@ export const useStayStore = defineStore('stayStore', () => {
           return sum
         }
 
-        if (!classItem.insurance?.enabled) return sum
+        if (!classItem.insurance?.enabled) {
+          return sum
+        }
 
         const insurancePrice = classItem.insurance.price || 0
         const dayMultiplier = classItem.insurance.perDay ? (classItem.dates?.length || 1) : 1
@@ -209,7 +211,7 @@ export const useStayStore = defineStore('stayStore', () => {
           dynamicId: generateUniqueId(),
           participantType: isAdult ? 'adult' : 'child',
           age: isAdult ? null : null, // Age will be set by user for children
-          selectedClasses: JSON.parse(JSON.stringify(blankParticipant.selectedClasses))
+          selectedClasses: JSON.parse(JSON.stringify(blankParticipant.selectedClasses)),
         })
       })
       participants.value.push(...newParticipants)
@@ -231,12 +233,12 @@ export const useStayStore = defineStore('stayStore', () => {
   // Loyalty card number checking simulation
   const checkingLoyaltyCardNumber = ref(false)
   const isValidLoyaltyCardNumber = ref(null)
-  const checkLoyaltyCardNumber = (number) => {
+  const checkLoyaltyCardNumber = number => {
     checkingLoyaltyCardNumber.value = true
     isValidLoyaltyCardNumber.value = null // Reset validation state
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       setTimeout(() => {
-        const isValid = parseInt(number.slice(-1)) % 2 === 0
+        const isValid = Number.parseInt(number.slice(-1)) % 2 === 0
         isValidLoyaltyCardNumber.value = isValid
         checkingLoyaltyCardNumber.value = false
         resolve(isValid)

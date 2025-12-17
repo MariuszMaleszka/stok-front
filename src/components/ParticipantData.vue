@@ -1,54 +1,54 @@
 <script setup>
-import { ref } from 'vue'
-import { useI18n } from 'vue-i18n'
-import { useStayStore } from '@/stores/StayStore.js'
-import UserIcon from '@/assets/user-circle-blue.svg'
-import { VDateInput } from 'vuetify/labs/VDateInput'
+  import { ref } from 'vue'
+  import { useI18n } from 'vue-i18n'
+  import { VDateInput } from 'vuetify/labs/VDateInput'
+  import UserIcon from '@/assets/user-circle-blue.svg'
+  import { useStayStore } from '@/stores/StayStore.js'
 
-const props = defineProps({
-  participant: {
-    type: Object,
-    required: true
-  },
-  index: {
-    type: Number,
-    required: true
+  const props = defineProps({
+    participant: {
+      type: Object,
+      required: true,
+    },
+    index: {
+      type: Number,
+      required: true,
+    },
+  })
+
+  const { t } = useI18n()
+  const stayStore = useStayStore()
+  const form = ref(null)
+  const showErrors = ref(false)
+
+  const rules = {
+    required: value => !!value || t('fill_the_field_properly'),
+    phone: value => {
+      const phoneRegex = /^\+?[0-9]{9,15}$/
+      return !value || phoneRegex.test(value) || t('invalid_phone_number')
+    },
   }
-})
 
-const { t } = useI18n()
-const stayStore = useStayStore()
-const form = ref(null)
-const showErrors = ref(false)
+  // Get adult participants for childminder selection
+  const adultParticipants = computed(() => {
+    return stayStore.participants.filter(p => p.participantType === 'adult')
+  })
 
-const rules = {
-  required: value => !!value || t('fill_the_field_properly'),
-  phone: value => {
-    const phoneRegex = /^\+?[0-9]{9,15}$/
-    return !value || phoneRegex.test(value) || t('invalid_phone_number')
-  }
-}
+  defineExpose({
+    validate: async () => {
+      showErrors.value = true
+      const formValid = await form.value?.validate()
 
-// Get adult participants for childminder selection
-const adultParticipants = computed(() => {
-  return stayStore.participants.filter(p => p.participantType === 'adult')
-})
+      // Additional validation for childminder if child
+      const hasChildminder = props.participant.participantType === 'child'
+        ? !!props.participant.childminder
+        : true
 
-defineExpose({
-  validate: async () => {
-    showErrors.value = true
-    const formValid = await form.value?.validate()
-
-    // Additional validation for childminder if child
-    const hasChildminder = props.participant.participantType === 'child'
-      ? !!props.participant.childminder
-      : true
-
-    return {
-      valid: formValid?.valid && hasChildminder
-    }
-  }
-})
+      return {
+        valid: formValid?.valid && hasChildminder,
+      }
+    },
+  })
 </script>
 
 <template>
@@ -57,19 +57,19 @@ defineExpose({
       <p class="custom-input-label mb-2">{{ $t('name') }}</p>
       <VTextField
         v-model="participant.name"
-        variant="outlined"
-        density="default"
-        clearable
-        clearIcon="mdi-close"
         autocomplete="off"
+        clear-icon="mdi-close"
+        clearable
+        density="default"
         hide-details="auto"
-        maxLength="50"
-        minLength="2"
+        max-length="50"
+        min-length="2"
         :rules="[rules.required]"
+        variant="outlined"
         @keydown="(e) => /\d/.test(e.key) && e.preventDefault()"
       >
         <template #prepend-inner>
-          <VIcon size="18" icon="mdi-account"/>
+          <VIcon icon="mdi-account" size="18" />
         </template>
       </VTextField>
     </div>
@@ -78,19 +78,19 @@ defineExpose({
       <p class="custom-input-label mb-2">{{ $t('surname') }}</p>
       <VTextField
         v-model="participant.surname"
-        variant="outlined"
-        density="default"
-        clearable
-        clearIcon="mdi-close"
         autocomplete="off"
+        clear-icon="mdi-close"
+        clearable
+        density="default"
         hide-details="auto"
-        maxLength="50"
-        minLength="2"
+        max-length="50"
+        min-length="2"
         :rules="[rules.required]"
+        variant="outlined"
         @keydown="(e) => /\d/.test(e.key) && e.preventDefault()"
       >
         <template #prepend-inner>
-          <VIcon size="18" icon="mdi-account-outline"/>
+          <VIcon icon="mdi-account-outline" size="18" />
         </template>
       </VTextField>
     </div>
@@ -99,35 +99,35 @@ defineExpose({
       <p class="custom-input-label mb-2">{{ $t('phone_number') }}</p>
       <VTextField
         v-model="participant.phoneNumber"
-        variant="outlined"
-        density="default"
-        clearable
-        clearIcon="mdi-close"
         autocomplete="off"
+        clear-icon="mdi-close"
+        clearable
+        density="default"
         hide-details="auto"
-        maxLength="9"
+        max-length="9"
         :rules="[rules.required, rules.phone]"
+        variant="outlined"
         @keydown="(e) => !/[\d+]/.test(e.key) && e.key !== 'Backspace' && e.preventDefault()"
       >
         <template #prepend-inner>
-          <VIcon size="18" icon="mdi-phone"/>
+          <VIcon icon="mdi-phone" size="18" />
         </template>
       </VTextField>
     </div>
 
     <div class="mb-4">
       <p class="custom-input-label mb-2">{{ $t('birth_date') }}</p>
-<!--      <input v-model="participant.birthDate" type="date"/>-->
+      <!--      <input v-model="participant.birthDate" type="date"/>-->
       <VDateInput
         v-model="participant.birthDate"
-        variant="outlined"
         density="default"
-        prepend-icon=""
         hide-details="auto"
+        prepend-icon=""
         :rules="[rules.required]"
+        variant="outlined"
       >
         <template #prepend-inner>
-          <VIcon size="18" icon="mdi-calendar"/>
+          <VIcon icon="mdi-calendar" size="18" />
         </template>
       </VDateInput>
     </div>
@@ -136,17 +136,17 @@ defineExpose({
       <p class="custom-input-label mb-2">{{ $t('childminder') }}</p>
       <VSelect
         v-model="participant.childminder"
-        :items="adultParticipants"
-        item-title="name"
-        item-value="dynamicId"
-        variant="outlined"
         density="default"
         hide-details="auto"
+        item-title="name"
+        item-value="dynamicId"
+        :items="adultParticipants"
         :placeholder="$t('select_childminder')"
         :rules="[rules.required]"
+        variant="outlined"
       >
         <template #prepend-inner>
-          <VIcon size="18" icon="mdi-account-supervisor"/>
+          <VIcon icon="mdi-account-supervisor" size="18" />
         </template>
       </VSelect>
       <small v-if="showErrors && !participant.childminder" class="fs-12 fc-error pl-4 pt-2">

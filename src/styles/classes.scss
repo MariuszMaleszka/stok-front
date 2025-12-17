@@ -45,6 +45,10 @@
   font-size: 24px;
 }
 
+.fs-30 {
+  font-size: 30px;
+}
+
 // Letter spacing utility classes
 .ls-0 {
   letter-spacing: 0px !important;
@@ -72,8 +76,9 @@
 .fc-black {
   color: #000 !important;
 }
+
 .fc-smoked {
-    color: #374151 !important;
+  color: #374151 !important;
 }
 
 .fc-white {
@@ -116,9 +121,11 @@
 .bg-light-gray {
   background-color: $bg-gray-light !important;
 }
+
 .bg-dark-gray {
   background-color: $gray-dark !important;
 }
+
 .bg-gray-primary {
   background-color: #E5E7EB !important;
 }
@@ -154,8 +161,9 @@
 .w-fit-content {
   width: fit-content;
 }
+
 .max-w-10 {
-    max-width: 10px;
+  max-width: 10px;
 }
 
 .w-max-content {
@@ -234,8 +242,12 @@
   color: #374151 !important;
   border-color: #D1D5DB !important;
 }
+
 .custom-badge.orange {
   color: #000 !important;
   background-color: #FDBA8C;
 }
 
+.line-height-1 {
+  line-height: 1 !important;
+}

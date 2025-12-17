@@ -1,17 +1,17 @@
 <script setup>
+  import { onMounted, ref, watch } from 'vue'
   import { useI18n } from 'vue-i18n'
   import ClassesModal from '@/components/modals/ClassesModal.vue'
   import ParticipantCard from '@/components/ParticipantCard.vue'
   import { useToast } from '@/composables/useToast'
   import { useStayStore } from '@/stores/StayStore.js'
   import { useTimerStore } from '@/stores/TimerStore.js'
-  import { useViewControlStore } from '@/stores/ViewControlStore.js'
 
   const timerStore = useTimerStore()
 
-  const { showSimpleToast, showActionToast } = useToast()
+  const { showSimpleToast } = useToast()
   const stayStore = useStayStore()
-  const viewStore = useViewControlStore()
+
   const { t } = useI18n()
 
   const classesModalOpen = ref(false)
@@ -23,11 +23,6 @@
   function closeClassesModal () {
     classesModalOpen.value = false
     selectedParticipant.value = null
-  }
-
-  async function handleNextClick () {
-    viewStore.isStepTwoCompleted = true
-    viewStore.goToNextStep()
   }
 
   watch(() => timerStore.timeRemaining, remaining => {
@@ -74,35 +69,13 @@
           :name="p.name || '-'"
           :participant-type="p.participantType"
           :subtitle="`${t(p.participantType || 'adult')} - ${p.activityType || t('ski')} - Poz. ${p.skillLevel || '-'}`"
-          :total-price="stayStore.participantClassesTotalPrice.get(p.dynamicId)"
+          :total-price="stayStore.participantClassesTotalPrice(p.dynamicId)"
           @click="openClassesModal(p)"
           @edit="openClassesModal(p)"
         />
       </div>
     </div>
 
-    <div class="navigation-tab-actions d-flex ga-4 justify-space-between ">
-      <VBtn
-        class="fs-16 text-capitalize flex-1"
-        color="blue"
-        size="x-large"
-        variant="outlined"
-        @click="viewStore.currentView = 'one'; viewStore.stepOne = viewStore.STEP_ONE_PREFERENCES"
-      >
-        {{ $t('previous') }}
-      </VBtn>
-      <VBtn
-        class="fs-16 text-capitalize flex-2"
-        color="blue"
-        :disabled="!stayStore.dateOfStay"
-        size="x-large"
-        variant="flat"
-        @click="handleNextClick"
-      >
-        <!--        :disabled="!isFormValid"-->
-        {{ $t('next') }}
-      </VBtn>
-    </div>
     <ClassesModal
       v-model="classesModalOpen"
       :activity-type="selectedParticipant?.activityType === t('snowboard') ? 'snowboard' : 'ski'"

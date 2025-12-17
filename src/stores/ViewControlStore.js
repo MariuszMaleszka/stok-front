@@ -2,7 +2,6 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-
 export const useViewControlStore = defineStore('viewStore', () => {
   const { t } = useI18n()
 
@@ -17,10 +16,9 @@ export const useViewControlStore = defineStore('viewStore', () => {
 
   const currentStep = ref({
     parent: 1,
-    child: 1
-  }
+    child: 1,
+  },
   )
-
 
   const isStepOneCompleted = ref(false)
 
@@ -31,7 +29,6 @@ export const useViewControlStore = defineStore('viewStore', () => {
   const isStepThreePaymentCompleted = ref(false) // step three - payment
   const isStepThreeCompleted = computed(() => isStepThreeCartCompleted.value && isStepThreeParticipantsCompleted.value && isStepThreePaymentCompleted.value)
 
-
   return {
 
     currentStep,
@@ -41,7 +38,6 @@ export const useViewControlStore = defineStore('viewStore', () => {
     isStepThreeParticipantsCompleted, // step three - participants
     isStepThreePaymentCompleted, // step three - payment
     isStepThreeCompleted, // step three - overall
-
 
   }
 })

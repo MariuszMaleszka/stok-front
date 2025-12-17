@@ -1,13 +1,13 @@
 <script setup>
-import skiLOGO from '@/assets/ski-icon.svg'
-import snowboardLOGO from '@/assets/snowboard-icon.svg'
-import GreenShield from '@/assets/shield-check-green.svg'
-import {useI18n} from "vue-i18n";
-import {formatPrice} from "@/utils/numbers.js";
-import {useStayStore} from "@/stores/StayStore.js";
-import {useDisplay} from 'vuetify';
-import PopupSmall from "@/components/modals/PopupSmall.vue";
-import InsuranceIMG from '@/assets/insurance_img.png'
+  import { useI18n } from 'vue-i18n'
+  import { useDisplay } from 'vuetify'
+  import InsuranceIMG from '@/assets/insurance_img.png'
+  import GreenShield from '@/assets/shield-check-green.svg'
+  import skiLOGO from '@/assets/ski-icon.svg'
+  import snowboardLOGO from '@/assets/snowboard-icon.svg'
+  import PopupSmall from '@/components/modals/PopupSmall.vue'
+  import { useStayStore } from '@/stores/StayStore.js'
+  import { formatPrice } from '@/utils/numbers.js'
 
   const props = defineProps({
     participant: {
@@ -26,43 +26,43 @@ import InsuranceIMG from '@/assets/insurance_img.png'
   const expandedPanels = ref({})
   const panel = ref([0])// Expansion panel state (main)
 
-// const insuranceSelected = ref({}) // Holds the insurance selection state
-const insuranceInfoDialog = ref(false) // Controls the insurance info dialog visibility
-const currentInsurance = ref(null) // Holds the insurance info to display
+  // const insuranceSelected = ref({}) // Holds the insurance selection state
+  const insuranceInfoDialog = ref(false) // Controls the insurance info dialog visibility
+  const currentInsurance = ref(null) // Holds the insurance info to display
 
   const classToDelete = ref(null) // Holds the class selected for deletion
   const confirmClassDeletationDialog = ref(false) // Controls the confirmation dialog visibility
 
-const openInsuranceDialog = (insurance) => {
-  currentInsurance.value = insurance
-  insuranceInfoDialog.value = true
-}
-// Delete class
-const deleteClass = (dynamicId) => {
-  const item = props.participant.selectedClasses.find(c => c.dynamicId === dynamicId)
-  if (item) {
-    classToDelete.value = item
-    confirmClassDeletationDialog.value = true
+  function openInsuranceDialog (insurance) {
+    currentInsurance.value = insurance
+    insuranceInfoDialog.value = true
   }
-}
-// Confirm deletion
-const confirmDeleteClass = () => {
-  if (classToDelete.value) {
-    const index = props.participant.selectedClasses.findIndex(
-      c => c.dynamicId === classToDelete.value.dynamicId
-    )
-    if (index !== -1) {
-      props.participant.selectedClasses.splice(index, 1)
+  // Delete class
+  function deleteClass (dynamicId) {
+    const item = props.participant.selectedClasses.find(c => c.dynamicId === dynamicId)
+    if (item) {
+      classToDelete.value = item
+      confirmClassDeletationDialog.value = true
     }
-    classToDelete.value = null
   }
-  confirmClassDeletationDialog.value = false
-}
-// Cancel deletion
-const cancelDelete = () => {
-  classToDelete.value = null
-  confirmClassDeletationDialog.value = false
-}
+  // Confirm deletion
+  function confirmDeleteClass () {
+    if (classToDelete.value) {
+      const index = props.participant.selectedClasses.findIndex(
+        c => c.dynamicId === classToDelete.value.dynamicId,
+      )
+      if (index !== -1) {
+        props.participant.selectedClasses.splice(index, 1)
+      }
+      classToDelete.value = null
+    }
+    confirmClassDeletationDialog.value = false
+  }
+  // Cancel deletion
+  function cancelDelete () {
+    classToDelete.value = null
+    confirmClassDeletationDialog.value = false
+  }
 
 </script>
 
@@ -103,7 +103,7 @@ const cancelDelete = () => {
                   >
                     <div class="d-flex align-center">
                       <p v-if="item.groupName" class="fc-gray">
-                        &#8226; <span >{{ item.groupName }},</span>
+                        &#8226; <span>{{ item.groupName }},</span>
                       </p>
                       <p v-if="item.skillLevel" class="fc-gray">
                         &#8226;<span class="ml-1">{{ item.skillLevel }}</span>
@@ -126,56 +126,54 @@ const cancelDelete = () => {
                 </div>
 
                 <div class="d-flex align-center">
-                <span
-                  :class="mobile ? 'fs-12 ': 'fs-14'"
-                  class="mr-2 fw-600"
-                >
-                  {{ formatPrice(item.price) }}&nbsp;{{ stayStore.currency }}
-                </span>
-                  <VIcon size="18" color="grey" icon="mdi-close" @click="deleteClass(item.dynamicId)"/>
+                  <span
+                    class="mr-2 fw-600"
+                    :class="mobile ? 'fs-12 ': 'fs-14'"
+                  >
+                    {{ formatPrice(item.price) }}&nbsp;{{ stayStore.currency }}
+                  </span>
+                  <VIcon color="grey" icon="mdi-close" size="18" @click="deleteClass(item.dynamicId)" />
                 </div>
               </div>
 
               <VSheet
                 v-if="participant.participantType === 'child' && item.type === 'group'"
                 class="rounded mt-2 mb-4 bg-light-green"
-
               >
                 <div
-                  :class="mobile ? 'px-0': 'px-4'"
                   class="pt-0 rounded d-flex align-center justify-between"
+                  :class="mobile ? 'px-0': 'px-4'"
                 >
-                  <img width="16px" :src="GreenShield" alt="shield">
+                  <img alt="shield" :src="GreenShield" width="16px">
 
                   <div
-                    :class="mobile ? 'fs-10': 'fs-14'"
                     class="fw-400 d-flex align-center ml-2"
+                    :class="mobile ? 'fs-10': 'fs-14'"
                   >
                     {{ t('insurance_included') }}
 
                     <VBtn
-                      :class="mobile ? 'fs-10': 'fs-14'"
                       class="ma-2 text-capitalize px-2"
-                      variant="text"
-                      size="small"
-                      flat
+                      :class="mobile ? 'fs-10': 'fs-14'"
                       color="grey"
+                      flat
+                      size="small"
+                      variant="text"
                       @click="expandedPanels[item.dynamicId] = !expandedPanels[item.dynamicId]"
                     >
                       {{ expandedPanels[item.dynamicId] ? t('collapse') : t('expand') }}
-                      <VIcon :icon="expandedPanels[item.dynamicId] ? 'mdi-chevron-up' : 'mdi-chevron-down'"/>
+                      <VIcon :icon="expandedPanels[item.dynamicId] ? 'mdi-chevron-up' : 'mdi-chevron-down'" />
                     </VBtn>
                   </div>
-
 
                 </div>
 
                 <VExpandTransition>
                   <VCard
                     v-show="expandedPanels[item.dynamicId]"
-                    width="100%"
                     flat
                     style="background-color: transparent;"
+                    width="100%"
                   >
                     <VCardText class="px-8 pt-0">
                       <p :class="mobile ? 'fs-10' : 'fs-12'">
@@ -183,11 +181,11 @@ const cancelDelete = () => {
                       </p>
 
                       <div
-                        :class="mobile ? 'fs-10' : 'fs-12'"
                         class="custom-badge gray mt-4"
+                        :class="mobile ? 'fs-10' : 'fs-12'"
                         @click="openInsuranceDialog(item.insurance)"
                       >
-                        <VIcon class="mr-1" color="grey" icon="mdi-information-slab-circle"/>
+                        <VIcon class="mr-1" color="grey" icon="mdi-information-slab-circle" />
                         {{ $t('aditional_info') }}
                       </div>
                     </VCardText>
@@ -200,54 +198,54 @@ const cancelDelete = () => {
                 class="rounded bg-light-gray mt-2 mb-4"
               >
                 <div
-                  :class="mobile ? 'px-0': 'px-4'"
                   class="pt-0 rounded d-flex align-center justify-between"
+                  :class="mobile ? 'px-0': 'px-4'"
                 >
                   <VCheckbox
-                    density="compact"
                     v-model="item.insurance.enabled"
-                    hide-details
                     color="info"
+                    density="compact"
+                    hide-details
                   />
                   <div
-                    :class="mobile ? 'fs-10': 'fs-14'"
                     class="fw-400 d-flex align-center ml-2"
+                    :class="mobile ? 'fs-10': 'fs-14'"
                   >
                     {{ t('insurance_included') }}
 
                     <VBtn
-                      :class="mobile ? 'fs-10': 'fs-14'"
                       class="ma-2 text-capitalize px-2"
-                      variant="text"
-                      size="small"
-                      flat
+                      :class="mobile ? 'fs-10': 'fs-14'"
                       color="grey"
+                      flat
+                      size="small"
+                      variant="text"
                       @click="expandedPanels[item.dynamicId] = !expandedPanels[item.dynamicId]"
                     >
                       {{ expandedPanels[item.dynamicId] ? t('collapse') : t('expand') }}
-                      <VIcon :icon="expandedPanels[item.dynamicId] ? 'mdi-chevron-up' : 'mdi-chevron-down'"/>
+                      <VIcon :icon="expandedPanels[item.dynamicId] ? 'mdi-chevron-up' : 'mdi-chevron-down'" />
                     </VBtn>
                   </div>
 
                   <div
-                    :class="mobile ? 'fs-11 ': 'fs-14'"
                     class="d-flex flex-column align-end ml-auto ma-0 fc-gray"
+                    :class="mobile ? 'fs-11 ': 'fs-14'"
                   >
-                  <span class="fw-500">
-                    + {{ formatPrice(item.insurance.price) }}
-                  </span>
+                    <span class="fw-500">
+                      + {{ formatPrice(item.insurance.price) }}
+                    </span>
                     <span class="fw-400 mt-n1 text-no-wrap">
-                    {{ item.insurance.perDay ? ` ( 1 ${t('day')})` : '' }}
-                  </span>
+                      {{ item.insurance.perDay ? ` ( 1 ${t('day')})` : '' }}
+                    </span>
                   </div>
                 </div>
 
                 <VExpandTransition>
                   <VCard
                     v-show="expandedPanels[item.dynamicId]"
-                    width="100%"
                     flat
                     style="background-color: transparent;"
+                    width="100%"
                   >
                     <VCardText class="px-8 pt-0">
                       <p :class="mobile ? 'fs-10' : 'fs-12'">
@@ -255,11 +253,11 @@ const cancelDelete = () => {
                       </p>
 
                       <div
-                        :class="mobile ? 'fs-10' : 'fs-12'"
                         class="custom-badge gray mt-4"
+                        :class="mobile ? 'fs-10' : 'fs-12'"
                         @click="openInsuranceDialog(item.insurance)"
                       >
-                        <VIcon class="mr-1" color="grey" icon="mdi-information-slab-circle"/>
+                        <VIcon class="mr-1" color="grey" icon="mdi-information-slab-circle" />
                         {{ $t('aditional_info') }}
                       </div>
                     </VCardText>
@@ -274,10 +272,10 @@ const cancelDelete = () => {
             class="participant-selected-classes-summary rounded-lg bg-gray-primary pa-4"
           >
             <p class="text-right ml-auto">
-              <span :class="mobile ? 'fs-12 ': 'fs-14'" class="fw-600">
+              <span class="fw-600" :class="mobile ? 'fs-12 ': 'fs-14'">
                 {{ $t('total') }}
               </span>
-                        <span :class="mobile ? 'fs-14 ': 'fs-16'" class="fw-500 ml-2">
+              <span class="fw-500 ml-2" :class="mobile ? 'fs-14 ': 'fs-16'">
                 {{ formatPrice(stayStore.participantClassesTotalPrice(participant.dynamicId) + stayStore.participantInsuranceTotalPrice(participant.dynamicId)) }}&nbsp;{{ stayStore.currency }}
                 <br>
                 <p v-if="stayStore.participantInsuranceTotalPrice(participant.dynamicId) > 0" class="fs-10 mt-n1">
@@ -292,8 +290,6 @@ const cancelDelete = () => {
         </VExpansionPanelText>
       </VExpansionPanel>
     </VExpansionPanels>
-
-
 
     <!--POPUPS-->
     <PopupSmall
@@ -346,7 +342,7 @@ const cancelDelete = () => {
               >
                 <div class="d-flex align-center">
                   <p v-if="classToDelete.groupName" class="fc-gray">
-                    &#8226; <span >{{ classToDelete.groupName }},</span>
+                    &#8226; <span>{{ classToDelete.groupName }},</span>
                   </p>
                   <p v-if="classToDelete.skillLevel" class="fc-gray">
                     &#8226;<span class="ml-1">{{ classToDelete.skillLevel }}</span>

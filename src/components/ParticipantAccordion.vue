@@ -4,33 +4,36 @@
   import { useDisplay } from 'vuetify'
   import { useStayStore } from '@/stores/StayStore.js'
 
-const props = defineProps({
-  participant: {
-    type: Object,
-    required: true
-  },
-  index: {
-    type: Number,
-    required: true
-  }
-})
-const stayStore = useStayStore()
-const {mobile} = useDisplay()
-const {t} = useI18n()
+  const props = defineProps({
+    participant: {
+      type: Object,
+      required: true,
+    },
+    index: {
+      type: Number,
+      required: true,
+    },
+  })
+  const stayStore = useStayStore()
+  const { mobile } = useDisplay()
+  const { t } = useI18n()
 
-const CUSTOMER_SERVICE_LINK = "https://szkolastok.pl/kontakt"
-const infoDialog = ref(false)
+  const CUSTOMER_SERVICE_LINK = 'https://szkolastok.pl/kontakt'
+  const infoDialog = ref(false)
 
-const panel = ref([0]) // To control expansion panel opened/closed state
-const form = ref(null) // Reference to the form (participant details)
-const showErrors = ref(false) // To control error display
+  const panel = ref([0]) // To control expansion panel opened/closed state
+  const form = ref(null) // Reference to the form (participant details)
+  const showErrors = ref(false) // To control error display
 
   const rules = {
     required: value => !!value || t('fill_the_field_properly'),
   }
 
-const selectedSkillLevel = ref(null)
-const selectedClassType = ref(null)
+  const selectedSkillLevel = ref(null)
+  const selectedClassType = ref(null)
+  const age = ref(props.participant.age ?? null)
+  const name = ref(props.participant.name ?? '')
+  const classLang = ref(props.participant.classLang ?? '')
 
   const availableSkillLevels = computed(() => {
     if (props.participant.participantType === 'adult') {
@@ -42,23 +45,23 @@ const selectedClassType = ref(null)
 
       const age = Number.parseInt(props.participant.age)
 
-    // Use adult skill levels for children aged 14 and above
-    if (age >= 14) {
-      return stayStore.skillLevels_ADULTS
-    }
+      // Use adult skill levels for children aged 14 and above
+      if (age >= 14) {
+        return stayStore.skillLevels_ADULTS
+      }
 
-    if (selectedClassType.value === 0) {
-      return stayStore.skillLevels_CHILDREN_SKI.filter(level =>
-        age >= level.ageRange[0] && age <= level.ageRange[1]
-      )
-    } else if (selectedClassType.value === 1) {
-      return stayStore.skillLevels_CHILDREN_SNOWBOARD.filter(level =>
-        age >= level.ageRange[0] && age <= level.ageRange[1]
-      )
+      if (selectedClassType.value === 0) {
+        return stayStore.skillLevels_CHILDREN_SKI.filter(level =>
+          age >= level.ageRange[0] && age <= level.ageRange[1],
+        )
+      } else if (selectedClassType.value === 1) {
+        return stayStore.skillLevels_CHILDREN_SNOWBOARD.filter(level =>
+          age >= level.ageRange[0] && age <= level.ageRange[1],
+        )
+      }
     }
-  }
-  return []
-})
+    return []
+  })
 
   const currentSkillLevelInfo = computed(() => {
     if (!selectedSkillLevel.value || !selectedSkillLevel.value[0]) return null
@@ -74,23 +77,33 @@ const selectedClassType = ref(null)
   function selectSkillLevel (level) {
     for (const l of availableSkillLevels.value) l.selected = false
     level.selected = true
-    props.participant.skillLevel = level.name
+    stayStore.participants[props.index].skillLevel = level.name
     selectedSkillLevel.value = [level]
     infoDialog.value = false
   }
 
   watch(selectedSkillLevel, newValue => {
-    props.participant.skillLevel = newValue && newValue[0] ? newValue[0].name : ''
+    stayStore.participants[props.index].skillLevel = newValue && newValue[0] ? newValue[0].name : ''
   })
 
-watch(() => props.participant.age, (newAge) => {
-  if (props.participant.participantType === 'child' && newAge !== null && newAge < 8 && selectedClassType.value === 1) {
-    selectedClassType.value = null
-    props.participant.activityType = ''
-    selectedSkillLevel.value = null
-    props.participant.skillLevel = ''
-  }
-})
+  watch(() => props.participant.age, newAge => {
+    if (props.participant.participantType === 'child' && newAge !== null && newAge < 8 && selectedClassType.value === 1) {
+      selectedClassType.value = null
+      stayStore.participants[props.index].activityType = ''
+      selectedSkillLevel.value = null
+      stayStore.participants[props.index].skillLevel = ''
+    }
+  })
+
+  watch(age, val => {
+    stayStore.participants[props.index].age = val
+  })
+  watch(name, val => {
+    stayStore.participants[props.index].name = val
+  })
+  watch(classLang, val => {
+    stayStore.participants[props.index].classLang = val
+  })
 
   // Expose validate method for parent
   defineExpose({
@@ -98,9 +111,9 @@ watch(() => props.participant.age, (newAge) => {
       showErrors.value = true
       const formValid = await form.value?.validate()
 
-    // Additional validation for classType and skillLevel
-    const hasClassType = selectedClassType.value !== null
-    const hasSkillLevel = selectedSkillLevel.value !== null && selectedSkillLevel.value.length > 0
+      // Additional validation for classType and skillLevel
+      const hasClassType = selectedClassType.value !== null
+      const hasSkillLevel = selectedSkillLevel.value !== null && selectedSkillLevel.value.length > 0
 
       return {
         valid: formValid?.valid && hasClassType && hasSkillLevel,
@@ -111,7 +124,7 @@ watch(() => props.participant.age, (newAge) => {
 
 <template>
   <VExpansionPanels v-model="panel">
-    <VExpansionPanel >
+    <VExpansionPanel>
       <VExpansionPanelTitle>
         <span class="fw-600">
           {{ index + 1 }} - {{ t(`${participant.participantType}`) || '-' }}
@@ -122,17 +135,8 @@ watch(() => props.participant.age, (newAge) => {
           <div v-if="participant.participantType === 'child'" class="mb-4">
             <p class="custom-input-label mb-2">{{ $t('child_age') }}</p>
             <VNumberInput
-              v-model="participant.age"
-              variant="outlined"
-              density="default"
-              :min="4"
+              v-model="age"
               :max="16"
-              :step="1"
-              control-variant="split"
-              density="default"
-              hide-details="auto"
-              :max="14"
-              max-width="165px"
               :min="4"
               :rules="[rules.required]"
               :step="1"
@@ -147,17 +151,17 @@ watch(() => props.participant.age, (newAge) => {
           <div class="mb-4">
             <p class="custom-input-label mb-2">{{ $t('name') }}</p>
             <VTextField
-              v-model="participant.name"
+              v-model="name"
               autocomplete="off"
               clear-icon="mdi-close"
               clearable
               density="default"
               hide-details="auto"
-              maxLength="50"
+              max-length="50"
               :placeholder="$t('enter_name')"
               :rules="[rules.required]"
               variant="outlined"
-              @click:clear="participant.name = ''"
+              @click:clear="name = ''"
               @keydown="(e) => /\d/.test(e.key) && e.preventDefault()"
               @paste="(e) => {
                 const pastedText = e.clipboardData.getData('text')
@@ -175,7 +179,7 @@ watch(() => props.participant.age, (newAge) => {
             <p class="custom-input-label mb-2">{{ $t('classes_lang') }}</p>
 
             <VSelect
-              v-model="participant.classLang"
+              v-model="classLang"
               density="default"
               hide-details="auto"
               item-title="name"
@@ -195,7 +199,7 @@ watch(() => props.participant.age, (newAge) => {
               class="ga-2 w-100"
               mandatory
               @update:model-value="(val) => {
-                participant.activityType = val === 0 ? t('ski') : t('snowboard')
+                stayStore.participants[index].activityType = val === 0 ? t('ski') : t('snowboard')
               }"
             >
               <VBtn
@@ -227,7 +231,7 @@ watch(() => props.participant.age, (newAge) => {
             </small>
           </div>
 
-          <div class="mb-4" v-if="selectedClassType === 0 || selectedClassType === 1">
+          <div v-if="selectedClassType === 0 || selectedClassType === 1" class="mb-4">
             <p class="custom-input-label mb-2">{{ $t('difficulty_level') }}</p>
             <VList
               v-model:selected="selectedSkillLevel"

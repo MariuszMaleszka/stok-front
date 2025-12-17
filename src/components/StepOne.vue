@@ -1,56 +1,54 @@
 <script setup>
-import {computed, ref, watch} from "vue"
-import {useCookies} from "@vueuse/integrations/useCookies"
-import {useDisplay} from 'vuetify'
-import {useI18n} from "vue-i18n"
+  import { useCookies } from '@vueuse/integrations/useCookies'
+  import { computed, ref, watch } from 'vue'
+  import { useI18n } from 'vue-i18n'
+  import { useDisplay } from 'vuetify'
 
-import DatePickerResponsive from "@/components/DatePickerResponsive.vue"
-import ParticipantAccordion from "@/components/ParticipantAccordion.vue"
-import {useStayStore} from '@/stores/StayStore.js'
-import {useViewControlStore} from "@/stores/ViewControlStore.js"
-import {useToast} from '@/composables/useToast'
+  import DatePickerResponsive from '@/components/DatePickerResponsive.vue'
+  import ParticipantAccordion from '@/components/ParticipantAccordion.vue'
+  import { useToast } from '@/composables/useToast'
+  import { useStayStore } from '@/stores/StayStore.js'
+  import { useViewControlStore } from '@/stores/ViewControlStore.js'
 
-const {t} = useI18n()
-const {showSimpleToast} = useToast()
-const stayStore = useStayStore()
-const viewStore = useViewControlStore()
-const cookies = useCookies(['locale'])
-const {mobile} = useDisplay()
-const currentLocale = computed(() => cookies.get('locale') || 'pl')
+  const { t } = useI18n()
+  const { showSimpleToast } = useToast()
+  const stayStore = useStayStore()
+  const viewStore = useViewControlStore()
+  const cookies = useCookies(['locale'])
+  const { mobile } = useDisplay()
+  const currentLocale = computed(() => cookies.get('locale') || 'pl')
 
-const stepOneNestedRef = ref(null)
-const activeChildStep = ref(1)
+  const stepOneNestedRef = ref(null)
+  const activeChildStep = ref(1)
 
-const dataForm = ref(null)
-const participantForms = ref([])
+  const dataForm = ref(null)
+  const participantForms = ref([])
 
-const validateCurrentStep = async () => {
-  const results = await Promise.all(
-    participantForms.value.map(form => form?.validate())
-  )
+  async function validateCurrentStep () {
+    const results = await Promise.all(
+      participantForms.value.map(form => form?.validate()),
+    )
 
-  const allValid = results.every(result => result?.valid === true)
+    const allValid = results.every(result => result?.valid === true)
 
-  if (!allValid) {
-    showSimpleToast(t('please_fill_required_fields'), 'error')
+    if (!allValid) {
+      showSimpleToast(t('please_fill_required_fields'), 'error')
+    }
+
+    return allValid
   }
 
-  return allValid
-}
-
-
-watch(() => stayStore.participants.length, () => {
-  participantForms.value = []
-})
-watch(activeChildStep, async (newStep) => {
-  await nextTick()
-  viewStore.currentStep.child = newStep
-})
-defineExpose({
-  stepOneNestedRef,
-  validateCurrentStep
-})
-
+  watch(() => stayStore.participants.length, () => {
+    participantForms.value = []
+  })
+  watch(activeChildStep, async newStep => {
+    await nextTick()
+    viewStore.currentStep.child = newStep
+  })
+  defineExpose({
+    stepOneNestedRef,
+    validateCurrentStep,
+  })
 
 </script>
 
@@ -63,22 +61,22 @@ defineExpose({
   >
     <VStepperHeader class="mt-2">
       <VStepperItem
-        :value="1"
-        :title="$t('stay_datails')"
         class="px-1 py-0"
         :complete="viewStore.isStepOneDataCompleted"
+        :title="$t('stay_datails')"
+        :value="1"
       >
         <template #icon>
-            1.
+          1.
         </template>
       </VStepperItem>
       <VStepperItem
-        :value="2"
         class="px-1 py-0"
         :title="$t('participants_preferences')"
-     >
+        :value="2"
+      >
         <template #icon>
-            2.
+          2.
         </template>
       </VStepperItem>
     </VStepperHeader>
@@ -91,8 +89,8 @@ defineExpose({
           </p>
           <div class="my-4">
             <p
-              :class="mobile ? 'fs-18' : 'fs-20'"
               class="font-weight-medium mb-n2"
+              :class="mobile ? 'fs-18' : 'fs-20'"
             >
               {{ $t('provide_details_of_your_stay') }}:
             </p>
@@ -165,7 +163,6 @@ defineExpose({
 
           <div class="d-flex flex-column ga-4 my-4">
             <ParticipantAccordion
-              ref="participantForms"
               v-for="(participant, index) in stayStore.participants"
               :key="participant.dynamicId"
               :ref="el => participantForms[index] = el"
