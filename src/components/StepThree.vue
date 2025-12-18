@@ -1,21 +1,60 @@
+<!--
+  StepThree Component - Cart, Participant Data & Payment Step
+
+  This component handles the third major step of the booking process.
+  It contains three child steps:
+  1. Cart - Review selected classes, add insurance, apply loyalty card
+  2. Participant Data - Enter details for all participants and stay manager
+  3. Payment - Process payment (to be implemented)
+
+  Features:
+  - Multi-step nested stepper (3 child steps)
+  - Form validation for all participant data
+  - Loyalty card validation with async checking
+  - Insurance selection for all participants
+  - Stay manager selection and data entry
+  - Optional payer data if different from manager
+  - Optional invoice data for companies
+  - Legal agreements acceptance
+  - Real-time price calculation with discounts
+-->
+
 <script setup>
+// ============================================================================
+// IMPORTS - Components
+// ============================================================================
 import DatePickerResponsive from "@/components/DatePickerResponsive.vue";
-import {useStayStore} from '@/stores/StayStore.js'
-import {useStayConfigStore} from "@/stores/StayConfigStore.js";
-import {computed, ref, watch, nextTick} from "vue";
-import {useCookies} from "@vueuse/integrations/useCookies";
-import {useToast} from '@/composables/useToast'
-import {useViewControlStore} from "@/stores/ViewControlStore.js";
-import {useDisplay} from 'vuetify'
 import SelectedParticipantClasses from "@/components/SelectedParticipantClasses.vue";
-import {useI18n} from "vue-i18n";
-import {formatPrice} from "@/utils/numbers.js";
-import CheckGreenIcon from "@/assets/check-circle.svg";
-import {useDebounceFn} from '@vueuse/core'
 import PopupSmall from "@/components/modals/PopupSmall.vue";
 import ParticipantData from "@/components/ParticipantData.vue";
+
+// ============================================================================
+// IMPORTS - Stores & Composables
+// ============================================================================
+import {useStayStore} from '@/stores/StayStore.js'
+import {useStayConfigStore} from "@/stores/StayConfigStore.js";
+import {useViewControlStore} from "@/stores/ViewControlStore.js";
+import {useToast} from '@/composables/useToast'
+import {useCookies} from "@vueuse/integrations/useCookies";
+import {useDisplay} from 'vuetify'
+import {useI18n} from "vue-i18n";
+
+// ============================================================================
+// IMPORTS - Vue & Utilities
+// ============================================================================
+import {computed, ref, watch, nextTick} from "vue";
+import {useDebounceFn} from '@vueuse/core'
+import {formatPrice} from "@/utils/numbers.js";
+
+// ============================================================================
+// IMPORTS - Assets
+// ============================================================================
+import CheckGreenIcon from "@/assets/check-circle.svg";
 import WalletIcon from "@/assets/wallet.svg";
 
+// ============================================================================
+// COMPOSABLES & STORE INITIALIZATION
+// ============================================================================
 const {showSimpleToast, showActionToast} = useToast()
 const stayStore = useStayStore()
 const configStore = useStayConfigStore()
@@ -24,35 +63,94 @@ const cookies = useCookies(['locale'])
 const {mobile, lgAndUp} = useDisplay()
 const {t} = useI18n()
 
-// Form refs
+// ============================================================================
+// TEMPLATE REFS - Form References
+// ============================================================================
+
+/** Form ref for loyalty card validation */
 const dataForm = ref(null)
+
+/** Form ref for stay manager data validation */
 const stayManagerFormRef = ref(null)
+
+/** Form ref for legal agreements validation */
 const agreementsFormRef = ref(null)
 
+/** Specific field ref for loyalty card input (for programmatic validation) */
 const loyaltyCardField = ref(null)
+
+/** Array of refs for all participant forms (dynamic based on participant count) */
 const participantForms = ref([])
+
+/** Main stepper ref for this component (exposed to parent) */
 const stepThreeNestedRef = ref(null)
+
+// ============================================================================
+// STATE - Child Step Navigation
+// ============================================================================
+
+/** Active child step within this stepper (1=Cart, 2=Participant Data, 3=Payment) */
 const activeChildStep = ref(1)
 
+// ============================================================================
+// VALIDATION RULES
+// ============================================================================
+
+/**
+ * Validation rules for form fields
+ * Each rule returns true if valid, or an error message string if invalid
+ */
 const rules = {
+  /** Required field validation */
   required: value => !!value || t('fill_the_field_properly'),
+
+  /** Email format validation (optional field) */
   email: value => !value || /.+@.+\..+/.test(value) || t('invalid_email'),
+
+  /** Phone number validation - allows digits, +, spaces, hyphens, parentheses */
   phone: value => !value || /^[\d+\s-()]+$/.test(value) || t('invalid_phone'),
+
+  /**
+   * Loyalty card validation - checks async validation result from store
+   * Only validates if a value is entered
+   */
   validLoyaltyCard: value => {
     if (!value) return true
     return stayStore.isValidLoyaltyCardNumber === true || t('invalid_loyalty_card_number')
   }
 }
 
-const selectInsurancesForAllCheckbox = ref(false) // input for selecting all
-const revealInsurancesForAllInfo = ref(false) // to reveal info sections for all
-const discountInfoDialog = ref(false) // discount info popup
+// ============================================================================
+// STATE - UI Controls
+// ============================================================================
 
+/** Checkbox state for selecting all insurances (currently unused) */
+const selectInsurancesForAllCheckbox = ref(false)
+
+/** Toggle to show/hide insurance information details */
+const revealInsurancesForAllInfo = ref(false)
+
+/** Dialog visibility for discount information popup */
+const discountInfoDialog = ref(false)
+
+// ============================================================================
+// WATCHERS - Child Step Synchronization
+// ============================================================================
+
+/**
+ * Sync active child step with view control store
+ * Updates the global step tracker when user navigates between child steps
+ */
 watch(activeChildStep, async (newStep) => {
   await nextTick()
   viewStore.currentStep.child = newStep
 })
 
+/**
+ * Watcher for bulk insurance selection checkbox (currently unused)
+ * When checked, applies insurance selection to all classes for all participants
+ * @deprecated This feature may be replaced by allInsurancesEnabled computed property
+ */
 watch(selectInsurancesForAllCheckbox, (newValue) => {
   stayStore.selectedInsurancesForAll = newValue
 
@@ -63,8 +161,18 @@ watch(selectInsurancesForAllCheckbox, (newValue) => {
   })
 })
 
+// ============================================================================
+// COMPUTED - Insurance Management
+// ============================================================================
 
-// Toggle all insurances for all participants
+/**
+ * Two-way computed property for enabling/disabling ALL insurances
+ *
+ * Getter: Returns true only if ALL participants have ALL their insurances enabled
+ * Setter: Enables or disables insurance for all classes of all participants
+ *
+ * Used by the "Insurance for all" checkbox in the cart
+ */
 const allInsurancesEnabled = computed({
   get() {
     return stayStore.participants.every(participant =>
@@ -82,7 +190,16 @@ const allInsurancesEnabled = computed({
   }
 })
 
-// Sum total of insurances for all participants no matter if they are selected or not
+/**
+ * Calculate total insurance cost for all participants
+ * This shows the POTENTIAL cost if all available insurances were enabled
+ *
+ * Special rules:
+ * - Skips insurance for children in group classes
+ * - Multiplies price by number of days if insurance is perDay
+ *
+ * @returns {number} Total insurance price across all participants
+ */
 const sumTotalInsurancesForAll = computed(() => {
   return stayStore.participants.reduce((total, participant) => {
     const participantInsuranceTotal = participant.selectedClasses.reduce((sum, item) => {
@@ -103,7 +220,20 @@ const sumTotalInsurancesForAll = computed(() => {
   }, 0)
 })
 
-// Handle loyalty card number validation on blur
+// ============================================================================
+// ACTIONS - Loyalty Card Validation
+// ============================================================================
+
+/**
+ * Debounced handler for loyalty card number validation
+ *
+ * Waits 1.5 seconds after user stops typing, then:
+ * 1. Calls the store's async validation method
+ * 2. Shows error toast if invalid
+ * 3. Forces field re-validation to show/hide error
+ *
+ * Debouncing prevents excessive API calls during typing
+ */
 const handleCardNumberValidation = useDebounceFn(async () => {
   if (stayStore.loyaltyProgram.loyaltyCardNumber) {
     console.log('Handling loyalty card number validation...')
@@ -118,8 +248,16 @@ const handleCardNumberValidation = useDebounceFn(async () => {
   }
 }, 1500)
 
+// ============================================================================
+// COMPUTED - Stay Manager Selection
+// ============================================================================
 
-// Get adult participants for stay manager select
+/**
+ * Build list of adult participants for stay manager dropdown
+ * Includes all adult participants plus an "another" option for non-participants
+ *
+ * @returns {Array} Array of selectable adults with special "another" option
+ */
 const adultParticipants = computed(() => {
   const adults = stayStore.participants.filter(p => p.participantType === 'adult')
   return [
@@ -128,7 +266,17 @@ const adultParticipants = computed(() => {
   ]
 })
 
-// Auto-select first adult and populate fields
+// ============================================================================
+// WATCHERS - Stay Manager Auto-population
+// ============================================================================
+
+/**
+ * Auto-select first adult participant as stay manager on initialization
+ * This watcher runs immediately and whenever adult participants change
+ *
+ * Only populates if no manager is already selected
+ * Copies name, surname, phone, and email from the first adult
+ */
 watch(adultParticipants, (adults) => {
   const actualAdults = adults.filter(a => a.dynamicId !== 'another')
   if (actualAdults.length > 0 && !stayStore.stayManagerData.managerId) {
@@ -141,15 +289,23 @@ watch(adultParticipants, (adults) => {
   }
 }, {immediate: true})
 
-// Update fields when selection changes
+/**
+ * Update stay manager fields when selection changes
+ *
+ * If "another" is selected: Clear all fields (user enters new data)
+ * If existing participant selected: Auto-populate from participant data
+ *
+ * This creates a seamless UX where selecting a participant auto-fills their info
+ */
 watch(() => stayStore.stayManagerData.managerId, (managerId) => {
   if (managerId === 'another') {
-    // Clear fields when "another" is selected
+    // Clear fields when "another" is selected - user will enter custom data
     stayStore.stayManagerData.name = ''
     stayStore.stayManagerData.surname = ''
     stayStore.stayManagerData.phone = ''
     stayStore.stayManagerData.email = ''
   } else {
+    // Auto-populate from selected participant's data
     const manager = stayStore.participants.find(p => p.dynamicId === managerId)
     if (manager) {
       stayStore.stayManagerData.name = manager.name || ''
@@ -160,10 +316,35 @@ watch(() => stayStore.stayManagerData.managerId, (managerId) => {
   }
 })
 
-// Check if "another stay manager" is selected
+// ============================================================================
+// COMPUTED - Stay Manager Helpers
+// ============================================================================
+
+/**
+ * Check if "another stay manager" option is selected
+ * Used to conditionally change field labels (e.g., "Name" vs "Payer's Name")
+ *
+ * @returns {boolean} True if custom manager (not a participant) is selected
+ */
 const isAnotherStayManager = computed(() => stayStore.stayManagerData.managerId === 'another')
 
-// Validate all forms in step 3/2 (participants data)
+// ============================================================================
+// ACTIONS - Form Validation
+// ============================================================================
+
+/**
+ * Comprehensive validation for all forms in step 3/2 (Participant Data child step)
+ *
+ * Validates in order:
+ * 1. Loyalty card form (if loyalty card checkbox is checked)
+ * 2. All participant forms (name, email, phone, etc.)
+ * 3. Stay manager form
+ * 4. Legal agreements (all three must be accepted)
+ *
+ * Shows appropriate error toasts if validation fails
+ *
+ * @returns {Promise<boolean>} True if all validations pass, false otherwise
+ */
 const validateCurrentStep = async () => {
   const validationResults = []
 
@@ -212,7 +393,14 @@ const validateCurrentStep = async () => {
   return true
 }
 
-// Expose for parent access
+// ============================================================================
+// COMPONENT EXPOSURE
+// ============================================================================
+
+/**
+ * Expose stepper ref and validation function to parent component
+ * Parent uses these to control navigation and validate before proceeding
+ */
 defineExpose({
   stepThreeNestedRef,
   validateCurrentStep,
@@ -221,6 +409,10 @@ defineExpose({
 </script>
 
 <template>
+  <!--
+    Main Stepper Component for Step 3
+    Contains 3 child steps: Cart (1), Participant Data (2), Payment (3)
+  -->
   <VStepper
     ref="stepThreeNestedRef"
     v-model="activeChildStep"
@@ -261,6 +453,9 @@ defineExpose({
     </VStepperHeader>
 
     <VStepperWindow class="flex-1">
+      <!-- ================================================================== -->
+      <!-- CHILD STEP 1: CART - Review Classes & Add Insurance -->
+      <!-- ================================================================== -->
       <VStepperWindowItem :value="1">
         <div class="d-flex flex-wrap">
           <div
@@ -281,6 +476,7 @@ defineExpose({
 
           </div>
           <div :class="lgAndUp ? 'w-50' : 'w-100'">
+            <!-- Date and title display for mobile -->
             <StayDateDisplay v-if="!lgAndUp" class="my-4"/>
             <p
               v-if="!lgAndUp"
@@ -316,7 +512,9 @@ defineExpose({
             </div>
           </div>
           <div :class="lgAndUp ? 'w-40 ml-auto' : 'w-100'">
-            <!--ADDITIONAL OPTIONS-->
+            <!-- =========================================================== -->
+            <!-- ADDITIONAL OPTIONS - Insurance for all participants -->
+            <!-- =========================================================== -->
             <div class="my-4 px-1">
               <p
                 :class="mobile? 'fs-16':'fs-20'"
@@ -390,6 +588,10 @@ defineExpose({
                 </VExpandTransition>
               </VSheet>
             </div>
+
+            <!-- =========================================================== -->
+            <!-- LOYALTY CARD - Optional loyalty program benefits -->
+            <!-- =========================================================== -->
             <div class="my-4 px-1">
               <p
                 :class="mobile? 'fs-16':'fs-20'"
@@ -467,7 +669,10 @@ defineExpose({
                 </VForm>
               </VExpandTransition>
             </div>
-            <!--SUMMARY-->
+
+            <!-- =========================================================== -->
+            <!-- SUMMARY - Price breakdown for cart step -->
+            <!-- =========================================================== -->
             <div class="my-4 px-1">
               <p
                 :class="mobile? 'fs-16':'fs-20'"
@@ -496,7 +701,8 @@ defineExpose({
                     <VDivider class="mt-1 mb-2"/>
                   </li>
                 </ul>
-                <!--DISCOUNTS-->
+
+                <!-- Discount display (if applicable) -->
                 <div
                   v-if="parseFloat(stayStore.discountGeneric) > 0"
                   class=" fw-600 mt-2"
@@ -543,7 +749,7 @@ defineExpose({
 
         </div>
 
-        <!--POPUPS-->
+        <!-- Discount information popup modal -->
         <PopupSmall
           v-model="discountInfoDialog"
           :title="t('discounts_title')"
@@ -560,7 +766,9 @@ defineExpose({
         </PopupSmall>
       </VStepperWindowItem>
 
-      <!--PARTICIPANTS DATA-->
+      <!-- ================================================================== -->
+      <!-- CHILD STEP 2: PARTICIPANT DATA - Collect participant information -->
+      <!-- ================================================================== -->
       <VStepperWindowItem
         :value="2"
       >
@@ -586,7 +794,9 @@ defineExpose({
             :participant="participant"
           />
 
-          <!--stay MANAGER DATA-->
+          <!-- =========================================================== -->
+          <!-- STAY MANAGER DATA - Select or enter contact person info -->
+          <!-- =========================================================== -->
           <VForm ref="stayManagerFormRef" class="mt-8 mb-4 px-1">
             <p
               :class="mobile? 'fs-16':'fs-20'"
@@ -698,6 +908,8 @@ defineExpose({
                 </VCol>
               </VRow>
               <VDivider class="mt-8 mb-4"/>
+
+              <!-- Optional: Different payer data (if payer != manager) -->
               <div class="my-4 w-100">
                 <VCheckbox
                   v-model="stayStore.anotherPayerData"
@@ -761,6 +973,7 @@ defineExpose({
 
               <VDivider class="my-4"/>
 
+              <!-- Optional: Invoice data for companies -->
               <div class="my-4 w-100">
                 <VCheckbox
                   v-model="stayStore.receiveInvoice"
@@ -827,7 +1040,10 @@ defineExpose({
 
             </VSheet>
           </VForm>
-          <!--AGREEMENTS-->
+
+          <!-- =========================================================== -->
+          <!-- LEGAL AGREEMENTS - Required consents and declarations -->
+          <!-- =========================================================== -->
           <VForm ref="agreementsFormRef" class="agreements-container mt-8 mb-4 px-1 lh-normal">
             <p
               :class="mobile? 'fs-16':'fs-20'"
@@ -890,7 +1106,9 @@ defineExpose({
           </VForm>
 
 
-          <!--SUMMARY-->
+          <!-- =========================================================== -->
+          <!-- SUMMARY - Final price breakdown before payment -->
+          <!-- =========================================================== -->
           <div class="mt-8 mb-4 px-1">
             <p
               :class="mobile? 'fs-16':'fs-20'"
@@ -919,7 +1137,8 @@ defineExpose({
                   <VDivider class="mt-1 mb-2"/>
                 </li>
               </ul>
-              <!--DISCOUNTS-->
+
+              <!-- Discount display (if applicable) -->
               <div
                 v-if="parseFloat(stayStore.discountGeneric) > 0"
                 class=" fw-600 mt-2"
