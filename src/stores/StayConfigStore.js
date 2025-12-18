@@ -5,7 +5,9 @@ import { useI18n } from 'vue-i18n'
 export const useStayConfigStore = defineStore('stayConfig', () => {
   const { t } = useI18n()
 
-  const CUSTOMER_SERVICE_LINK = 'https://example.com/contact'
+  const CUSTOMER_SERVICE_LINK = 'https://szkolastok.pl/kontakt'
+  const REGULATIONS_LINK = 'https://szkolastok.pl/kontakt'
+  const PAYMENT_REGULATIONS_LINK = 'https://szkolastok.pl/kontakt'
 
   const currency = 'zł'
 
@@ -116,5 +118,7 @@ export const useStayConfigStore = defineStore('stayConfig', () => {
     availableLanguages,
     currency,
     CUSTOMER_SERVICE_LINK,
+    REGULATIONS_LINK,
+    PAYMENT_REGULATIONS_LINK
   }
 })

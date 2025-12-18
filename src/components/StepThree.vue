@@ -1,7 +1,8 @@
 <script setup>
 import DatePickerResponsive from "@/components/DatePickerResponsive.vue";
 import {useStayStore} from '@/stores/StayStore.js'
-import {computed, ref, watch} from "vue";
+import {useStayConfigStore} from "@/stores/StayConfigStore.js";
+import {computed, ref, watch, nextTick} from "vue";
 import {useCookies} from "@vueuse/integrations/useCookies";
 import {useToast} from '@/composables/useToast'
 import {useViewControlStore} from "@/stores/ViewControlStore.js";
@@ -10,13 +11,14 @@ import SelectedParticipantClasses from "@/components/SelectedParticipantClasses.
 import {useI18n} from "vue-i18n";
 import {formatPrice} from "@/utils/numbers.js";
 import CheckGreenIcon from "@/assets/check-circle.svg";
-import { useDebounceFn } from '@vueuse/core'
+import {useDebounceFn} from '@vueuse/core'
 import PopupSmall from "@/components/modals/PopupSmall.vue";
 import ParticipantData from "@/components/ParticipantData.vue";
 import WalletIcon from "@/assets/wallet.svg";
 
 const {showSimpleToast, showActionToast} = useToast()
 const stayStore = useStayStore()
+const configStore = useStayConfigStore()
 const viewStore = useViewControlStore()
 const cookies = useCookies(['locale'])
 const {mobile, lgAndUp} = useDisplay()
@@ -24,6 +26,9 @@ const {t} = useI18n()
 
 // Form refs
 const dataForm = ref(null)
+const stayManagerFormRef = ref(null)
+const agreementsFormRef = ref(null)
+
 const loyaltyCardField = ref(null)
 const participantForms = ref([])
 const stepThreeNestedRef = ref(null)
@@ -119,7 +124,7 @@ const adultParticipants = computed(() => {
   const adults = stayStore.participants.filter(p => p.participantType === 'adult')
   return [
     ...adults,
-    { dynamicId: 'another', name: t('another_stay_manager'), surname: '' }
+    {dynamicId: 'another', name: t('another_stay_manager'), surname: ''}
   ]
 })
 
@@ -134,7 +139,7 @@ watch(adultParticipants, (adults) => {
     stayStore.stayManagerData.phone = firstAdult.phone || ''
     stayStore.stayManagerData.email = firstAdult.email || ''
   }
-}, { immediate: true })
+}, {immediate: true})
 
 // Update fields when selection changes
 watch(() => stayStore.stayManagerData.managerId, (managerId) => {
@@ -158,9 +163,57 @@ watch(() => stayStore.stayManagerData.managerId, (managerId) => {
 // Check if "another stay manager" is selected
 const isAnotherStayManager = computed(() => stayStore.stayManagerData.managerId === 'another')
 
+// Validate all forms in step 3/2 (participants data)
+const validateCurrentStep = async () => {
+  const validationResults = []
+
+  // Validate loyalty card form if has loyalty card
+  if (stayStore.hasLoyaltyCard && dataForm.value) {
+    const loyaltyCardValid = await dataForm.value.validate()
+    validationResults.push(loyaltyCardValid.valid)
+  }
+
+  // Validate all participant forms
+  if (participantForms.value && participantForms.value.length > 0) {
+    for (const form of participantForms.value) {
+      if (form && form.validate) {
+        const result = await form.validate()
+        validationResults.push(result.valid)
+      }
+    }
+  }
+
+  // Validate stay manager form
+  if (stayManagerFormRef.value) {
+    const stayManagerValid = await stayManagerFormRef.value.validate()
+    validationResults.push(stayManagerValid.valid)
+  }
+
+  // Validate agreements - all three must be checked
+  const agreementsValid =
+    stayStore.stokSchoolRegulationsAccepted &&
+    stayStore.stokSchoolRodoAccepted &&
+    stayStore.stokSchoolPaymentRegulationsAccepted
+
+  if (!agreementsValid) {
+    showSimpleToast(t('please_accept_all_required_agreements'), 'error')
+    validationResults.push(false)
+  }
+
+  // Check if all validations passed
+  const allValid = validationResults.every(result => result === true)
+
+  if (!allValid) {
+    showSimpleToast(t('please_fill_all_required_fields'), 'error')
+  }
+
+  return allValid
+}
+
 // Expose for parent access
 defineExpose({
   stepThreeNestedRef,
+  validateCurrentStep,
 })
 
 </script>
@@ -217,12 +270,12 @@ defineExpose({
               {{ $t('cart') }}
             </p>
 
-              <p
-                :class="mobile ? 'fs-14' : 'fs-16'"
-                class="font-weight-medium mb-2"
-              >
-                {{ $t('cart_subtitle') }}
-              </p>
+            <p
+              :class="mobile ? 'fs-14' : 'fs-16'"
+              class="font-weight-medium mb-2"
+            >
+              {{ $t('cart_subtitle') }}
+            </p>
 
           </div>
           <div :class="lgAndUp ? 'w-50' : 'w-100'">
@@ -247,7 +300,7 @@ defineExpose({
               class="fw-600 my-4"
               :class="mobile ? 'fs-18 mb-4 mt-8' : 'fs-20'"
             >
-             {{ $t('selected_classes') }}:
+              {{ $t('selected_classes') }}:
             </p>
             <div class="d-flex flex-column ga-4 pa-1">
               <SelectedParticipantClasses
@@ -260,7 +313,7 @@ defineExpose({
               />
             </div>
           </div>
-          <div  :class="lgAndUp ? 'w-40 ml-auto' : 'w-100'" >
+          <div :class="lgAndUp ? 'w-40 ml-auto' : 'w-100'">
             <!--ADDITIONAL OPTIONS-->
             <div class="my-4 px-1">
               <p
@@ -271,27 +324,27 @@ defineExpose({
               </p>
               <VSheet class="rounded bg-light-gray mt-2 mb-4">
                 <div
-                  class="pa-1 rounded d-flex align-center justify-between"
+                  class="pa-4 ga-3 rounded d-flex align-center justify-between"
                 >
                   <VCheckbox
                     density="compact"
                     v-model="allInsurancesEnabled"
                     hide-details
                     color="info"
-                    class="mb-auto mt-1 "
+                    class="mb-auto "
                   />
                   <div
                     :class="mobile ? 'fs-10': 'fs-14'"
-                    class="fw-400 d-flex align-center ml-2"
+                    class="fw-400 d-flex 2 align-center ml-2"
                   >
-                    <div class="d-flex flex-column py-2">
-                      <p class="ma-1 lh-normal">
+                    <div class="d-flex flex-column">
+                      <p class="mt-2 lh-normal">
                         {{ t('insurance_for_all_option') }}
                       </p>
 
                       <VBtn
                         :class="mobile ? 'fs-10': 'fs-14'"
-                        class="text-capitalize w-max-content px-1"
+                        class="text-capitalize w-max-content px-0"
                         variant="text"
                         size="small"
                         flat
@@ -303,13 +356,11 @@ defineExpose({
                       </VBtn>
 
                     </div>
-
-
                   </div>
 
                   <div
                     :class="mobile ? 'fs-11 ': 'fs-14'"
-                    class="d-flex flex-column align-end ml-auto fc-gray px-1 mb-auto"
+                    class="d-flex mt-1 flex-column align-end ml-auto fc-gray mb-auto"
                   >
                     <span class="fw-500 mb-auto">
                       +&nbsp;{{ formatPrice(sumTotalInsurancesForAll) }}&nbsp;{{ stayStore.currency }}
@@ -325,9 +376,11 @@ defineExpose({
                     flat
                     style="background-color: transparent;"
                   >
-                    <VCardText class="pl-8 pt-0">
+                    <VCardText class="pl-6 pt-0">
                       <p :class="mobile ? 'fs-10' : 'fs-12'">
-                        Lorem
+                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut
+                        labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
+                        laboris nisi ut aliquip ex ea commodo consequat.
                       </p>
 
                     </VCardText>
@@ -433,7 +486,9 @@ defineExpose({
                     <div class="d-flex justify-space-between">
                       <span>{{ participant.name || '-' }}</span>
                       <span class="ml-auto">
-                    {{ formatPrice(stayStore.participantClassesTotalPrice(participant.dynamicId) + stayStore.participantInsuranceTotalPrice(participant.dynamicId)) }}&nbsp;{{ stayStore.currency }}
+                    {{
+                          formatPrice(stayStore.participantClassesTotalPrice(participant.dynamicId) + stayStore.participantInsuranceTotalPrice(participant.dynamicId))
+                        }}&nbsp;{{ stayStore.currency }}
                   </span>
                     </div>
                     <VDivider class="mt-1 mb-2"/>
@@ -472,7 +527,9 @@ defineExpose({
                   </span>
                     </div>
                     <div v-if="allInsurancesEnabled" class="fs-11">
-                      <span>{{ $t('including') }}</span>&nbsp;<span class="text-lowercase">{{ $t('aditional_options') }}: </span>
+                      <span>{{ $t('including') }}</span>&nbsp;<span class="text-lowercase">{{
+                        $t('aditional_options')
+                      }}: </span>
                       <span>{{ formatPrice(sumTotalInsurancesForAll) }}&nbsp;{{ stayStore.currency }}</span>
                     </div>
                   </div>
@@ -497,11 +554,11 @@ defineExpose({
             <VBtn variant="outlined" @click="discountInfoDialog = false">
               Ok
             </VBtn>
-
           </template>
         </PopupSmall>
       </VStepperWindowItem>
 
+      <!--PARTICIPANTS DATA-->
       <VStepperWindowItem
         :value="2"
       >
@@ -528,7 +585,7 @@ defineExpose({
           />
 
           <!--stay MANAGER DATA-->
-          <div class="mt-8 mb-4 px-1">
+          <VForm ref="stayManagerFormRef" class="mt-8 mb-4 px-1">
             <p
               :class="mobile? 'fs-16':'fs-20'"
               class="fw-600 my-4"
@@ -588,7 +645,9 @@ defineExpose({
                 </VCol>
 
                 <VCol :cols="mobile ? 12 : 6">
-                  <p class="custom-input-label mb-2">{{ isAnotherStayManager ? $t('payers_surname') : $t('surname') }}</p>
+                  <p class="custom-input-label mb-2">{{
+                      isAnotherStayManager ? $t('payers_surname') : $t('surname')
+                    }}</p>
                   <VTextField
                     v-model="stayStore.stayManagerData.surname"
                     variant="outlined"
@@ -616,9 +675,9 @@ defineExpose({
                     @keydown="(e) => !/[\d+]/.test(e.key) && e.key !== 'Backspace' && e.preventDefault()"
                   >
                   </VTextField>
-                    <p class="fs-12 px-4 fc-gray">
-                      {{ $t('enter_only_numbers') }}
-                    </p>
+                  <p class="fs-12 px-4 fc-gray">
+                    {{ $t('enter_only_numbers') }}
+                  </p>
                 </VCol>
 
                 <VCol :cols="mobile ? 12 : 6">
@@ -637,16 +696,16 @@ defineExpose({
               </VRow>
               <VDivider class="mt-8 mb-4"/>
               <div class="my-4 w-100">
-               <VCheckbox
-                v-model="stayStore.anotherPayerData"
-                density="compact"
-                color="info"
-                hide-details="auto"
-               >
-                 <template #label>
-                 {{ $t('another_payers_data') }}
-                 </template>
-               </VCheckbox>
+                <VCheckbox
+                  v-model="stayStore.anotherPayerData"
+                  density="compact"
+                  color="info"
+                  hide-details="auto"
+                >
+                  <template #label>
+                    {{ $t('another_payers_data') }}
+                  </template>
+                </VCheckbox>
               </div>
 
               <VExpandTransition>
@@ -739,9 +798,9 @@ defineExpose({
                       clearable
                       hide-details="auto"
                       :rules="stayStore.receiveInvoice ? [rules.required] : []"
-                      :placeholder="$t('enter_only_numbers')"
                       @keydown="(e) => !/[\d]/.test(e.key) && e.key !== 'Backspace' && e.key !== 'Tab' && e.key !== 'Delete' && e.key !== 'ArrowLeft' && e.key !== 'ArrowRight' && e.preventDefault()"
                     />
+
                   </VCol>
 
                   <VCol cols="12">
@@ -755,14 +814,77 @@ defineExpose({
                       clearable
                       hide-details="auto"
                       :rules="stayStore.receiveInvoice ? [rules.required] : []"
-                      :placeholder="$t('enter_street_and_number')"
                     />
+                    <p class="fs-12 px-4 fc-gray">
+                      {{ $t('enter_street_and_number') }}
+                    </p>
                   </VCol>
                 </VRow>
               </VExpandTransition>
 
             </VSheet>
-          </div>
+          </VForm>
+          <!--AGREEMENTS-->
+          <VForm ref="agreementsFormRef" class="agreements-container mt-8 mb-4 px-1 lh-normal">
+            <p
+              :class="mobile? 'fs-16':'fs-20'"
+              class="fw-600 my-4"
+            >
+              {{ $t('consents_and_declarations') }}:
+            </p>
+              <VCheckbox
+                v-model="stayStore.stokSchoolRegulationsAccepted"
+                density="compact"
+                color="info"
+                hide-details="auto"
+                :class="mobile? 'fs-12':'fs-14'"
+                class="mb-2"
+              >
+                <template #label>
+                  <span :class="mobile? 'fs-12':'fs-14'">
+                    {{ $t('i_declare_that_i_have_read_and_accept_the_regulations') }}
+                     <a :href="configStore.REGULATIONS_LINK" target="_blank" :class="mobile? 'fs-12':'fs-14'">
+                   {{ $t('stok_rules') }}
+                  </a>
+                  </span>
+                </template>
+              </VCheckbox>
+
+              <VCheckbox
+                v-model="stayStore.stokSchoolRodoAccepted"
+                density="compact"
+                color="info"
+                hide-details="auto"
+                class="mb-2"
+              >
+                <template #label>
+                  <span :class="mobile? 'fs-12':'fs-14'">
+                    {{ $t('rodo_declaration') }}
+                  </span>
+                </template>
+              </VCheckbox>
+
+              <VCheckbox
+                v-model="stayStore.stokSchoolPaymentRegulationsAccepted"
+                density="compact"
+                color="info"
+                hide-details="auto"
+                :class="mobile? 'fs-12':'fs-14'"
+                class="mb-2"
+              >
+                <template #label>
+                  <span :class="mobile? 'fs-12':'fs-14'">
+                    {{ $t('i_declare_that_i_accept') }}&nbsp;
+                  </span>
+                  <a :href="configStore.PAYMENT_REGULATIONS_LINK" target="_blank" :class="mobile? 'fs-12':'fs-14'">
+                   {{ $t('payment_regulations') }}
+                  </a>
+                </template>
+              </VCheckbox>
+            <small v-if="!stayStore.agreementsAcceptedCombined" class="fs-12 fc-error pl-4">
+              {{ $t('please_accept_all_required_agreements') }}
+            </small>
+          </VForm>
 
 
           <!--SUMMARY-->
@@ -786,7 +908,9 @@ defineExpose({
                   <div class="d-flex justify-space-between">
                     <span>{{ participant.name || '-' }}</span>
                     <span class="ml-auto">
-                    {{ formatPrice(stayStore.participantClassesTotalPrice(participant.dynamicId) + stayStore.participantInsuranceTotalPrice(participant.dynamicId)) }}&nbsp;{{ stayStore.currency }}
+                    {{
+                        formatPrice(stayStore.participantClassesTotalPrice(participant.dynamicId) + stayStore.participantInsuranceTotalPrice(participant.dynamicId))
+                      }}&nbsp;{{ stayStore.currency }}
                   </span>
                   </div>
                   <VDivider class="mt-1 mb-2"/>
@@ -825,7 +949,9 @@ defineExpose({
                   </span>
                   </div>
                   <div v-if="allInsurancesEnabled" class="fs-11">
-                    <span>{{ $t('including') }}</span>&nbsp;<span class="text-lowercase">{{ $t('aditional_options') }}: </span>
+                    <span>{{ $t('including') }}</span>&nbsp;<span class="text-lowercase">{{
+                      $t('aditional_options')
+                    }}: </span>
                     <span>{{ formatPrice(sumTotalInsurancesForAll) }}&nbsp;{{ stayStore.currency }}</span>
                   </div>
                 </div>
@@ -856,3 +982,13 @@ defineExpose({
 
 
 </template>
+<style lang="scss">
+.agreements-container {
+  .v-selection-control__wrapper {
+    margin-right: .5rem;
+    //margin-bottom: auto;
+    //margin-top: 3px;
+  }
+}
+
+</style>

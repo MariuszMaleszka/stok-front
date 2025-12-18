@@ -149,6 +149,13 @@
   "enter_only_numbers": "Enter numbers only, minimum 9",
   "proceed_to_payment": "Proceed to payment",
   "begginer": "Begginer",
-  "book_more_info": "To book classes for more than 8 people, please contact"
-
+  "book_more_info": "To book classes for more than 8 people, please contact",
+  "consents_and_declarations": "Consents and declarations",
+  "i_declare_that_i_have_read_and_accept_the_regulations": "I declare that I have read and accept",
+  "rodo_declaration": "I declare that I have read and understood the rules for the processing of personal data by the STOK Ski School, as set out in the privacy policy available on the Privacy Policy page, including the following information Show.",
+  "i_declare_that_i_accept": "I declare that I accept",
+  "stok_rules": "rules and regulations of the STOK Ski School",
+  "payment_regulations": "Payment regulations",
+  "please_accept_all_required_agreements": "Please accept all required agreements",
+  "please_fill_all_required_fields": "Please fill in all required fields correctly"
 }

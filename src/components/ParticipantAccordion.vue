@@ -20,7 +20,6 @@ const configStore = useStayConfigStore()
 const {mobile} = useDisplay()
 const {t} = useI18n()
 
-const CUSTOMER_SERVICE_LINK = "https://szkolastok.pl/kontakt"
 const infoDialog = ref(false)
 
 const panel = ref(props.index === 0 ? [0] : []) // To control expansion panel opened/closed state

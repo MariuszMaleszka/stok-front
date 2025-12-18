@@ -1,5 +1,5 @@
 <script setup>
-import {computed, ref} from 'vue'
+import {computed, ref, watch} from 'vue'
 import {useDisplay} from 'vuetify'
 import {useViewControlStore} from "@/stores/ViewControlStore.js"
 import {useStayStore} from '@/stores/StayStore.js'
@@ -44,10 +44,11 @@ const handlePrev = () => {
 }
 
 const handleNext = async () => {
-
+  // Step 1/1 (stay data) - proceed to Step 1/2
   if (viewStore.currentStep.parent === 1 && viewStore.currentStep.child === 1) {
     stepOneComponentRef.value.stepOneNestedRef.next()
   }
+  // Step 1/2 (participants data) - validate and proceed to Step 2
   if (viewStore.currentStep.parent === 1 && viewStore.currentStep.child === 2) {
     const isValid = await stepOneComponentRef.value?.validateCurrentStep()
     if (isValid) {
@@ -58,12 +59,26 @@ const handleNext = async () => {
     }
     return
   }
+  // Step 2 (classes data) - proceed to Step 3
   if (viewStore.currentStep.parent === 2) {
     viewStore.currentStep = {parent: 2, child: 1} // reset child step to 1 to remain flow
     parentStepperRef.value.next()
   }
-  if (viewStore.currentStep.parent === 3) {
+  // Step 3/1 (cart) - no validations -  proceed to Step 3/2
+  if (viewStore.currentStep.parent === 3 && viewStore.currentStep.child === 1) {
     stepThreeComponentRef.value.stepThreeNestedRef.next()
+  }
+  // Step 3/2 (participants data)  - proceed to payment
+  if(viewStore.currentStep.parent === 3 && viewStore.currentStep.child === 2) {
+    const isValid = await stepThreeComponentRef.value?.validateCurrentStep()
+    console.log('isValid', isValid)
+    if (isValid) {
+      viewStore.isStepThreeCompleted = true
+      stepThreeComponentRef.value.stepThreeNestedRef.next()
+    } else {
+      viewStore.isStepThreeCompleted = false
+    }
+    return
   }
 }
 
@@ -74,7 +89,7 @@ watch(parentActiveStep, (newStep) => {
 </script>
 
 <template>
-
+{{ viewStore.currentStep }}
   <VContainer
     max-width="990"
     :class="mobile ? 'px-2': ''"
@@ -96,7 +111,6 @@ watch(parentActiveStep, (newStep) => {
           :title="$t('participants')"
           class="pa-1"
           :complete="viewStore.isStepOneCompleted"
-
         >
         </VStepperItem>
         <VDivider :style="mobile ? 'max-width: 10px' : ''"></VDivider>
@@ -150,28 +164,20 @@ watch(parentActiveStep, (newStep) => {
             </VBtn>
 
             <VBtn
-              v-if="viewStore.currentStep.parent !== 3 || viewStore.currentStep.child !== 3"
               variant="flat"
               color="blue"
               size="large"
-              class="fs-16 text-capitalize px-8 ml-auto flex-2"
+              class="fs-16  px-8 ml-auto flex-2"
               :disabled="!stayStore.dateOfStay"
               @click="handleNext"
             >
-              {{ t('next') }}
+              <span v-if="viewStore.currentStep.parent === 3 && viewStore.currentStep.child === 2">
+                {{ t('proceed_to_payment') }}
+              </span>
+              <span v-else>
+                {{ t('next') }}
+              </span>
             </VBtn>
-            <VBtn
-              v-else
-              variant="flat"
-              color="blue"
-              size="large"
-              class="fs-16 text-capitalize px-8 ml-auto flex-2"
-              :disabled="false"
-              @click="console.log('Finish clicked')"
-            >
-              {{ t('proceed_to_payment') }}
-            </VBtn>
-
 
           </div>
 

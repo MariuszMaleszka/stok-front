@@ -149,6 +149,14 @@
   "enter_only_numbers": "Wpisz tylko cyfry, minimum 9",
   "proceed_to_payment": "Przejdź do płatności",
   "begginer": "Początkujący",
-  "book_more_info": "By zarezerwować zajęcia dla więcej niż 8 osób - skontaktuj się z"
+  "book_more_info": "By zarezerwować zajęcia dla więcej niż 8 osób - skontaktuj się z",
+  "consents_and_declarations": "Zgody i oświadczenia",
+  "i_declare_that_i_have_read_and_accept_the_regulations": "Oświadczam, że zaopoznałem/zapoznałam się z",
+  "rodo_declaration": "Oświadczam, że zapoznałem/zapoznałam się z zasadami przetwarzania danych osobowych przez Szkołę Narciarską STOK, określonymi w polityce prywatności dostępnej na stronie Polityka prywatności, w tym z następującymi informacjami Pokaż.",
+  "i_declare_that_i_accept": "Oświadczam, że akceptuję",
+  "stok_rules": "regulaminem Szkoły Narciarskiej STOK",
+  "payment_regulations": "Regulamin płatności",
+  "please_accept_all_required_agreements": "Proszę zaakceptować wszystkie wymagane zgody",
+  "please_fill_all_required_fields": "Proszę poprawnie wypełnić wszystkie wymagane pola"
 }
 

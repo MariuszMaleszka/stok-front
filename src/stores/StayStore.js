@@ -127,6 +127,10 @@ export const useStayStore = defineStore('stayStore', () => {
     payerData: anotherPayerData.value ? payerData.value : null,
     receiveInvoice: receiveInvoice.value,
     invoiceData: receiveInvoice.value ? invoiceData.value : null,
+    stokSchoolRegulationsAccepted: null,
+    stokSchoolRodoAccepted: null,
+    stokSchoolPaymentRegulationsAccepted: null,
+
   }))
 
   const stayManagerData = ref({
@@ -143,6 +147,17 @@ export const useStayStore = defineStore('stayStore', () => {
     surname: '',
     email: ''
   })
+
+  const stokSchoolRegulationsAccepted = ref(false)
+  const stokSchoolRodoAccepted = ref(false)
+  const stokSchoolPaymentRegulationsAccepted = ref(false)
+
+  const agreementsAcceptedCombined = computed(() => {
+    return stokSchoolRegulationsAccepted.value &&
+           stokSchoolRodoAccepted.value &&
+           stokSchoolPaymentRegulationsAccepted.value
+  })
+
 
   const receiveInvoice = ref(false) // checkbox for receiving invoice
   const invoiceData = ref({
@@ -290,6 +305,10 @@ export const useStayStore = defineStore('stayStore', () => {
     payerData,
     receiveInvoice,
     invoiceData,
+    stokSchoolRegulationsAccepted,
+    stokSchoolRodoAccepted,
+    stokSchoolPaymentRegulationsAccepted,
+    agreementsAcceptedCombined,
     // Computed
     maxAdults,
     maxChildren,

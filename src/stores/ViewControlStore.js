@@ -26,10 +26,11 @@ export const useViewControlStore = defineStore('viewStore', () => {
 
   const isStepTwoCompleted = ref(false)
 
+  const isStepThreeCompleted = ref(false)
+
   const isStepThreeCartCompleted = ref(false) // step three - cart
   const isStepThreeParticipantsCompleted = ref(false) // step three - participants
   const isStepThreePaymentCompleted = ref(false) // step three - payment
-  const isStepThreeCompleted = computed(() => isStepThreeCartCompleted.value && isStepThreeParticipantsCompleted.value && isStepThreePaymentCompleted.value)
 
 
   return {
