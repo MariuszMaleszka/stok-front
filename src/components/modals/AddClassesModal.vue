@@ -1,6 +1,10 @@
 <script setup>
   import { computed, ref, watch } from 'vue'
   import CalendarPlusIcon from '@/assets/calendar-plus.svg'
+  import InfoIcon from '@/assets/info.svg'
+  import UserIcon from '@/assets/user.svg'
+  import UsersGroupIcon from '@/assets/users-group.svg'
+  import UsersIcon from '@/assets/users.svg'
   import { useStayStore } from '@/stores/StayStore'
 
   const props = defineProps({
@@ -39,17 +43,17 @@
     {
       id: 'individual',
       label: 'Zajęcia indywidualne',
-      icon: 'mdi-account',
+      icon: UserIcon,
     },
     {
       id: 'shared',
       label: 'Zajęcia wspólne z innym uczestnikiem',
-      icon: 'mdi-account-multiple',
+      icon: UsersIcon,
     },
     {
       id: 'group',
       label: 'Zajęcia grupowe',
-      icon: 'mdi-account-group',
+      icon: UsersGroupIcon,
     },
   ]
 
@@ -216,7 +220,7 @@
       <div class="modal-header pa-4">
         <div class="d-flex justify-space-between align-center">
           <span class="text-h6 font-weight-bold text-primary-900 mb-1">{{ modalTitle }}</span>
-          <VBtn icon="mdi-close" variant="text" @click="close" />
+          <VBtn class="special-close-btn" icon="mdi-close" variant="text" @click="close" />
         </div>
 
         <div class="d-flex align-center text-grey-darken-1">
@@ -241,10 +245,8 @@
               :class="{ 'selected': selectedType === type.id }"
               @click="selectedType = type.id"
             >
-              <div class="selection-circle mr-4 d-flex align-center justify-center">
-                <div v-if="selectedType === type.id" class="inner-circle" />
-              </div>
-              <VIcon class="mr-3" :color="selectedType === type.id ? 'primary' : 'grey-darken-1'" :icon="type.icon" />
+              <div class="selection-circle mr-4 d-flex align-center justify-center" />
+              <img alt="" class="mr-3" :src="type.icon" width="24">
               <span class="font-weight-medium text-primary-900 fs-14">{{ type.label }}</span>
             </div>
           </div>
@@ -253,9 +255,11 @@
             <VBtn
               class="text-none text-caption"
               color="grey-darken-1 border-gray"
-              prepend-icon="mdi-information"
               variant="outlined"
             >
+              <template #prepend>
+                <img alt="" :src="InfoIcon" width="16">
+              </template>
               Dowiedz się więcej o rodzajach zajęć
             </VBtn>
           </div>
@@ -281,7 +285,6 @@
                 <div class="mb-4">
                   <VSwitch
                     v-model="individualPreferences.searchPreviouslySelected"
-                    color="primary"
                     hide-details
                     label="Szukaj tylko zajęć z wybranym wcześniej instruktorem"
                   />
@@ -346,17 +349,20 @@
                   <div
                     v-for="slot in availableSlots"
                     :key="slot.id"
-                    class="slot-card px-4 py-3 cursor-pointer"
+                    class="slot-card d-flex align-center px-4 py-3 cursor-pointer"
                     :class="{ 'selected': individualSlot === slot.id }"
                     @click="individualSlot = slot.id"
                   >
-                    <div class="d-flex justify-space-between align-center mb-1">
-                      <span class="font-weight-bold text-primary-900">{{ slot.time }}</span>
-                      <span v-if="slot.price" class="font-weight-bold text-primary-900">{{ slot.price }} zł</span>
-                    </div>
-                    <div class="d-flex align-center text-caption text-grey-darken-1">
-                      <span v-if="slot.instructor">{{ slot.instructor }}</span>
-                      <span v-if="slot.isHappyHours" class="text-primary font-weight-bold">Happy Hours</span>
+                    <div class="selection-circle mr-4 d-flex align-center justify-center" />
+                    <div class="flex-grow-1">
+                      <div class="d-flex justify-space-between align-center">
+                        <span class="font-weight-bold text-primary-900">{{ slot.time }}</span>
+                        <span v-if="slot.price" class="font-weight-bold text-primary-900">{{ slot.price }} zł</span>
+                      </div>
+                      <div class="d-flex align-center text-caption text-grey-darken-1">
+                        <span v-if="slot.instructor">{{ slot.instructor }}</span>
+                        <span v-if="slot.isHappyHours" class="text-primary font-weight-bold happy-hours">Happy Hours</span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -392,7 +398,6 @@
                 <div class="mb-4">
                   <VSwitch
                     v-model="sharedPreferences.searchPreviouslySelected"
-                    color="primary"
                     hide-details
                     label="Szukaj tylko zajęć z wybranym wcześniej instruktorem"
                   />
@@ -454,17 +459,20 @@
                   <div
                     v-for="slot in availableSlots"
                     :key="slot.id"
-                    class="slot-card px-4 py-3 cursor-pointer"
+                    class="slot-card d-flex align-center px-4 py-3 cursor-pointer"
                     :class="{ 'selected': sharedSlot === slot.id }"
                     @click="sharedSlot = slot.id"
                   >
-                    <div class="d-flex justify-space-between align-center mb-1">
-                      <span class="font-weight-bold text-primary-900">{{ slot.time }}</span>
-                      <span v-if="slot.price" class="font-weight-bold text-primary-900">{{ slot.price }} zł</span>
-                    </div>
-                    <div class="d-flex align-center text-caption text-grey-darken-1">
-                      <span v-if="slot.instructor">{{ slot.instructor }}</span>
-                      <span v-if="slot.isHappyHours" class="text-primary font-weight-bold">Happy Hours</span>
+                    <div class="selection-circle mr-4 d-flex align-center justify-center" />
+                    <div class="flex-grow-1">
+                      <div class="d-flex justify-space-between align-center">
+                        <span class="font-weight-bold text-primary-900">{{ slot.time }}</span>
+                        <span v-if="slot.price" class="font-weight-bold text-primary-900">{{ slot.price }} zł</span>
+                      </div>
+                      <div class="d-flex align-center text-caption text-grey-darken-1">
+                        <span v-if="slot.instructor">{{ slot.instructor }}</span>
+                        <span v-if="slot.isHappyHours" class="text-primary font-weight-bold happy-hours">Happy Hours</span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -481,17 +489,20 @@
                   <div
                     v-for="group in availableGroups"
                     :key="group.id"
-                    class="slot-card px-4 py-3 cursor-pointer"
+                    class="slot-card d-flex align-center px-4 py-3 cursor-pointer"
                     :class="{ 'selected': selectedGroup === group.id }"
                     @click="selectedGroup = group.id"
                   >
-                    <div class="d-flex justify-space-between align-center mb-1">
-                      <span class="font-weight-bold text-primary-900 fs-14">{{ group.name }}</span>
-                      <span v-if="group.price" class="font-weight-bold text-primary-900">{{ group.price }} zł</span>
+                    <div class="selection-circle mr-4 d-flex align-center justify-center" />
+                    <div class="flex-grow-1">
+                      <div class="d-flex justify-space-between align-center">
+                        <span class="font-weight-bold text-primary-900 fs-14">{{ group.name }}</span>
+                        <span v-if="group.price" class="font-weight-bold text-primary-900">{{ group.price }} zł</span>
+                      </div>
+                      <div class="text-caption text-grey-darken-1 mb-1">{{ group.dates }}</div>
+                      <div class="text-caption text-grey-darken-1">{{ group.desc }}</div>
+                      <div v-if="group.isHappyHours" class="text-caption text-primary font-weight-bold happy-hours">Happy Hours</div>
                     </div>
-                    <div class="text-caption text-grey-darken-1 mb-1">{{ group.dates }}</div>
-                    <div class="text-caption text-grey-darken-1">{{ group.desc }}</div>
-                    <div v-if="group.isHappyHours" class="text-caption text-primary font-weight-bold">Happy Hours</div>
                   </div>
                 </div>
               </VStepperWindowItem>
@@ -549,6 +560,13 @@
   gap: 12px;
 }
 
+.selection-card {
+  img {
+    max-width: 16px;
+    max-height: 16px;
+  }
+}
+
 .selection-card, .slot-card {
   border: 1px solid #E5E7EB;
   border-radius: 12px;
@@ -583,13 +601,6 @@
   }
 }
 
-.inner-circle {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background-color: #2563EB;
-}
-
 .flex-1-1 {
   flex: 1 1 0;
 }
@@ -614,6 +625,49 @@
 }
 
 :deep(.v-label) {
-      font-size: 14px;
+  font-size: 14px;
+  color: #111928;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.special-close-btn {
+  position: relative;
+  top: -12px;
+  right: -12px;
+}
+
+:deep(.v-checkbox .v-label) {
+  margin-left: 4px;
+}
+
+:deep(.v-switch__track) {
+  border: 3px solid #E5E7EB !important;
+  background-color: #E5E7EB !important;
+  opacity: 1 !important;
+  border-radius: 20px !important;
+}
+
+:deep(.v-selection-control--dirty .v-switch__track) {
+  background-color: #2563EB !important;
+}
+
+:deep(.v-switch__thumb) {
+  height: 20px !important;
+  width: 20px !important;
+  background-color: white !important;
+}
+
+:deep(.v-switch .v-selection-control__input > .v-overlay) {
+  display: none !important;
+}
+
+.happy-hours {
+    color: #000 !important;
+    font-size: 10px;
+    font-weight: 400 !important;
+    background: #FACA15;
+    padding: 2px 6px;
+    border-radius: 5px;
 }
 </style>
