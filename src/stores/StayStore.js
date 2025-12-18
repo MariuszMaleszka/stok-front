@@ -467,6 +467,14 @@ export const useStayStore = defineStore('stayStore', () => {
       }, 1000) // Simulate network delay
     })
   }
+  // ==========================================================================
+  // CART
+  // ==========================================================================
+
+  const isPaymentCompleted = ref(true)
+  const isPaymentInProgress = ref(true)
+  const isPaymentFailed = ref(true)
+
 
   // ==========================================================================
   // STORE EXPORTS
@@ -499,6 +507,9 @@ export const useStayStore = defineStore('stayStore', () => {
     stokSchoolRodoAccepted,         // RODO/GDPR acceptance
     stokSchoolPaymentRegulationsAccepted, // Payment regulations acceptance
     agreementsAcceptedCombined,     // All agreements check (computed)
+    isPaymentCompleted,             // Payment completed state
+    isPaymentInProgress,           // Payment in progress state
+    isPaymentFailed,               // Payment failed state
 
     // ==========================================================================
     // COMPUTED PROPERTIES

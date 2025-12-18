@@ -34,8 +34,8 @@ const changeLanguage = (lang) => {
 
     <VMenu v-model="menu">
       <template v-slot:activator="{ props }">
-        <VBtn v-bind="props" icon variant="text">
-          <img :src="currentFlag" :alt="locale" style="width: 24px; height: 24px;">
+        <VBtn v-bind="props" variant="text">
+          {{ locale.toUpperCase() }}
         </VBtn>
       </template>
 

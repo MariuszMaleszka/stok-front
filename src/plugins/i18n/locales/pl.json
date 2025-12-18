@@ -157,6 +157,12 @@
   "stok_rules": "regulaminem Szkoły Narciarskiej STOK",
   "payment_regulations": "Regulamin płatności",
   "please_accept_all_required_agreements": "Proszę zaakceptować wszystkie wymagane zgody",
-  "please_fill_all_required_fields": "Proszę poprawnie wypełnić wszystkie wymagane pola"
+  "please_fill_all_required_fields": "Proszę poprawnie wypełnić wszystkie wymagane pola",
+  "booking_confirmed": "Twoja rezerwacja została potwierdzona",
+  "booking_confirmed_info": "Sprawdź podany adres email by uzyskać więcej informacji",
+  "back_to_homepage": "Wróć do strony głównej",
+  "payment_failed": "Płatność nie została zrealizowana. Spróbuj ponownie.",
+  "payment_in_process": "Płatność w toku",
+    "payment_in_process_info": "Twoja płatność jest w trakcie przetwarzania. Prosimy o cierpliwość."
 }
 

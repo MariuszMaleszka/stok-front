@@ -221,6 +221,7 @@ watch(parentActiveStep, (newStep) => {
 
 // Parent stepper
 .parent-stepper {
+  box-shadow: none !important;
   &:not(.child-stepper) {
     > .v-stepper-header {
       border-radius: $border-radius;
