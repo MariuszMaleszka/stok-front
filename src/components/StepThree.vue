@@ -189,25 +189,27 @@ const validateCurrentStep = async () => {
     validationResults.push(stayManagerValid.valid)
   }
 
+  // Check if all form validations passed (before agreements)
+  const allFormsValid = validationResults.every(result => result === true)
+
   // Validate agreements - all three must be checked
   const agreementsValid =
     stayStore.stokSchoolRegulationsAccepted &&
     stayStore.stokSchoolRodoAccepted &&
     stayStore.stokSchoolPaymentRegulationsAccepted
 
+  // Show appropriate error message
+  if (!allFormsValid) {
+    showSimpleToast(t('please_fill_all_required_fields'), 'error')
+    return false
+  }
+
   if (!agreementsValid) {
     showSimpleToast(t('please_accept_all_required_agreements'), 'error')
-    validationResults.push(false)
+    return false
   }
 
-  // Check if all validations passed
-  const allValid = validationResults.every(result => result === true)
-
-  if (!allValid) {
-    showSimpleToast(t('please_fill_all_required_fields'), 'error')
-  }
-
-  return allValid
+  return true
 }
 
 // Expose for parent access
@@ -670,6 +672,7 @@ defineExpose({
                     clearIcon="mdi-close"
                     clearable
                     maxLength="11"
+                    minLength="9"
                     hide-details="auto"
                     :rules="[rules.required, rules.phone]"
                     @keydown="(e) => !/[\d+]/.test(e.key) && e.key !== 'Backspace' && e.preventDefault()"
