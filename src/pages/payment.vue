@@ -106,9 +106,9 @@ const {mobile} = useDisplay()
             variant="flat"
             color="primary"
             size="large"
-            @click="$router.push({ name: '/' })"
+            @click="$router.push({ name: '/payment' })"
           >
-            {{ $t('back_to_homepage') }}
+            {{ $t('back_to_payment') }}
           </VBtn>
         </div>
 

@@ -163,5 +163,6 @@
   "back_to_homepage": "Back to homepage",
   "payment_failed": "The payment has not been processed. Please try again.",
   "payment_in_process": "Payment in process",
-  "payment_in_process_info": "Your payment is being processed."
+  "payment_in_process_info": "Your payment is being processed.",
+  "back_to_payment": "Back to payment"
 }

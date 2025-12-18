@@ -163,6 +163,7 @@
   "back_to_homepage": "Wróć do strony głównej",
   "payment_failed": "Płatność nie została zrealizowana. Spróbuj ponownie.",
   "payment_in_process": "Płatność w toku",
-    "payment_in_process_info": "Twoja płatność jest w trakcie przetwarzania. Prosimy o cierpliwość."
+  "payment_in_process_info": "Twoja płatność jest w trakcie przetwarzania. Prosimy o cierpliwość.",
+  "back_to_payment": "Wróć do płatności"
 }
 
