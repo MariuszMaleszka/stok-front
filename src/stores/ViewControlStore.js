@@ -18,9 +18,10 @@ export const useViewControlStore = defineStore('viewStore', () => {
   const currentStep = ref({
       parent: 1,
       child: 1
-  }
+    }
   )
 
+  const parentStepperRef = ref(null) // Reference to the parent stepper component
 
   const isStepOneCompleted = ref(false)
 
@@ -33,6 +34,11 @@ export const useViewControlStore = defineStore('viewStore', () => {
   const isStepThreePaymentCompleted = ref(false) // step three - payment
 
 
+
+  const setParentStepper = (stepperRef) => {
+    parentStepperRef.value = stepperRef
+  }
+
   return {
 
     currentStep,
@@ -42,6 +48,8 @@ export const useViewControlStore = defineStore('viewStore', () => {
     isStepThreeParticipantsCompleted, // step three - participants
     isStepThreePaymentCompleted, // step three - payment
     isStepThreeCompleted, // step three - overall
+    parentStepperRef,
+    setParentStepper
 
 
   }

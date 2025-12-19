@@ -71,7 +71,6 @@ const handleNext = async () => {
   // Step 3/2 (participants data)  - proceed to payment
   if(viewStore.currentStep.parent === 3 && viewStore.currentStep.child === 2) {
     const isValid = await stepThreeComponentRef.value?.validateCurrentStep()
-    console.log('isValid', isValid)
     if (isValid) {
       viewStore.isStepThreeCompleted = true
       stepThreeComponentRef.value.stepThreeNestedRef.next()
@@ -85,6 +84,10 @@ const handleNext = async () => {
 watch(parentActiveStep, (newStep) => {
   viewStore.currentStep.parent = newStep
 
+})
+
+onMounted(() => {
+  viewStore.setParentStepper(parentStepperRef.value)
 })
 </script>
 

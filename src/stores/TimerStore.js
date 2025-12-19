@@ -38,12 +38,18 @@ export const useTimerStore = defineStore('timerStore', () => {
     timeRemaining.value = 20 * 60
   }
 
+  // Add 5 minutes to the current timer
+  const addFiveMinutes = () => {
+    timeRemaining.value += 5 * 60 // Add 5 minutes in seconds
+  }
+
   return {
     timeRemaining,
     formattedTime,
     isTimerActive,
     startTimer,
     stopTimer,
-    resetTimer
+    resetTimer,
+    addFiveMinutes
   }
 })

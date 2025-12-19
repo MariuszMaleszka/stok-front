@@ -494,22 +494,48 @@ defineExpose({
                 {{ $t('cart_subtitle') }}
               </p>
             </div>
-            <p
-              class="fw-600 my-4"
-              :class="mobile ? 'fs-18 mb-4 mt-8' : 'fs-20'"
-            >
-              {{ $t('selected_classes') }}:
-            </p>
-            <div class="d-flex flex-column ga-4 pa-1">
-              <SelectedParticipantClasses
-                v-for="(participant, index) in stayStore.participants"
-                :key="participant.dynamicId"
-                :ref="el => participantForms[index] = el"
-                class="ga-4"
-                :index="index"
-                :participant="participant"
-              />
+            <div v-if="stayStore.participants.some(p => p.selectedClasses?.length > 0)">
+              <p
+                class="fw-600 my-4"
+                :class="mobile ? 'fs-18 mb-4 mt-8' : 'fs-20'"
+              >
+                {{ $t('selected_classes') }}:
+              </p>
+              <div class="d-flex flex-column ga-4 pa-1">
+                <SelectedParticipantClasses
+                  v-for="(participant, index) in stayStore.participants"
+                  :key="participant.dynamicId"
+                  :ref="el => participantForms[index] = el"
+                  class="ga-4"
+                  :index="index"
+                  :participant="participant"
+                />
+              </div>
             </div>
+              <VSheet
+                v-else
+                class="bg-white fs-16 rounded-lg px-4 py-8 lh-normal text-center"
+              >
+                <div class="d-flex flex-column ga-2 mb-4 fw-500 align-center justify-center">
+                  <p>
+                    {{ $t('cart_is_empty') }}
+                  </p>
+                  <p>
+                    {{ $t('back_to_class_selection') }}:
+                  </p>
+                </div>
+                <VBtn
+                  variant="flat"
+                  color="blue"
+                  size="large"
+                  class="fs-16 mx-auto"
+                  :disabled="!stayStore.dateOfStay"
+                  prepend-icon="mdi-arrow-left"
+                  @click="viewStore.parentStepperRef?.prev()"
+                >
+                    {{ $t('select_classes') }}
+                </VBtn>
+              </VSheet>
           </div>
           <div :class="lgAndUp ? 'w-40 ml-auto' : 'w-100'">
             <!-- =========================================================== -->

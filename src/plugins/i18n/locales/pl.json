@@ -164,6 +164,8 @@
   "payment_failed": "Płatność nie została zrealizowana. Spróbuj ponownie.",
   "payment_in_process": "Płatność w toku",
   "payment_in_process_info": "Twoja płatność jest w trakcie przetwarzania. Prosimy o cierpliwość.",
-  "back_to_payment": "Wróć do płatności"
+  "back_to_payment": "Wróć do płatności",
+  "cart_is_empty": "Koszyk jest pusty !",
+  "back_to_class_selection": "Wróć do wyboru zajęć"
 }
 

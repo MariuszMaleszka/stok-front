@@ -357,6 +357,59 @@ export const useStayStore = defineStore('stayStore', () => {
     return Math.max(0, (classesTotal + insuranceTotal) - discountGeneric)
   })
 
+  /**
+   * Calculate total hours of classes across ALL participants
+   * @returns {number} Total hours of all classes for all participants combined
+   *
+   * Parses time ranges from class dates (e.g., "9:00 - 9:55") and sums up
+   * the duration in hours across all participants and their enrolled classes
+   */
+  const allParticipantsTotalHours = computed(() => {
+    return participants.value.reduce((totalHours, participant) => {
+      if (!participant?.selectedClasses || participant.selectedClasses.length === 0) {
+        return totalHours
+      }
+
+      const participantHours = participant.selectedClasses.reduce((classTotal, classItem) => {
+        // Exclude group classes from total hours calculation
+        if (classItem.type === 'group') {
+          return classTotal
+        }
+
+        if (!classItem.dates || classItem.dates.length === 0) {
+          return classTotal
+        }
+
+        // Calculate hours for each date in this class
+        const classHours = classItem.dates.reduce((dateHours, dateObj) => {
+          if (!dateObj.time) return dateHours
+
+          // Parse time range (e.g., "9:00 - 9:55")
+          const timeParts = dateObj.time.split(' - ')
+          if (timeParts.length !== 2) return dateHours
+
+          const [startTime, endTime] = timeParts
+
+          // Convert time strings to hours (e.g., "9:00" -> 9, "9:55" -> 9.916...)
+          const parseTime = (timeStr) => {
+            const [hours, minutes] = timeStr.split(':').map(Number)
+            return hours + (minutes / 60)
+          }
+
+          const startHours = parseTime(startTime)
+          const endHours = parseTime(endTime)
+          const duration = endHours - startHours
+
+          return dateHours + duration
+        }, 0)
+
+        return classTotal + classHours
+      }, 0)
+
+      return totalHours + participantHours
+    }, 0)
+  })
+
   // ==========================================================================
   // STATE - DISCOUNTS AND PROMOTIONS
   // ==========================================================================
@@ -521,6 +574,7 @@ export const useStayStore = defineStore('stayStore', () => {
     participantClassesTotalPrice,   // Single participant classes price calculator
     participantInsuranceTotalPrice, // Single participant insurance price calculator
     allParticipantsTotalPrice,      // Total price for all participants
+    allParticipantsTotalHours,      // Total hours of classes for all participants
     checkingLoyaltyCardNumber,      // Loyalty card validation loading state
 
     // ==========================================================================
