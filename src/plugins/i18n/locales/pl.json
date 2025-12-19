@@ -166,6 +166,12 @@
   "payment_in_process_info": "Twoja płatność jest w trakcie przetwarzania. Prosimy o cierpliwość.",
   "back_to_payment": "Wróć do płatności",
   "cart_is_empty": "Koszyk jest pusty !",
-  "back_to_class_selection": "Wróć do wyboru zajęć"
+  "back_to_class_selection": "Wróć do wyboru zajęć",
+  "lower_price_package_activated": "Aktywowano niższy pakiet cenowy",
+  "cheaper_price_package_activated": "Aktywowano tańszy pakiet cenowy!",
+  "you_are_missing": "Brakuje Ci",
+  "classes_plural": "zajęć",
+  "to_activate_the_package": "by aktywować niższy pakiet cenowy",
+  "in_package": "w pakiecie"
 }
 

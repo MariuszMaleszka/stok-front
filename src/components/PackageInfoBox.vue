@@ -2,6 +2,7 @@
 import GreenShieldIcon from "@/assets/shield-check-green.svg";
 import YellowShieldIcon from "@/assets/shield-check-yellow.svg";
 import OrangeShieldIcon from "@/assets/shield-check-orange.svg";
+import TagIcon from "@/assets/tag.svg";
 import {useDisplay} from "vuetify";
 const props = defineProps({
   color: {
@@ -18,7 +19,7 @@ const {mobile} = useDisplay();
 const icon = computed(() => {
   const iconMap = {
     green: GreenShieldIcon,
-    yellow: YellowShieldIcon,
+    yellow: TagIcon,
     orange: OrangeShieldIcon
   };
   return iconMap[props.color];
@@ -51,7 +52,7 @@ const backgroundColor = computed(() => {
       class="pa-0 position-relative"
     >
       <template v-if="showIcon" #prepend>
-        <img class="mt-1" width="18px" :src="icon" alt="">
+        <img class="mt-1 mr-2" width="18px" :src="icon" alt="">
       </template>
       <div :class="mobile ? 'fs-12' : 'fs-14'">
         <slot />

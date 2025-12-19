@@ -730,7 +730,7 @@ defineExpose({
 
                 <!-- Discount display (if applicable) -->
                 <div
-                  v-if="parseFloat(stayStore.discountGeneric) > 0"
+                  v-if="parseFloat(stayStore.finalDiscount) > 0"
                   class=" fw-600 mt-2"
                 >
                   <div class="d-flex justify-space-between fw-400">
@@ -744,7 +744,7 @@ defineExpose({
                       {{ $t('discount') }}
                     </div>
                     <span class="fw-400">
-                -&nbsp;{{ stayStore.discountGeneric }}&nbsp;{{ stayStore.currency }}
+                -&nbsp;{{ stayStore.finalDiscount }}&nbsp;{{ stayStore.currency }}
               </span>
                   </div>
                   <VDivider class="mt-1 mb-2"/>
@@ -1166,7 +1166,7 @@ defineExpose({
 
               <!-- Discount display (if applicable) -->
               <div
-                v-if="parseFloat(stayStore.discountGeneric) > 0"
+                v-if="parseFloat(stayStore.finalDiscount) > 0"
                 class=" fw-600 mt-2"
               >
                 <div class="d-flex justify-space-between fw-400">
@@ -1180,7 +1180,7 @@ defineExpose({
                     {{ $t('discount') }}
                   </div>
                   <span class="fw-400">
-                -&nbsp;{{ stayStore.discountGeneric }}&nbsp;{{ stayStore.currency }}
+                -&nbsp;{{ stayStore.finalDiscount }}&nbsp;{{ stayStore.currency }}
               </span>
                 </div>
                 <VDivider class="mt-1 mb-2"/>

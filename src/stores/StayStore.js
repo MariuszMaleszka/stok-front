@@ -35,7 +35,7 @@ const DUMMY_SELECTED_CLASSES = [
     dates: [
       {date: '01.01.2025', time: '9:00 - 9:55'}
     ],
-    price: 100.00,
+    price: 1000.00, // is calculated per date
     insurance: {
       title: 'NNW Turystyczno-Sportowe lorem ipsum amet dolor blabla tututut',
       enabled: false,
@@ -54,10 +54,9 @@ const DUMMY_SELECTED_CLASSES = [
     instructor: 'Marcin Kowalik',
     dates: [
       {date: '01.01.2025', time: '9:00 - 9:55'},
-      {date: '02.01.2025', time: '9:00 - 9:55'},
-      {date: '03.01.2025', time: '9:00 - 9:55'},
+      {date: '01.01.2025', time: '9:00 - 10:00'},
     ],
-    price: 100.00,
+    price: 100.00, // is calculated per date
     insurance: {
       title: 'NNW Turystyczno-Sportowe lorem ipsum amet dolor blabla tututut',
       enabled: false,
@@ -79,10 +78,14 @@ const DUMMY_SELECTED_CLASSES = [
       {date: '01.01.2025', time: '9:00 - 9:55'},
       {date: '02.01.2025', time: '9:00 - 9:55'},
       {date: '03.01.2025', time: '9:00 - 9:55'},
-      {date: '04.01.2025', time: '9:00 - 9:55'},
-      {date: '05.01.2025', time: '9:00 - 9:55'},
+      {date: '03.01.2025', time: '9:00 - 9:55'},
+      {date: '03.01.2025', time: '9:00 - 9:55'},
+      {date: '03.01.2025', time: '9:00 - 9:55'},
+      {date: '03.01.2025', time: '9:00 - 9:55'},
+      {date: '03.01.2025', time: '9:00 - 9:55'},
+      {date: '03.01.2025', time: '9:00 - 9:55'},
     ],
-    price: 250.00,
+    price: 350.00, // is calculated per date
     insurance: {
       title: 'NNW Turystyczno-Sportowe lorem ipsum amet dolor blabla tututut',
       enabled: false,
@@ -106,7 +109,7 @@ const DUMMY_SELECTED_CLASSES = [
 const blankParticipant = {
   dynamicId: '',                    // Unique identifier generated at runtime
   name: '',                         // Participant's first name
-  surname:'',                       // Participant's last name
+  surname: '',                       // Participant's last name
   phone: null,                      // Contact phone number
   birthDate: null,                  // Date of birth (used to calculate age)
   participantType: '',              // Either 'adult' or 'child'
@@ -243,8 +246,8 @@ export const useStayStore = defineStore('stayStore', () => {
    */
   const agreementsAcceptedCombined = computed(() => {
     return stokSchoolRegulationsAccepted.value &&
-           stokSchoolRodoAccepted.value &&
-           stokSchoolPaymentRegulationsAccepted.value
+      stokSchoolRodoAccepted.value &&
+      stokSchoolPaymentRegulationsAccepted.value
   })
 
   // ==========================================================================
@@ -305,7 +308,8 @@ export const useStayStore = defineStore('stayStore', () => {
       }
 
       return participant.selectedClasses.reduce((sum, classItem) => {
-        return sum + (classItem.price || 0)
+        const numberOfDates = classItem.dates?.length || 1
+        return sum + (classItem.price * numberOfDates)
       }, 0)
     }
   })
@@ -354,18 +358,28 @@ export const useStayStore = defineStore('stayStore', () => {
       return total + participantInsuranceTotalPrice.value(participant.dynamicId)
     }, 0)
 
-    return Math.max(0, (classesTotal + insuranceTotal) - discountGeneric)
+    return Math.max(0, (classesTotal + insuranceTotal) - finalDiscount.value)
   })
 
+  // ==========================================================================
+  // STATE - DISCOUNTS AND PROMOTIONS
+  // ==========================================================================
+
   /**
-   * Calculate total hours of classes across ALL participants
+   * Discount and promotional features
+   * Currently in development, will be used for implementing package deals
+   */
+
+  /**
+   * Calculate total hours of classes across ALL participants excluding group classes
    * @returns {number} Total hours of all classes for all participants combined
    *
    * Parses time ranges from class dates (e.g., "9:00 - 9:55") and sums up
    * the duration in hours across all participants and their enrolled classes
    */
+
   const allParticipantsTotalHours = computed(() => {
-    return participants.value.reduce((totalHours, participant) => {
+    const totalHours = participants.value.reduce((totalHours, participant) => {
       if (!participant?.selectedClasses || participant.selectedClasses.length === 0) {
         return totalHours
       }
@@ -408,20 +422,65 @@ export const useStayStore = defineStore('stayStore', () => {
 
       return totalHours + participantHours
     }, 0)
+
+    return parseFloat(totalHours.toFixed(1))
+  })
+  // thresholds:
+  const FIRST_PACKAGE_THRESHOLD = 10; // hours
+  const SECOND_PACKAGE_THRESHOLD = 20; // hours
+  const FIRST_LEVEL_DISCOUNT = 5.7 // percent
+  const SECOND_LEVEL_DISCOUNT = 11.4 // percent
+  const LOYALTY_CARD_DISCOUNT = 12 // percent
+
+  // first package eligibility
+  const firstPackageEligible = computed(() => {
+    return allParticipantsTotalHours.value >= FIRST_PACKAGE_THRESHOLD &&
+      allParticipantsTotalHours.value < SECOND_PACKAGE_THRESHOLD
   })
 
-  // ==========================================================================
-  // STATE - DISCOUNTS AND PROMOTIONS
-  // ==========================================================================
+  // second package eligibility
+  const secondPackageEligible = computed(() => {
+    return allParticipantsTotalHours.value >= SECOND_PACKAGE_THRESHOLD
+  })
+
+  // final discount calculation
+  const finalDiscount = computed(() => {
+    if (secondPackageEligible.value) {
+      return SECOND_LEVEL_DISCOUNT
+    }
+    if (firstPackageEligible.value) {
+      return FIRST_LEVEL_DISCOUNT
+    }
+    if (isValidLoyaltyCardNumber.value) {
+      return LOYALTY_CARD_DISCOUNT
+    }
+    return 0
+  })
+
+  // missing hours to thresholds
+  const missingHoursToFirstThreshold = computed(() => {
+    if (allParticipantsTotalHours.value >= FIRST_PACKAGE_THRESHOLD) {
+      return 0
+    }
+    return FIRST_PACKAGE_THRESHOLD - allParticipantsTotalHours.value
+  })
+  const missingHoursToSecondThreshold = computed(() => {
+    if (allParticipantsTotalHours.value >= SECOND_PACKAGE_THRESHOLD) {
+      return 0
+    }
+    return SECOND_PACKAGE_THRESHOLD - allParticipantsTotalHours.value
+  })
 
   /**
-   * Discount and promotional features
-   * Currently in development, will be used for implementing package deals
+   * Tracks how many more class hours are needed to reach discount thresholds
+   * Used to inform users how close they are to unlocking package deals
    */
-  const discountPackage_10 = ref(false)         // 10% package discount (not yet implemented)
-  const discountPackage_20 = ref(false)         // 20% package discount (not yet implemented)
-  const discountGeneric = 50                    // Generic discount value for demonstration
-  const missingClassesForDiscount = ref(false)  // Tracks if user is close to discount threshold
+  const missingClassesForDiscount = computed(() => {
+    if (firstPackageEligible.value || secondPackageEligible.value) {
+      return missingHoursToSecondThreshold.value
+    }
+    return (missingHoursToFirstThreshold.value).toFixed(1)
+  })
 
   // ==========================================================================
   // STATE - ADDITIONAL OPTIONS
@@ -543,14 +602,12 @@ export const useStayStore = defineStore('stayStore', () => {
     adultsNumber,                   // Number of adults
     childrenNumber,                 // Number of children
     participants,                   // Participants array
-    discountPackage_10,             // 10% package discount flag
-    discountPackage_20,             // 20% package discount flag
     missingClassesForDiscount,      // Discount threshold tracking
     insuranceSelected,              // Insurance selections per participant
     hasLoyaltyCard,                 // Loyalty card checkbox state
     loyaltyProgram,                 // Loyalty program data
     isValidLoyaltyCardNumber,       // Loyalty card validation result
-    discountGeneric,                // Generic discount amount
+    finalDiscount,                // Generic discount amount
     stayManagerData,                // Stay manager information
     anotherPayerData,               // Different payer checkbox
     payerData,                      // Payer information
@@ -563,6 +620,13 @@ export const useStayStore = defineStore('stayStore', () => {
     isPaymentCompleted,             // Payment completed state
     isPaymentInProgress,           // Payment in progress state
     isPaymentFailed,               // Payment failed state
+    firstPackageEligible,
+    secondPackageEligible,
+    missingHoursToFirstThreshold,
+    missingHoursToSecondThreshold,
+    FIRST_LEVEL_DISCOUNT,
+    SECOND_LEVEL_DISCOUNT,
+    LOYALTY_CARD_DISCOUNT,
 
     // ==========================================================================
     // COMPUTED PROPERTIES
@@ -574,7 +638,7 @@ export const useStayStore = defineStore('stayStore', () => {
     participantClassesTotalPrice,   // Single participant classes price calculator
     participantInsuranceTotalPrice, // Single participant insurance price calculator
     allParticipantsTotalPrice,      // Total price for all participants
-    allParticipantsTotalHours,      // Total hours of classes for all participants
+    allParticipantsTotalHours,      // Total hours of classes for all participants excluding groups
     checkingLoyaltyCardNumber,      // Loyalty card validation loading state
 
     // ==========================================================================

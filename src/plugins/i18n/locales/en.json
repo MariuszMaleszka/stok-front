@@ -166,5 +166,11 @@
   "payment_in_process_info": "Your payment is being processed.",
   "back_to_payment": "Back to payment",
   "cart_is_empty": "Your cart is empty",
-  "back_to_class_selection": "Back to class selection"
+  "back_to_class_selection": "Back to class selection",
+  "lower_price_package_activated": "Lower price package activated",
+  "cheaper_price_package_activated": "Cheaper price package activated",
+  "you_are_missing": "You are missing",
+  "classes_plural": "classes",
+  "to_activate_the_package": "to activate the lower price package",
+  "in_package": "in package"
 }
