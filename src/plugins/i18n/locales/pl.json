@@ -172,6 +172,20 @@
   "you_are_missing": "Brakuje Ci",
   "classes_plural": "zajęć",
   "to_activate_the_package": "by aktywować niższy pakiet cenowy",
-  "in_package": "w pakiecie"
+  "in_package": "w pakiecie",
+  "price_packages": "Pakiety cenowe",
+  "price_package": {
+    "info_1": "Zgodnie z Regulaminem Szkoły Narciarskiej STOK godzina szkoleniowa trwa około 55 minut.",
+    "info_2": "Pakiet 10+ obowiązuje przy jednorazowym zakupie od 10 do 19 godzin szkoleniowych.",
+    "info_3": "Pakiet 20+ obowiązuje przy jednorazowym zakupie co najmniej 20 godzin szkoleniowych.",
+    "info_4": "Happy Hours obowiązują po godzinie 15:00 aż do zamknięcia ośrodka."
+  },
+  "1_class_hour": "1h szkoleniowa",
+  "first_person": "Pierwsza osoba",
+  "second_person": "Druga osoba",
+  "third_person": "Trzecia osoba",
+  "package": "Pakiet",
+  "additional_information": "Informacje dodatkowe",
+  "close": "Zamknij"
 }
 

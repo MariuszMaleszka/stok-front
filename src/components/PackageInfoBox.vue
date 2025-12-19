@@ -4,6 +4,10 @@ import YellowShieldIcon from "@/assets/shield-check-yellow.svg";
 import OrangeShieldIcon from "@/assets/shield-check-orange.svg";
 import TagIcon from "@/assets/tag.svg";
 import {useDisplay} from "vuetify";
+import PopupSmall from "@/components/modals/PopupSmall.vue";
+import {useStayConfigStore} from "@/stores/StayConfigStore.js";
+import PercentIcon from "@/assets/percentage.svg";
+
 const props = defineProps({
   color: {
     type: String,
@@ -16,6 +20,10 @@ const props = defineProps({
   }
 });
 const {mobile} = useDisplay();
+const configStore = useStayConfigStore();
+
+const popup = ref(false);
+
 const icon = computed(() => {
   const iconMap = {
     green: GreenShieldIcon,
@@ -36,30 +44,139 @@ const backgroundColor = computed(() => {
 </script>
 
 <template>
-  <div
-    :class="[
-    mobile ? 'pa-4 pt-2' : 'px-4 pb-4 py-2',
-    'package-card-info',
-    'rounded-lg',
-    'position-relative',
-    backgroundColor
-  ]"
-  >
-    <div class="d-flex justify-end mb-n4 mr-n1">
-      <VIcon class="ml-auto" color="grey" icon="mdi-information-slab-circle" />
-    </div>
-    <VListItem
-      class="pa-0 position-relative"
+  <div>
+    <div
+      :class="[
+      mobile ? 'pa-4 pt-2' : 'px-4 pb-4 py-2',
+      'package-card-info',
+      'rounded-lg',
+      'position-relative',
+      'my-4',
+      backgroundColor
+    ]"
     >
-      <template v-if="showIcon" #prepend>
-        <img class="mt-1 mr-2" width="18px" :src="icon" alt="">
-      </template>
-      <div :class="mobile ? 'fs-12' : 'fs-14'">
-        <slot />
+      <div class="d-flex justify-end position-relative z-10">
       </div>
+      <VListItem
+        class="package-list-item pa-0 position-relative "
+      >
+        <template v-if="showIcon" #prepend>
+          <img class="mt-1 mr-2" width="18px" :src="icon" alt="">
+        </template>
+        <div :class="mobile ? 'fs-12' : 'fs-14'">
+          <slot />
+        </div>
+        <template #append>
+          <VIcon @click.stop="popup = true" class="mb-auto" color="grey" icon="mdi-information-slab-circle" />
 
-    </VListItem>
+        </template>
 
+      </VListItem>
+
+    </div>
+    <PopupSmall
+      :title="$t('price_packages')" v-model="popup">
+      <template #icon>
+        <img class="mr-2" :src="PercentIcon" alt="icon">
+      </template>
+      <template #content >
+        <div
+          :class="mobile?'fs-11' : 'fs-12'"
+        >
+          <div class="mb-4 ">
+            <p class="fw-600">
+              {{ $t('1_class_hour') }}
+            </p>
+            <ul class="pl-4 lh-normal">
+              <li>
+                {{ $t('first_person') }}: {{ configStore.combinedClassesPrices.firstParticipant }}&nbsp;{{ configStore.currency }}
+              </li>
+              <li>
+                {{ $t('second_person') }}: {{ configStore.combinedClassesPrices.secondParticipant }}&nbsp;{{ configStore.currency }}
+              </li>
+              <li>
+                {{ $t('third_person') }}: {{ configStore.combinedClassesPrices.additionalParticipant }}&nbsp;{{ configStore.currency }}
+              </li>
+            </ul>
+          </div>
+          <div class="mb-4">
+            <p class="fw-600">
+              {{ $t('package') }} 10+
+            </p>
+            <ul class="pl-4 lh-normal">
+              <li>
+                {{ $t('first_person') }}: {{ configStore.combinedClassesPrices_10h.firstParticipant }}&nbsp;{{ configStore.currency }}
+              </li>
+              <li>
+                {{ $t('second_person') }}: {{ configStore.combinedClassesPrices_10h.secondParticipant }}&nbsp;{{ configStore.currency }}
+              </li>
+              <li>
+                {{ $t('third_person') }}: {{ configStore.combinedClassesPrices_10h.additionalParticipant }}&nbsp;{{ configStore.currency }}
+              </li>
+            </ul>
+          </div>
+          <div class="mb-4">
+            <p class="fw-600">
+              {{ $t('package') }} 20+
+            </p>
+            <ul class="pl-4 lh-normal">
+              <li>
+                {{ $t('first_person') }}: {{ configStore.combinedClassesPrices_20h.firstParticipant }}&nbsp;{{ configStore.currency }}
+              </li>
+              <li>
+                {{ $t('second_person') }}: {{ configStore.combinedClassesPrices_20h.secondParticipant }}&nbsp;{{ configStore.currency }}
+              </li>
+              <li>
+                {{ $t('third_person') }}: {{ configStore.combinedClassesPrices_20h.additionalParticipant }}&nbsp;{{ configStore.currency }}
+              </li>
+            </ul>
+          </div>
+          <div class="mb-4">
+            <p class="fw-600">
+              Happy Hours
+            </p>
+            <ul class="pl-4 lh-normal">
+              <li>
+                {{ $t('first_person') }}: {{ configStore.combinedClassesPrices_HH.firstParticipant }}&nbsp;{{ configStore.currency }}
+              </li>
+              <li>
+                {{ $t('second_person') }}: {{ configStore.combinedClassesPrices_HH.secondParticipant }}&nbsp;{{ configStore.currency }}
+              </li>
+              <li>
+                {{ $t('third_person') }}: {{ configStore.combinedClassesPrices_HH.additionalParticipant }}&nbsp;{{ configStore.currency }}
+              </li>
+            </ul>
+          </div>
+          <div class="mb-4">
+            <p class="fw-600">
+              {{ $t('additional_information') }}
+            </p>
+            <ul class="pl-4 lh-normal">
+              <li>
+                {{ $t('price_package.info_1') }}
+              </li>
+              <li>
+                {{  $t('price_package.info_2') }}
+              </li>
+              <li>
+                {{  $t('price_package.info_3') }}
+              </li>
+              <li>
+                {{  $t('price_package.info_4') }}
+              </li>
+            </ul>
+          </div>
+        </div>
+      </template>
+
+      <template #actions>
+        <VBtn variant="outlined" @click="popup = false">
+          {{ $t('close') }}
+        </VBtn>
+
+      </template>
+
+    </PopupSmall>
   </div>
 </template>
 
@@ -82,6 +199,9 @@ const backgroundColor = computed(() => {
   .v-list-item__content,
   .v-list-item__prepend {
     margin-top: 8px
+  }
+  .v-list-item__append {
+   margin-bottom: auto;
   }
 }
 </style>
