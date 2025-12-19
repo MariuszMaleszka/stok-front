@@ -46,23 +46,32 @@ const { t } = useI18n();
 <template>
   <VContainer max-width="990">
     <h2>Those are price package boxes, related to stayStore participant selectedClasses</h2>
-    <!--INFO BOX-->
+    <!--INFO BOX FIRST LEVEL DISCOUNT-->
+
     <PackageInfoBox v-if="stayStore.firstPackageEligible" class="my-4" color="yellow">
       <span class="fw-500"><span class="fw-600">{{stayStore.allParticipantsTotalHours}}</span>/10h w {{ $t('in_package') }}.</span>
-      <p class="mb-2">{{ $t('lower_price_package_activated') }}
-        <span>{{ stayStore.allParticipantsTotalPrice }}</span>
-      </p>
+      <div class="d-flex justify-space-between">
+        <p class="mb-2 ">{{ $t('lower_price_package_activated') }}
+        </p>
+          <span class="fc-gray fw-500 ml-auto">
+            -{{ ((stayStore.allParticipantsTotalPrice / (1 - stayStore.FIRST_LEVEL_DISCOUNT / 100)) * (stayStore.FIRST_LEVEL_DISCOUNT / 100)).toFixed(2) }}&nbsp;{{ stayStore.currency }}
+          </span>
+      </div>
       <div :class="mobile? 'fs-10':'fs-12'" class="custom-badge info">
         {{ $t('you_save') }} -{{ stayStore.FIRST_LEVEL_DISCOUNT }}%
       </div>
     </PackageInfoBox>
 
-    <!--INFO BOX-->
+    <!--INFO BOX SECOND LEVEL DISCOUNT-->
     <PackageInfoBox v-if="stayStore.secondPackageEligible" class="my-4" color="yellow" >
       <span class="fw-500"><span class="fw-600">{{stayStore.allParticipantsTotalHours}}</span>/20h w {{ $t('in_package') }}.</span>
-      <p class="mb-2">{{ $t('cheaper_price_package_activated') }}
-        <span>{{ stayStore.allParticipantsTotalPrice }}</span>
-      </p>
+      <div class="d-flex justify-space-between">
+        <p class="mb-2 ">{{ $t('cheaper_price_package_activated') }}
+        </p>
+        <span class="fc-gray fw-500 ml-auto">
+            -{{ ((stayStore.allParticipantsTotalPrice / (1 - stayStore.SECOND_LEVEL_DISCOUNT / 100)) * (stayStore.SECOND_LEVEL_DISCOUNT / 100)).toFixed(2) }}&nbsp;{{ stayStore.currency }}
+          </span>
+      </div>
       <div :class="mobile? 'fs-10':'fs-12'" class="custom-badge info">
         {{ $t('you_save') }} -{{ stayStore.SECOND_LEVEL_DISCOUNT }}%
       </div>
