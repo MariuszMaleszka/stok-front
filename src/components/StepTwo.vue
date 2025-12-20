@@ -24,9 +24,9 @@ watch(() => timerStore.timeRemaining, (remaining) => {
   }
 })
 
-onMounted(() => {
-  timerStore.startTimer()
-})
+// onMounted(() => {
+//   timerStore.startTimer()
+// })
 </script>
 
 <template>
