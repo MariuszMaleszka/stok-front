@@ -1,7 +1,7 @@
 <script setup>
 import DatePickerResponsive from "@/components/DatePickerResponsive.vue";
 import {useStayStore} from '@/stores/StayStore.js'
-import {computed, ref, watch} from "vue";
+import {computed, onMounted, ref, watch} from "vue";
 import {useCookies} from "@vueuse/integrations/useCookies";
 import {useToast} from '@/composables/useToast'
 import {useViewControlStore} from "@/stores/ViewControlStore.js";
@@ -33,16 +33,6 @@ onMounted(() => {
   <div class="d-flex flex-column justify-space-between h-100 flex-1">
     <!-- tabs navigation remains the same -->
     <div>
-      <div class="time-counter fs-12 text-center mt-2">
-        {{ $t('timer_info') }}
-        <span class="black-badge ">
-
-        {{ timerStore.formattedTime }}
-        </span>
-      </div>
-      <div>
-
-      </div>
 
     <p class="fs-20 font-weight-bold my-4">
       {{ $t('select_classes') }}:

@@ -186,5 +186,10 @@
   "third_person": "Third person",
   "package": "Package",
   "additional_information": "Additional information",
-  "close": "Close"
+  "close": "Close",
+  "time_expire_warning": "The time to complete your booking is about to expire!\nPlease note that the time to complete your booking is about to expire.",
+  "extend_time_by_5": "Extend time by 5 minutes",
+  "time_left": "Time left:",
+  "added_5_minutes": "Added 5 minutes to your booking time.",
+  "booking_time_expired": "Your booking time has expired. Please start again."
 }

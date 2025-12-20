@@ -5,34 +5,36 @@ import {useI18n} from "vue-i18n";
 import {useCookies} from "@vueuse/integrations/useCookies";
 import plFlag from '@/assets/pl-flag.svg'
 import enFlag from '@/assets/en-flag.svg'
+import Timer from "@/components/Timer.vue";
+import {useDisplay} from "vuetify";
 
 const { locale } = useI18n()
+const { mobile } = useDisplay()
 const menu = ref(false)
 const cookies = useCookies(['locale'])
-
-const currentFlag = computed(() => {
-  return locale.value === 'pl' ? plFlag : enFlag
-})
 
 // Switch language
 const changeLanguage = (lang) => {
   locale.value = lang
   cookies.set('locale', lang, { path: '/', maxAge: 60 * 60 * 24 * 365 }) // 1 year
 }
+// Start timer when component mounts
+
 </script>
 
 <template>
   <VAppBar :elevation="0">
     <VImg
       :src="Logo"
-      max-width="120"
+      :max-width="mobile? 78: 120"
+      :width="mobile? 78:120 "
       contain
       class="ml-2"
     />
-
     <VSpacer />
+    <Timer :class="mobile ? '' :'ml-auto'"/>
 
-    <VMenu v-model="menu">
+    <VMenu v-model="menu" class="ml-auto">
       <template v-slot:activator="{ props }">
         <VBtn v-bind="props" variant="text">
           {{ locale.toUpperCase() }}

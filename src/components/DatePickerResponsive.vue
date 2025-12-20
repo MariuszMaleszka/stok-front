@@ -337,7 +337,7 @@ const onInternalUpdate = (newValue) => {
 
 <style lang="scss">
 .dp__outer_menu_wrap {
-  @media (max-width: 960px) {
+  @media (max-width: 600px) {
   width: 100%;
   }
 
@@ -345,7 +345,7 @@ const onInternalUpdate = (newValue) => {
 .dp__menu {
   font-family: 'Inter', sans-serif;
   border: none;
-  @media (min-width: 960px) {
+  @media (min-width: 600px) {
     margin-top: unset;
     border-radius: 16px;
     padding: 16px;
@@ -381,7 +381,7 @@ const onInternalUpdate = (newValue) => {
   padding-bottom: 0;
   column-gap: 10px;
 
-  @media (min-width: 960px) {
+  @media (min-width: 600px) {
     padding: 16px 16px 0 16px !important;
 
   }
@@ -390,7 +390,7 @@ const onInternalUpdate = (newValue) => {
 .dp__calendar_header {
   font-size: 11px;
   font-weight: 200;
-  @media (min-width: 960px) {
+  @media (min-width: 600px) {
     font-size: 13px;
   }
 }
@@ -427,7 +427,7 @@ const onInternalUpdate = (newValue) => {
   border-radius: $border-radius;
   height: 24px !important;
   font-size: 11px;
-  @media (min-width: 960px) {
+  @media (min-width: 600px) {
     font-size: 13px;
     height: 28px !important;
     padding: 1px 8px !important;

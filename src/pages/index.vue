@@ -92,7 +92,6 @@ onMounted(() => {
 </script>
 
 <template>
-{{ viewStore.currentStep }}
   <VContainer
     max-width="990"
     :class="mobile ? 'px-2': ''"

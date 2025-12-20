@@ -30,6 +30,8 @@ declare module 'vue' {
     StepOne: typeof import('./src/components/StepOne.vue')['default']
     StepThree: typeof import('./src/components/StepThree.vue')['default']
     StepTwo: typeof import('./src/components/StepTwo.vue')['default']
+    Timer: typeof import('./src/components/Timer.vue')['default']
+    TimerToast: typeof import('./src/components/toasts/TimerToast.vue')['default']
     Toast: typeof import('./src/components/toasts/Toast.vue')['default']
   }
 }

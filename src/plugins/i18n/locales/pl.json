@@ -82,7 +82,7 @@
   "select_difficulty_level": "Wybierz poziom trudności",
   "select_classes": "Wybierz zajęcia",
   "select_classes_for_each_participant": "Wybierz zajęcia w wybrane dni dla każdego z uczestników",
-  "timer_info": "Twoje rezerwacje będą aktywne jeszcze:",
+  "timer_info": "Czas na dokończenie rezerwacji:",
   "classes_lang": "Język lekcji",
   "polish": "Polski",
   "english": "Angielski",
@@ -186,6 +186,12 @@
   "third_person": "Trzecia osoba",
   "package": "Pakiet",
   "additional_information": "Informacje dodatkowe",
-  "close": "Zamknij"
+  "close": "Zamknij",
+  "time_expire_warning": "Za chwilę upłynie czas na zakończenie Twojej rezerwacji!",
+  "extend_time_by_5": "Przedłuż o 5 min",
+  "time_left": "Pozostało",
+  "added_5_minutes": "Dodano 5 minut do czasu rezerwacji.",
+  "booking_time_expired": "Upłynął czas na dokonanie rezerwacji. Prosimy o rozpoczęcie procesu od nowa."
+
 }
 
