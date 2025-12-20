@@ -504,6 +504,7 @@
     v-model="showAddClassesModal"
     :date-iso="selectedDateForAddIso"
     :date-str="selectedDateForAdd"
+    :participant-type="props.participantType"
     @next="handleAddClassesNext"
   />
 </template>

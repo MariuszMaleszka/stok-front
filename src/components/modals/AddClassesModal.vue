@@ -12,6 +12,7 @@
     modelValue: { type: Boolean, default: false },
     dateStr: { type: String, default: '' },
     dateIso: { type: String, default: '' },
+    participantType: { type: String, default: 'adult' },
   })
 
   const emit = defineEmits(['update:modelValue', 'next'])
@@ -242,6 +243,21 @@
     }
   }
 
+  const isChildParticipant = computed(() => {
+    if (selectedType.value === 'individual') {
+      return props.participantType === 'child'
+    }
+    if (selectedType.value === 'shared' && stayStore.participants.length > 0) {
+      return stayStore.participants[0].participantType === 'child'
+    }
+    return false
+  })
+
+  function toggleChildSpecialist (type) {
+    const prefs = type === 'individual' ? pickedClassesStore.individualPreferences : pickedClassesStore.sharedPreferences
+    prefs.childSpecialist = !prefs.childSpecialist
+  }
+
   function getFilters (prefs) {
     const filters = []
     if (prefs.timeOfDay && prefs.timeOfDay !== 'Dowolna') {
@@ -451,6 +467,26 @@
                       variant="outlined"
                     />
                   </div>
+
+                  <div v-if="isChildParticipant" class="mb-4 pa-3 rounded-lg d-flex align-start mt-2" style="background-color: #E1EFFE;">
+                    <div class="mr-3 mt-1">
+                      <div
+                        class="selection-circle d-flex align-center justify-center cursor-pointer"
+                        :class="{ 'selected': pickedClassesStore.individualPreferences.childSpecialist }"
+                        style="width: 20px; height: 20px; border: 2px solid #A4CAFE; border-radius: 50%; background: white;"
+                        @click="toggleChildSpecialist('individual')"
+                      >
+                        <div v-if="pickedClassesStore.individualPreferences.childSpecialist" style="width: 10px; height: 10px; border-radius: 50%; background-color: #1E429F;" />
+                      </div>
+                    </div>
+                    <div>
+                      <div class="font-weight-bold text-primary-900 fs-14 cursor-pointer" @click="toggleChildSpecialist('individual')">Tylko "Specjaliści dla dzieci"</div>
+                      <div class="text-caption text-primary-900 mb-1" style="line-height: 1.3; opacity: 0.8;">
+                        Wyszukaj tylko instruktorów specjalnie przeszkolonych do jazdy z najmłodszymi.
+                      </div>
+                      <a class="text-caption text-primary-900 text-decoration-underline font-weight-medium cursor-pointer">Dowiedz się więcej</a>
+                    </div>
+                  </div>
                 </div>
               </VStepperWindowItem>
 
@@ -584,6 +620,7 @@
                   hide-details
                   label="Szukaj tylko zajęć z wybranym wcześniej instruktorem"
                 />
+
                 <div class="mb-4">
                   <span class="text-subtitle-2 font-weight-bold mb-1 d-block text-primary-900">Pora dnia</span>
                   <VSelect

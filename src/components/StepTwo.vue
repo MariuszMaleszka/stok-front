@@ -31,6 +31,8 @@
     const participantClasses = pickedClassesStore.bookedClasses.filter(c => c.participantId === participantId)
     if (!participantClasses || participantClasses.length === 0) return 0
 
+    const processedGroupIds = new Set()
+
     return participantClasses.reduce((sum, booking) => {
       let price = 0
       if (booking.type === 'individual' || booking.type === 'shared') {
@@ -38,7 +40,15 @@
           price = booking.data.slot.price
         }
       } else if (booking.type === 'group' && booking.data.group && booking.data.group.price) {
-        price = booking.data.group.price
+        if (booking.groupBookingId) {
+          if (!processedGroupIds.has(booking.groupBookingId)) {
+            price = booking.data.group.price
+            processedGroupIds.add(booking.groupBookingId)
+          }
+        } else {
+          // Fallback if no groupBookingId (should not happen with new code)
+          price = booking.data.group.price
+        }
       }
       return sum + price
     }, 0)

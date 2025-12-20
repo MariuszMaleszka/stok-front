@@ -27,15 +27,15 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
 
   // Base slots templates
   const baseSlots = [
-    { time: '9:00 - 11:00', price: 50, instructor: 'Marcin Kowalik', gender: 'male', duration: '2h', timeOfDay: 'Rano' },
+    { time: '9:00 - 11:00', price: 50, instructor: 'Marcin Kowalik', gender: 'male', duration: '2h', timeOfDay: 'Rano', isChildSpecialist: true },
     { time: '10:00 - 12:00', price: 50, instructor: 'Anna Nowak', gender: 'female', duration: '2h', timeOfDay: 'Rano' },
     { time: '10:00 - 12:00', price: 50, isHappyHours: true, duration: '2h', timeOfDay: 'Rano' },
     { time: '10:30 - 12:30', price: 50, duration: '2h', timeOfDay: 'Rano' },
     { time: '11:00 - 13:00', price: 50, duration: '2h', timeOfDay: 'Rano' },
     { time: '14:00 - 16:00', price: 50, instructor: 'Piotr Wiśniewski', gender: 'male', duration: '2h', timeOfDay: 'Popołudnie' },
-    { time: '15:00 - 16:00', price: 35, instructor: 'Maria Zielińska', gender: 'female', duration: '1h', timeOfDay: 'Popołudnie' },
+    { time: '15:00 - 16:00', price: 35, instructor: 'Maria Zielińska', gender: 'female', duration: '1h', timeOfDay: 'Popołudnie', isChildSpecialist: true },
     { time: '18:00 - 20:00', price: 50, instructor: 'Tomasz Kamiński', gender: 'male', duration: '2h', timeOfDay: 'Wieczór' },
-    { time: '19:00 - 20:00', price: 35, instructor: 'Katarzyna Lewandowska', gender: 'female', duration: '1h', timeOfDay: 'Wieczór' },
+    { time: '19:00 - 20:00', price: 35, instructor: 'Katarzyna Lewandowska', gender: 'female', duration: '1h', timeOfDay: 'Wieczór', isChildSpecialist: true },
   ]
 
   // Generate slots for next 30 days
@@ -127,6 +127,7 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
     duration: '2h',
     instructorGender: 'Dowolna',
     findSpecificInstructor: false,
+    childSpecialist: false,
   })
 
   // Shared Preferences
@@ -136,6 +137,7 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
     duration: '2h',
     instructorGender: 'Dowolna',
     findSpecificInstructor: false,
+    childSpecialist: false,
   })
 
   // Selected Slots
@@ -191,6 +193,11 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
       slots = slots.filter(s => s.gender === targetGender)
     }
 
+    // Filter by Child Specialist
+    if (prefs.childSpecialist) {
+      slots = slots.filter(s => s.isChildSpecialist)
+    }
+
     return slots
   }
 
@@ -234,27 +241,27 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
   }
 
   // Actions
-  function setSelectedDate(date) {
+  function setSelectedDate (date) {
     selectedDate.value = date
   }
 
-  function loadMoreSlots(type) {
+  function loadMoreSlots (type) {
     visibleSlotsLimit.value = type === 'individual'
       ? individualFilteredSlots.value.length
       : sharedFilteredSlots.value.length
   }
 
-  function resetState() {
+  function resetState () {
     searchPreviouslySelected.value = false
-    individualPreferences.value = { selectedInstructor: null, timeOfDay: 'Dowolna', duration: '2h', instructorGender: 'Dowolna', findSpecificInstructor: false }
-    sharedPreferences.value = { selectedInstructor: null, timeOfDay: 'Dowolna', duration: '2h', instructorGender: 'Dowolna', findSpecificInstructor: false }
+    individualPreferences.value = { selectedInstructor: null, timeOfDay: 'Dowolna', duration: '2h', instructorGender: 'Dowolna', findSpecificInstructor: false, childSpecialist: false }
+    sharedPreferences.value = { selectedInstructor: null, timeOfDay: 'Dowolna', duration: '2h', instructorGender: 'Dowolna', findSpecificInstructor: false, childSpecialist: false }
     individualSlot.value = null
     sharedSlot.value = null
     selectedGroup.value = null
     visibleSlotsLimit.value = 4
   }
 
-  function addBookedClass(booking) {
+  function addBookedClass (booking) {
     // Add unique ID
     const newBooking = {
       ...booking,
@@ -263,7 +270,7 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
     bookedClasses.value.push(newBooking)
   }
 
-  function removeBookedClass(bookingId) {
+  function removeBookedClass (bookingId) {
     const bookingToRemove = bookedClasses.value.find(c => c.id === bookingId)
     if (!bookingToRemove) {
       return
