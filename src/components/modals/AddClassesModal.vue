@@ -59,7 +59,7 @@
 
   // Reset state when modal opens/closes or type changes
   watch(() => props.modelValue, val => {
-    if (!val) {
+    if (val) {
       resetState()
     }
   })
@@ -71,6 +71,8 @@
     pickedClassesStore.resetState()
     savePreferences.value = false
     sharedParticipants.value = []
+
+    // Always pre-select the first participant
     if (stayStore.participants.length > 0) {
       const p1 = stayStore.participants[0]
       sharedParticipants.value.push(p1.dynamicId || 0)
@@ -140,7 +142,10 @@
       }
       return { participants: sharedParticipants.value, preferences: pickedClassesStore.sharedPreferences, slot: slotObj || pickedClassesStore.sharedSlot }
     }
-    if (selectedType.value === 'group') return { group: pickedClassesStore.selectedGroup }
+    if (selectedType.value === 'group') {
+      const groupObj = pickedClassesStore.availableGroups.find(g => g.id === pickedClassesStore.selectedGroup)
+      return { group: groupObj || pickedClassesStore.selectedGroup }
+    }
     return null
   }
 
@@ -176,6 +181,18 @@
 
   const isRightButtonDisabled = computed(() => {
     if (!showStepper.value) return !selectedType.value
+
+    if (selectedType.value === 'individual' && currentStep.value === 2) {
+      return !pickedClassesStore.individualSlot
+    }
+    if (selectedType.value === 'shared') {
+      if (currentStep.value === 1) return sharedParticipants.value.length <= 1
+      if (currentStep.value === 3) return !pickedClassesStore.sharedSlot
+    }
+    if (selectedType.value === 'group') {
+      return !pickedClassesStore.selectedGroup
+    }
+
     return false
   })
 
@@ -227,7 +244,15 @@
 
   function toggleParticipant (id) {
     const firstId = stayStore.participants[0]?.dynamicId || 0
-    if (id === firstId) return
+
+    // Prevent removing the first participant
+    if (id === firstId) {
+      // Ensure it's selected (recovery mechanism)
+      if (!sharedParticipants.value.includes(id)) {
+        sharedParticipants.value.push(id)
+      }
+      return
+    }
 
     const index = sharedParticipants.value.indexOf(id)
     if (index === -1) {
@@ -673,7 +698,7 @@
 
                 <div class="d-flex flex-column gap-3">
                   <div
-                    v-for="group in pickedClassesStore.availableGroups"
+                    v-for="group in pickedClassesStore.filteredGroups"
                     :key="group.id"
                     class="slot-card d-flex align-center px-4 py-4 cursor-pointer flex-column"
                     :class="{ 'selected': pickedClassesStore.selectedGroup === group.id }"
@@ -793,9 +818,9 @@
   transition: all 0.2s ease;
   min-height: 70px;
 
-  &:hover {
-    border-color: #2563EB;
-    background-color: #F9FAFB;
+  &:hover, &:focus {
+    border-color: #E5E7EB;
+    background-color: transparent;
   }
 
   &.selected {
@@ -1009,6 +1034,10 @@
 }
 
 .gap-4 {
-  gap: 4px;
+
+  :deep(.v-selection-control) {
+      gap: 4px;
+}
+
 }
 </style>

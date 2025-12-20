@@ -96,14 +96,28 @@
   function handleAddClassesNext (payload) {
     const { type, data } = payload
 
-    if (currentDayForBooking.value && props.participant) {
-      const booking = {
-        participantId: props.participant.dynamicId,
-        dateStr: currentDayForBooking.value.dateStr,
-        type,
-        data,
+    if (currentDayForBooking.value) {
+      // Handle shared classes - add for all selected participants
+      if (type === 'shared' && data.participants && Array.isArray(data.participants)) {
+        for (const pId of data.participants) {
+          const booking = {
+            participantId: pId,
+            dateStr: currentDayForBooking.value.dateStr,
+            type,
+            data,
+          }
+          pickedClassesStore.addBookedClass(booking)
+        }
+      } else if (props.participant) {
+        // Handle individual/group classes - add for current participant only
+        const booking = {
+          participantId: props.participant.dynamicId,
+          dateStr: currentDayForBooking.value.dateStr,
+          type,
+          data,
+        }
+        pickedClassesStore.addBookedClass(booking)
       }
-      pickedClassesStore.addBookedClass(booking)
     }
 
     showAddClassesModal.value = false
@@ -118,7 +132,8 @@
         return 'Zajęcia indywidualne'
       }
       case 'group': {
-        return 'Zajęcia grupowe'
+        const progress = getGroupProgress(booking)
+        return `Zajęcia grupowe ${progress}`.trim()
       }
       case 'shared': {
         return 'Zajęcia wspólne'
@@ -127,6 +142,16 @@
         return 'Zajęcia'
       }
     }
+  }
+
+  function getGroupProgress (booking) {
+    if (booking.type !== 'group' || !booking.data.group || !booking.data.group.description) return ''
+    const match = booking.data.group.description.match(/(\d+)\s+dni/)
+    if (match) {
+      // For now default to 1/X as we don't track day index in mock
+      return `(1/${match[1]})`
+    }
+    return ''
   }
 
   // Helper to get slot time if available
@@ -145,8 +170,11 @@
       const found = allSlots.find(s => s.id === slotId)
       if (found) return found.time
     } else if (booking.type === 'group' && booking.data.group && booking.data.group.schedule) {
-      // remove "od " and "do " for cleaner look if needed, but for now return as is or formatted
-      return booking.data.group.schedule.replace('od ', '').replace('do ', '-').replace(' oraz ', ', ')
+      // remove "od " and "do " for cleaner look
+      return booking.data.group.schedule
+        .replace(/\s* od\s+/gi, ' ')
+        .replace(/\s+ do\s+/gi, ' - ')
+        .replace(/\s+ oraz \s+/gi, ', ')
     }
     return ''
   }
@@ -261,9 +289,9 @@
                     <div v-if="getBookedClassDisplay(day)" class="d-flex align-center ga-3 w-100">
                       <img
                         alt="Selected"
-                        height="24"
+                        height="20"
                         :src="checkCircleIcon"
-                        width="24"
+                        width="20"
                       >
                       <div class="fw-600 text-primary-900 fs-18">
                         {{ day.dayName.charAt(0).toUpperCase() + day.dayName.slice(1, 3) }}. {{ day.dateStr }}
@@ -300,25 +328,47 @@
                       />
 
                       <div class="d-flex justify-space-between align-center mb-1 pr-6">
-                        <span class="fs-12 font-weight-medium booking-card-title text-truncate">{{ getBookedClassDisplay(day) }}</span>
+                        <span class="booking-card-title text-truncate" :class="{ 'fs-12 font-weight-medium': getBookingColorClass(day) !== 'booking-card--group' }">{{ getBookedClassDisplay(day) }}</span>
                       </div>
 
-                      <div class="d-flex align-center justify-space-between mb-1">
-                        <div class="d-flex align-center ga-2 text-truncate" style="min-width: 0;">
-                          <VIcon icon="mdi-clock-outline" size="16" />
-                          <span class="fs-14 font-weight-medium text-truncate">{{ getBookingTime(day) }}</span>
+                      <template v-if="getBookingColorClass(day) === 'booking-card--group'">
+                        <div class="d-flex align-center justify-space-between w-100">
+                          <div>
+                            <div class="d-flex align-center ga-2 mb-1">
+                              <VIcon icon="mdi-clock-outline" size="16" />
+                              <span class="booking-time">{{ getBookingTime(day) }}</span>
+                            </div>
+
+                            <div v-if="getBookingSubtitle(day)" class="d-flex align-center ga-2 mt-1">
+                              <img
+                                alt=""
+                                :src="getBookingIcon(day)"
+                                width="16"
+                              >
+                              <span class="booking-subtitle text-truncate">{{ getBookingSubtitle(day) }}</span>
+                            </div>
+                          </div>
                         </div>
-                        <span v-if="getBookingPrice(day)" class="fs-14 font-weight-bold ml-2 flex-shrink-0">{{ getBookingPrice(day) }}</span>
-                      </div>
+                      </template>
 
-                      <div v-if="getBookingSubtitle(day)" class="d-flex align-center ga-2 mt-1">
-                        <img
-                          alt=""
-                          :src="getBookingIcon(day)"
-                          width="14"
-                        >
-                        <span class="fs-12 text-truncate">{{ getBookingSubtitle(day) }}</span>
-                      </div>
+                      <template v-else>
+                        <div class="d-flex align-center justify-space-between mb-1">
+                          <div class="d-flex align-center ga-2 text-truncate" style="min-width: 0;">
+                            <VIcon icon="mdi-clock-outline" size="16" />
+                            <span class="fs-14 font-weight-medium text-truncate">{{ getBookingTime(day) }}</span>
+                          </div>
+                          <span v-if="getBookingPrice(day)" class="fs-14 font-weight-bold ml-2 flex-shrink-0">{{ getBookingPrice(day) }}</span>
+                        </div>
+
+                        <div v-if="getBookingSubtitle(day)" class="d-flex align-center ga-2 mt-1">
+                          <img
+                            alt=""
+                            :src="getBookingIcon(day)"
+                            width="14"
+                          >
+                          <span class="fs-11 text-truncate">{{ getBookingSubtitle(day) }}</span>
+                        </div>
+                      </template>
                     </div>
                   </div>
                   <div v-else class="text-center text-gray-600 h-100 d-flex align-center justify-center">{{ t('no_classes_selected') || 'Nie wybrano zajęć' }}</div>
@@ -534,16 +584,25 @@
     .booking-card-title {
       color: #9A3412;
       font-weight: 500;
-      font-size: 11px;
+        font-size: 11px;
+    }
+    .booking-time {
+      font-size: 14px;
+      font-weight: 500;
+      color: #1F2937;
+    }
+    .booking-subtitle {
+      color: #4B5563;
+          font-size: 11px;
     }
     :deep(.v-icon) {
-      color: #9A3412;
+      color: #4B5563;
     }
     :deep(.booking-remove-btn) {
       color: #9A3412;
     }
     img {
-       filter: brightness(0) saturate(100%) invert(23%) sepia(85%) saturate(2363%) hue-rotate(354deg) brightness(93%) contrast(90%);
+       filter: brightness(0) saturate(100%) invert(32%) sepia(9%) saturate(838%) hue-rotate(179deg) brightness(93%) contrast(89%);
     }
   }
 }

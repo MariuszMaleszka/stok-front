@@ -1,7 +1,9 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
+import { useStayStore } from './StayStore'
 
 export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
+  const stayStore = useStayStore()
   // Mock Data
   const availableSlots = ref([
     { id: 1, time: '9:00 - 11:00', price: 50, instructor: 'Marcin Kowalik', gender: 'male', duration: '2h', timeOfDay: 'Rano' },
@@ -16,9 +18,12 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
   ])
 
   const availableGroups = ref([
-    { id: 1, name: 'Nazwa grupy lorem ipsum', dates: '1 sty 2025 - 6 sty 2025', description: '5 dni zajęć, zajęcia 1x dziennie', schedule: 'od 9:30 do 10:30', price: 1400 },
-    { id: 2, name: 'Nazwa grupy lorem ipsum', dates: '1 sty 2025 - 3 sty 2025', description: '3 dni zajęć, zajęcia 2x dziennie', schedule: 'od 9:30 do 10:30 oraz od 15:30 do 17:30', price: 1400 },
-    { id: 3, name: 'Nazwa grupy lorem ipsum', dates: '1 sty 2025 - 6 sty 2025', description: '5 dni zajęć, zajęcia 1x dziennie', schedule: 'od 9:30 do 10:30', isHappyHours: true },
+    { id: 1, name: 'Grupa 5 dni', dates: '1 sty 2025 - 6 sty 2025', description: '5 dni zajęć, zajęcia 1x dziennie', schedule: 'od 9:30 do 10:30', price: 1400 },
+    { id: 2, name: 'Grupa 3 dni', dates: '1 sty 2025 - 3 sty 2025', description: '3 dni zajęć, zajęcia 2x dziennie', schedule: 'od 9:30 do 10:30 oraz od 15:30 do 17:30', price: 1400 },
+    { id: 3, name: 'Grupa Happy Hours', dates: '1 sty 2025 - 6 sty 2025', description: '5 dni zajęć, zajęcia 1x dziennie', schedule: 'od 9:30 do 10:30', isHappyHours: true },
+    { id: 4, name: 'Grupa Weekendowa', dates: '4 sty 2025 - 5 sty 2025', description: '2 dni zajęć, zajęcia 2x dziennie', schedule: 'od 9:00 do 11:00 oraz od 14:00 do 16:00', price: 600 },
+    { id: 5, name: 'Grupa Trzydniowa', dates: '1 sty 2025 - 3 sty 2025', description: '3 dni zajęć, zajęcia 1x dziennie', schedule: 'od 10:00 do 12:00', price: 500 },
+    { id: 6, name: 'Grupa Czterodniowa', dates: '1 sty 2025 - 4 sty 2025', description: '4 dni zajęć, zajęcia 1x dziennie', schedule: 'od 12:00 do 14:00', price: 800 },
   ])
 
   // State
@@ -95,6 +100,30 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
   const individualFilteredSlots = computed(() => getFilteredSlots('individual'))
   const sharedFilteredSlots = computed(() => getFilteredSlots('shared'))
 
+  const filteredGroups = computed(() => {
+    // Determine stay duration
+    let duration = 5 // Default max
+    if (stayStore.dateOfStay && Array.isArray(stayStore.dateOfStay) && stayStore.dateOfStay.length > 0) {
+      const start = new Date(stayStore.dateOfStay[0])
+      const end = stayStore.dateOfStay[1] ? new Date(stayStore.dateOfStay[1]) : new Date(start)
+      const diffTime = Math.abs(end - start)
+      duration = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
+    } else if (stayStore.dateOfStay) {
+      // Single date case
+      duration = 1
+    }
+
+    return availableGroups.value.filter(group => {
+      // Extract days from description e.g. "5 dni zajęć"
+      const match = group.description.match(/(\d+)\s+dni/)
+      if (match) {
+        const groupDays = Number.parseInt(match[1], 10)
+        return groupDays <= duration
+      }
+      return true
+    })
+  })
+
   const displayedIndividualSlots = computed(() => individualFilteredSlots.value.slice(0, visibleSlotsLimit.value))
   const displayedSharedSlots = computed(() => sharedFilteredSlots.value.slice(0, visibleSlotsLimit.value))
 
@@ -152,6 +181,7 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
     instructors,
     individualFilteredSlots,
     sharedFilteredSlots,
+    filteredGroups,
     displayedIndividualSlots,
     displayedSharedSlots,
     getBookedClass,
