@@ -29,7 +29,7 @@
     currency: { type: String, default: '' },
   })
   const emit = defineEmits(['update:modelValue', 'save'])
-  const { mobile } = useDisplay()
+  const { mobile, mdAndDown } = useDisplay()
   const { t, locale } = useI18n()
   const stayStore = useStayStore()
   const pickedClassesStore = usePickedClassesStore()
@@ -184,6 +184,12 @@
     }
 
     showAddClassesModal.value = false
+
+    if (mdAndDown.value) {
+      setTimeout(() => {
+        nextDay()
+      }, 2000)
+    }
   }
 
   function getBookedClasses (day) {
@@ -698,5 +704,13 @@
 
 .normal-text {
   text-transform: none!important;
+}
+
+:deep(.v-slide-group__container) {
+  scroll-behavior: smooth !important;
+}
+
+:deep(.v-slide-group__content) {
+  transition: transform 1s ease-out !important;
 }
 </style>
