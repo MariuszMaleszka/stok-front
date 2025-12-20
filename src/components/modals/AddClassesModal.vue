@@ -5,6 +5,7 @@
   import UserIcon from '@/assets/user.svg'
   import UsersGroupIcon from '@/assets/users-group.svg'
   import UsersIcon from '@/assets/users.svg'
+  import { usePickedClassesStore } from '@/stores/PickedClassesStore'
   import { useStayStore } from '@/stores/StayStore'
 
   const props = defineProps({
@@ -14,35 +15,24 @@
 
   const emit = defineEmits(['update:modelValue', 'next'])
   const stayStore = useStayStore()
+  const pickedClassesStore = usePickedClassesStore()
 
   const currentStep = ref(1)
   const selectedType = ref(null)
   const showStepper = ref(false)
-  const searchPreviouslySelected = ref(false)
 
-  // Individual Flow State
-  const individualPreferences = ref({
-    selectedInstructor: null,
-    timeOfDay: 'Dowolna',
-    duration: '2h',
-    instructorGender: 'Dowolna',
-    findSpecificInstructor: false,
-  })
   function formatSchedule (text) {
     if (!text) return ''
     return text.replace(/(\d{1,2}:\d{2})/g, '<span class="text-primary font-weight-bold">$1</span>')
   }
 
-  const individualSlot = ref(null)
   const savePreferences = ref(false)
 
   // Shared Flow State
   const sharedParticipants = ref([])
-  const sharedPreferences = ref({ ...individualPreferences.value })
-  const sharedSlot = ref(null)
 
   // Group Flow State
-  const selectedGroup = ref(null)
+  // selectedGroup is now in store
 
   // Mock Data
   const classTypes = [
@@ -67,71 +57,6 @@
   const durations = ['1h', '2h', '3h']
   const genders = ['Dowolna', 'Kobieta', 'Mężczyzna']
 
-  const availableSlots = [
-    { id: 1, time: '9:00 - 11:00', price: 50, instructor: 'Marcin Kowalik', gender: 'male', duration: '2h', timeOfDay: 'Rano' },
-    { id: 2, time: '10:00 - 12:00', price: 50, instructor: 'Anna Nowak', gender: 'female', duration: '2h', timeOfDay: 'Rano' },
-    { id: 3, time: '10:00 - 12:00', price: 50, isHappyHours: true, duration: '2h', timeOfDay: 'Rano' },
-    { id: 4, time: '10:30 - 12:30', price: 50, duration: '2h', timeOfDay: 'Rano' },
-    { id: 5, time: '11:00 - 13:00', price: 50, duration: '2h', timeOfDay: 'Rano' },
-    { id: 6, time: '14:00 - 16:00', price: 50, instructor: 'Piotr Wiśniewski', gender: 'male', duration: '2h', timeOfDay: 'Popołudnie' },
-    { id: 7, time: '15:00 - 16:00', price: 35, instructor: 'Maria Zielińska', gender: 'female', duration: '1h', timeOfDay: 'Popołudnie' },
-    { id: 8, time: '18:00 - 20:00', price: 50, instructor: 'Tomasz Kamiński', gender: 'male', duration: '2h', timeOfDay: 'Wieczór' },
-    { id: 9, time: '19:00 - 20:00', price: 35, instructor: 'Katarzyna Lewandowska', gender: 'female', duration: '1h', timeOfDay: 'Wieczór' },
-  ]
-
-  const availableGroups = [
-    { id: 1, name: 'Nazwa grupy lorem ipsum', dates: '1 sty 2025 - 6 sty 2025', description: '5 dni zajęć, zajęcia 1x dziennie', schedule: 'od 9:30 do 10:30', price: 1400 },
-    { id: 2, name: 'Nazwa grupy lorem ipsum', dates: '1 sty 2025 - 3 sty 2025', description: '3 dni zajęć, zajęcia 2x dziennie', schedule: 'od 9:30 do 10:30 oraz od 15:30 do 17:30', price: 1400 },
-    { id: 3, name: 'Nazwa grupy lorem ipsum', dates: '1 sty 2025 - 6 sty 2025', description: '5 dni zajęć, zajęcia 1x dziennie', schedule: 'od 9:30 do 10:30', isHappyHours: true },
-  ]
-
-  // Pagination for slots
-  const visibleSlotsLimit = ref(4)
-
-  const instructors = computed(() => {
-    const names = new Set(availableSlots.filter(s => s.instructor).map(s => s.instructor))
-    return Array.from(names)
-  })
-
-  const filteredSlots = computed(() => {
-    let slots = availableSlots
-    const prefs = selectedType.value === 'individual' ? individualPreferences.value : sharedPreferences.value
-
-    // Filter by Time of Day
-    if (prefs.timeOfDay && prefs.timeOfDay !== 'Dowolna') {
-      slots = slots.filter(s => s.timeOfDay === prefs.timeOfDay)
-    }
-
-    // Filter by "Previously Selected Instructor" (Switch)
-    if (searchPreviouslySelected.value) {
-      slots = slots.filter(s => s.instructor)
-    }
-
-    // Filter by Selected Instructor (if checkbox is checked)
-    if (prefs.findSpecificInstructor && prefs.selectedInstructor) {
-      slots = slots.filter(s => s.instructor === prefs.selectedInstructor)
-    }
-
-    // Filter by Duration
-    if (prefs.duration) {
-      slots = slots.filter(s => s.duration === prefs.duration)
-    }
-
-    // Filter by Gender
-    if (prefs.instructorGender && prefs.instructorGender !== 'Dowolna') {
-      const targetGender = prefs.instructorGender === 'Mężczyzna' ? 'male' : 'female'
-      slots = slots.filter(s => s.gender === targetGender)
-    }
-
-    return slots
-  })
-
-  const displayedSlots = computed(() => filteredSlots.value.slice(0, visibleSlotsLimit.value))
-
-  function loadMoreSlots () {
-    visibleSlotsLimit.value = filteredSlots.value.length
-  }
-
   // Reset state when modal opens/closes or type changes
   watch(() => props.modelValue, val => {
     if (!val) {
@@ -143,19 +68,13 @@
     currentStep.value = 1
     selectedType.value = null
     showStepper.value = false
-    searchPreviouslySelected.value = false
-    individualPreferences.value = { selectedInstructor: null, timeOfDay: 'Dowolna', duration: '2h', instructorGender: 'Dowolna', findSpecificInstructor: false }
-    individualSlot.value = null
+    pickedClassesStore.resetState()
     savePreferences.value = false
     sharedParticipants.value = []
     if (stayStore.participants.length > 0) {
       const p1 = stayStore.participants[0]
       sharedParticipants.value.push(p1.dynamicId || 0)
     }
-    sharedPreferences.value = { ...individualPreferences.value }
-    sharedSlot.value = null
-    selectedGroup.value = null
-    visibleSlotsLimit.value = 4
   }
 
   function close () {
@@ -207,9 +126,21 @@
   }
 
   function getDataForType () {
-    if (selectedType.value === 'individual') return { preferences: individualPreferences.value, slot: individualSlot.value }
-    if (selectedType.value === 'shared') return { participants: sharedParticipants.value, preferences: sharedPreferences.value, slot: sharedSlot.value }
-    if (selectedType.value === 'group') return { group: selectedGroup.value }
+    if (selectedType.value === 'individual') {
+      let slotObj = pickedClassesStore.availableSlots.find(s => s.id === pickedClassesStore.individualSlot)
+      if (!slotObj) {
+        slotObj = pickedClassesStore.availableSlots.find(s => s.id === Number(pickedClassesStore.individualSlot))
+      }
+      return { preferences: pickedClassesStore.individualPreferences, slot: slotObj || pickedClassesStore.individualSlot }
+    }
+    if (selectedType.value === 'shared') {
+      let slotObj = pickedClassesStore.availableSlots.find(s => s.id === pickedClassesStore.sharedSlot)
+      if (!slotObj) {
+        slotObj = pickedClassesStore.availableSlots.find(s => s.id === Number(pickedClassesStore.sharedSlot))
+      }
+      return { participants: sharedParticipants.value, preferences: pickedClassesStore.sharedPreferences, slot: slotObj || pickedClassesStore.sharedSlot }
+    }
+    if (selectedType.value === 'group') return { group: pickedClassesStore.selectedGroup }
     return null
   }
 
@@ -284,11 +215,11 @@
     return filters
   }
 
-  const individualFilters = computed(() => getFilters(individualPreferences.value))
-  const sharedFilters = computed(() => getFilters(sharedPreferences.value))
+  const individualFilters = computed(() => getFilters(pickedClassesStore.individualPreferences))
+  const sharedFilters = computed(() => getFilters(pickedClassesStore.sharedPreferences))
 
   function removeFilter (type, key) {
-    const prefs = type === 'individual' ? individualPreferences.value : sharedPreferences.value
+    const prefs = type === 'individual' ? pickedClassesStore.individualPreferences : pickedClassesStore.sharedPreferences
     if (key === 'timeOfDay') prefs.timeOfDay = 'Dowolna'
     if (key === 'duration') prefs.duration = '2h'
     if (key === 'instructorGender') prefs.instructorGender = 'Dowolna'
@@ -384,7 +315,7 @@
                 </div>
 
                 <VSwitch
-                  v-model="searchPreviouslySelected"
+                  v-model="pickedClassesStore.searchPreviouslySelected"
                   class="ml-2 mb-2 gap-4"
                   color="primary"
                   density="compact"
@@ -395,7 +326,7 @@
                 <div>
                   <span class="text-subtitle-2 font-weight-bold mb-1 d-block text-primary-900">Pora dnia</span>
                   <VSelect
-                    v-model="individualPreferences.timeOfDay"
+                    v-model="pickedClassesStore.individualPreferences.timeOfDay"
                     density="compact"
                     :items="timesOfDay"
                     variant="outlined"
@@ -404,7 +335,7 @@
                 <div>
                   <span class="text-subtitle-2 font-weight-bold mb-1 d-block text-primary-900">Długość lekcji</span>
                   <VSelect
-                    v-model="individualPreferences.duration"
+                    v-model="pickedClassesStore.individualPreferences.duration"
                     density="compact"
                     :items="durations"
                     variant="outlined"
@@ -413,7 +344,7 @@
                 <div class="mb-4">
                   <span class="text-subtitle-2 font-weight-bold mb-1 d-block text-primary-900 mb-2">Płeć instruktora</span>
                   <VBtnToggle
-                    v-model="individualPreferences.instructorGender"
+                    v-model="pickedClassesStore.individualPreferences.instructorGender"
                     class="ga-2 w-100 gender-buttons"
                     mandatory
                   >
@@ -430,19 +361,19 @@
                   </VBtnToggle>
                 </div>                <div class="mb-4">
                   <VCheckbox
-                    v-model="individualPreferences.findSpecificInstructor"
+                    v-model="pickedClassesStore.individualPreferences.findSpecificInstructor"
                     color="primary"
                     density="compact"
                     hide-details
                     label="Znajdź konkretnego instruktora"
                   />
-                  <div v-if="individualPreferences.findSpecificInstructor">
+                  <div v-if="pickedClassesStore.individualPreferences.findSpecificInstructor">
                     <span class="text-subtitle-2 font-weight-bold mt-1 mb-1 d-block text-primary-900">Instruktor</span>
                     <VSelect
-                      v-model="individualPreferences.selectedInstructor"
+                      v-model="pickedClassesStore.individualPreferences.selectedInstructor"
                       class="instructor-select"
                       density="compact"
-                      :items="instructors"
+                      :items="pickedClassesStore.instructors"
                       placeholder="Wybierz instruktora"
                       variant="outlined"
                     />
@@ -474,13 +405,13 @@
                   </VChip>
                 </div>
 
-                <div v-if="displayedSlots.length > 0" class="d-flex flex-column gap-3">
+                <div v-if="pickedClassesStore.displayedIndividualSlots.length > 0" class="d-flex flex-column gap-3">
                   <div
-                    v-for="slot in displayedSlots"
+                    v-for="slot in pickedClassesStore.displayedIndividualSlots"
                     :key="slot.id"
                     class="slot-card d-flex align-center px-4 py-3 cursor-pointer"
-                    :class="{ 'selected': individualSlot === slot.id }"
-                    @click="individualSlot = slot.id"
+                    :class="{ 'selected': pickedClassesStore.individualSlot === slot.id }"
+                    @click="pickedClassesStore.individualSlot = slot.id"
                   >
                     <div class="selection-circle mr-4 d-flex align-center justify-center flex-shrink-0" />
 
@@ -501,12 +432,12 @@
                     </div>
                   </div>
                   <!-- TODO: Remove this button after backend integration -->
-                  <div v-if="filteredSlots.length > visibleSlotsLimit" class="mt-2">
+                  <div v-if="pickedClassesStore.individualFilteredSlots.length > pickedClassesStore.visibleSlotsLimit" class="mt-2">
                     <VBtn
                       block
                       class="text-capitalize load-more-btn"
                       variant="outlined"
-                      @click="loadMoreSlots"
+                      @click="pickedClassesStore.loadMoreSlots('individual')"
                     >
                       Załaduj więcej
                     </VBtn>
@@ -573,7 +504,7 @@
                   <span class="text-subtitle-1 font-weight-medium text-primary-900">Dostosuj swoje zajęcia:</span>
                 </div>
                 <VSwitch
-                  v-model="searchPreviouslySelected"
+                  v-model="pickedClassesStore.searchPreviouslySelected"
                   class="ml-2 mb-2 gap-4"
                   color="primary"
                   density="compact"
@@ -583,7 +514,7 @@
                 <div class="mb-4">
                   <span class="text-subtitle-2 font-weight-bold mb-1 d-block text-primary-900">Pora dnia</span>
                   <VSelect
-                    v-model="sharedPreferences.timeOfDay"
+                    v-model="pickedClassesStore.sharedPreferences.timeOfDay"
                     density="compact"
                     :items="timesOfDay"
                     variant="outlined"
@@ -592,7 +523,7 @@
                 <div class="mb-4">
                   <span class="text-subtitle-2 font-weight-bold mb-1 d-block text-primary-900">Długość lekcji</span>
                   <VSelect
-                    v-model="sharedPreferences.duration"
+                    v-model="pickedClassesStore.sharedPreferences.duration"
                     density="compact"
                     :items="durations"
                     variant="outlined"
@@ -601,7 +532,7 @@
                 <div class="mb-4">
                   <span class="text-subtitle-2 font-weight-bold mb-1 d-block text-primary-900 mb-2">Płeć instruktora</span>
                   <VBtnToggle
-                    v-model="sharedPreferences.instructorGender"
+                    v-model="pickedClassesStore.sharedPreferences.instructorGender"
                     class="ga-2 w-100 gender-buttons"
                     mandatory
                   >
@@ -620,19 +551,19 @@
                 <div class="mb-4">
 
                   <VCheckbox
-                    v-model="sharedPreferences.findSpecificInstructor"
+                    v-model="pickedClassesStore.sharedPreferences.findSpecificInstructor"
                     color="primary"
                     density="compact"
                     hide-details
                     label="Znajdź konkretnego instruktora"
                   />
-                  <div v-if="sharedPreferences.findSpecificInstructor">
+                  <div v-if="pickedClassesStore.sharedPreferences.findSpecificInstructor">
                     <span class="text-subtitle-2 font-weight-bold mt-1 mb-1 d-block text-primary-900">Instruktor</span>
                     <VSelect
-                      v-model="sharedPreferences.selectedInstructor"
+                      v-model="pickedClassesStore.sharedPreferences.selectedInstructor"
                       class="instructor-select"
                       density="compact"
-                      :items="instructors"
+                      :items="pickedClassesStore.instructors"
                       placeholder="Wybierz instruktora"
                       variant="outlined"
                     />
@@ -664,13 +595,13 @@
                   </VChip>
                 </div>
 
-                <div v-if="displayedSlots.length > 0" class="d-flex flex-column gap-3">
+                <div v-if="pickedClassesStore.displayedSharedSlots.length > 0" class="d-flex flex-column gap-3">
                   <div
-                    v-for="slot in displayedSlots"
+                    v-for="slot in pickedClassesStore.displayedSharedSlots"
                     :key="slot.id"
                     class="slot-card d-flex align-center px-4 py-3 cursor-pointer"
-                    :class="{ 'selected': sharedSlot === slot.id }"
-                    @click="sharedSlot = slot.id"
+                    :class="{ 'selected': pickedClassesStore.sharedSlot === slot.id }"
+                    @click="pickedClassesStore.sharedSlot = slot.id"
                   >
                     <div class="selection-circle mr-4 d-flex align-center justify-center flex-shrink-0" />
                     <div class="flex-grow-1 d-flex justify-space-between align-center">
@@ -690,12 +621,12 @@
                     </div>
                   </div>
                   <!-- TODO: Remove this button after backend integration -->
-                  <div v-if="availableSlots.length > visibleSlotsLimit" class="mt-2">
+                  <div v-if="pickedClassesStore.sharedFilteredSlots.length > pickedClassesStore.visibleSlotsLimit" class="mt-2">
                     <VBtn
                       block
                       class="text-capitalize load-more-btn"
                       variant="outlined"
-                      @click="loadMoreSlots"
+                      @click="pickedClassesStore.loadMoreSlots('shared')"
                     >
                       Załaduj więcej
                     </VBtn>
@@ -742,11 +673,11 @@
 
                 <div class="d-flex flex-column gap-3">
                   <div
-                    v-for="group in availableGroups"
+                    v-for="group in pickedClassesStore.availableGroups"
                     :key="group.id"
                     class="slot-card d-flex align-center px-4 py-4 cursor-pointer flex-column"
-                    :class="{ 'selected': selectedGroup === group.id }"
-                    @click="selectedGroup = group.id"
+                    :class="{ 'selected': pickedClassesStore.selectedGroup === group.id }"
+                    @click="pickedClassesStore.selectedGroup = group.id"
                   >
 
                     <div class="d-flex align-center justify-center">
