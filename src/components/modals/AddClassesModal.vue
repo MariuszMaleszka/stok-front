@@ -72,6 +72,23 @@
     }
   }, { immediate: true })
 
+  // Reset filters when "Search only classes with previously selected instructor" is enabled
+  watch(() => pickedClassesStore.searchPreviouslySelected, val => {
+    if (val) {
+      // Reset Individual Preferences
+      pickedClassesStore.individualPreferences.timeOfDay = 'Dowolna'
+      pickedClassesStore.individualPreferences.instructorGender = 'Dowolna'
+      pickedClassesStore.individualPreferences.findSpecificInstructor = false
+      pickedClassesStore.individualPreferences.selectedInstructor = null
+
+      // Reset Shared Preferences
+      pickedClassesStore.sharedPreferences.timeOfDay = 'Dowolna'
+      pickedClassesStore.sharedPreferences.instructorGender = 'Dowolna'
+      pickedClassesStore.sharedPreferences.findSpecificInstructor = false
+      pickedClassesStore.sharedPreferences.selectedInstructor = null
+    }
+  })
+
   function resetState () {
     currentStep.value = 1
     selectedType.value = null
@@ -361,6 +378,7 @@
                   <VSelect
                     v-model="pickedClassesStore.individualPreferences.timeOfDay"
                     density="compact"
+                    :disabled="pickedClassesStore.searchPreviouslySelected"
                     :items="timesOfDay"
                     variant="outlined"
                   />
@@ -379,6 +397,7 @@
                   <VBtnToggle
                     v-model="pickedClassesStore.individualPreferences.instructorGender"
                     class="ga-2 w-100 gender-buttons"
+                    :disabled="pickedClassesStore.searchPreviouslySelected"
                     mandatory
                   >
                     <VBtn
@@ -397,6 +416,7 @@
                     v-model="pickedClassesStore.individualPreferences.findSpecificInstructor"
                     color="primary"
                     density="compact"
+                    :disabled="pickedClassesStore.searchPreviouslySelected"
                     hide-details
                     label="Znajdź konkretnego instruktora"
                   />
@@ -549,6 +569,7 @@
                   <VSelect
                     v-model="pickedClassesStore.sharedPreferences.timeOfDay"
                     density="compact"
+                    :disabled="pickedClassesStore.searchPreviouslySelected"
                     :items="timesOfDay"
                     variant="outlined"
                   />
@@ -567,6 +588,7 @@
                   <VBtnToggle
                     v-model="pickedClassesStore.sharedPreferences.instructorGender"
                     class="ga-2 w-100 gender-buttons"
+                    :disabled="pickedClassesStore.searchPreviouslySelected"
                     mandatory
                   >
                     <VBtn
@@ -587,6 +609,7 @@
                     v-model="pickedClassesStore.sharedPreferences.findSpecificInstructor"
                     color="primary"
                     density="compact"
+                    :disabled="pickedClassesStore.searchPreviouslySelected"
                     hide-details
                     label="Znajdź konkretnego instruktora"
                   />
