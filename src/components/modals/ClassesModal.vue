@@ -2,6 +2,8 @@
   import { computed, ref } from 'vue'
   import { useI18n } from 'vue-i18n'
   import { useDisplay } from 'vuetify'
+  import arrowLeft from '@/assets/arrow_left.svg'
+  import arrowRight from '@/assets/arrow_right.svg'
   import calendarIcon from '@/assets/calendar-plus.svg'
   import skiLOGO from '@/assets/ski-icon.svg'
   import snowboardLOGO from '@/assets/snowboard-icon.svg'
@@ -123,9 +125,25 @@
       <VCardText class="px-0">
         <div class="mb-4">
           <div class="main-container slider-controls d-flex align-center justify-space-between mb-2">
-            <VIcon class="nav-icon" :color="carouselIndex === 0 ? 'grey' : 'black'" icon="mdi-arrow-left" @click="prevDay" />
+            <img
+              alt="Previous day"
+              class="nav-icon"
+              :class="{ 'disabled-icon': carouselIndex === 0 }"
+              height="12"
+              :src="arrowLeft"
+              width="12"
+              @click="prevDay"
+            >
             <span class="fs-16 font-weight-medium text-gray-900">{{ t('select_day') || 'Wybór dnia' }}</span>
-            <VIcon class="nav-icon" :color="carouselIndex === days.length - 1 ? 'grey' : 'black'" icon="mdi-arrow-right" @click="nextDay" />
+            <img
+              alt="Next day"
+              class="nav-icon"
+              :class="{ 'disabled-icon': carouselIndex === days.length - 1 }"
+              height="12"
+              :src="arrowRight"
+              width="12"
+              @click="nextDay"
+            >
           </div>
           <VSlideGroup v-model="carouselIndex" center-active class="day-slider px-0 slider-breakout" :show-arrows="false">
             <VSlideGroupItem v-for="(day, idx) in days" :key="idx" :value="idx">
@@ -279,6 +297,12 @@
 
 .nav-icon {
   cursor: pointer;
+}
+
+.disabled-icon {
+  opacity: 0.3;
+  cursor: default;
+  pointer-events: none;
 }
 
 .class-card {

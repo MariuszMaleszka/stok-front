@@ -18,15 +18,21 @@
   const currentStep = ref(1)
   const selectedType = ref(null)
   const showStepper = ref(false)
+  const searchPreviouslySelected = ref(false)
 
   // Individual Flow State
   const individualPreferences = ref({
-    searchPreviouslySelected: false,
+    selectedInstructor: null,
     timeOfDay: 'Dowolna',
     duration: '2h',
     instructorGender: 'Dowolna',
     findSpecificInstructor: false,
   })
+  function formatSchedule (text) {
+    if (!text) return ''
+    return text.replace(/(\d{1,2}:\d{2})/g, '<span class="text-primary font-weight-bold">$1</span>')
+  }
+
   const individualSlot = ref(null)
   const savePreferences = ref(false)
 
@@ -62,18 +68,69 @@
   const genders = ['Dowolna', 'Kobieta', 'Mężczyzna']
 
   const availableSlots = [
-    { id: 1, time: '9:00 - 11:00', price: 50, instructor: 'Marcin Kowalik', gender: 'male' },
-    { id: 2, time: '10:00 - 12:00', price: 50, instructor: 'Anna Nowak', gender: 'female' },
-    { id: 3, time: '10:00 - 12:00', price: 50, isHappyHours: true },
-    { id: 4, time: '10:30 - 12:30', price: 50 },
-    { id: 5, time: '11:00 - 13:00', price: 50 },
+    { id: 1, time: '9:00 - 11:00', price: 50, instructor: 'Marcin Kowalik', gender: 'male', duration: '2h', timeOfDay: 'Rano' },
+    { id: 2, time: '10:00 - 12:00', price: 50, instructor: 'Anna Nowak', gender: 'female', duration: '2h', timeOfDay: 'Rano' },
+    { id: 3, time: '10:00 - 12:00', price: 50, isHappyHours: true, duration: '2h', timeOfDay: 'Rano' },
+    { id: 4, time: '10:30 - 12:30', price: 50, duration: '2h', timeOfDay: 'Rano' },
+    { id: 5, time: '11:00 - 13:00', price: 50, duration: '2h', timeOfDay: 'Rano' },
+    { id: 6, time: '14:00 - 16:00', price: 50, instructor: 'Piotr Wiśniewski', gender: 'male', duration: '2h', timeOfDay: 'Popołudnie' },
+    { id: 7, time: '15:00 - 16:00', price: 35, instructor: 'Maria Zielińska', gender: 'female', duration: '1h', timeOfDay: 'Popołudnie' },
+    { id: 8, time: '18:00 - 20:00', price: 50, instructor: 'Tomasz Kamiński', gender: 'male', duration: '2h', timeOfDay: 'Wieczór' },
+    { id: 9, time: '19:00 - 20:00', price: 35, instructor: 'Katarzyna Lewandowska', gender: 'female', duration: '1h', timeOfDay: 'Wieczór' },
   ]
 
   const availableGroups = [
-    { id: 1, name: 'Nazwa grupy lorem ipsum', dates: '1 sty 2025 - 6 sty 2025', desc: '5 dni zajęć, zajęcia 1x dziennie od 9:30 do 10:30', price: 1400 },
-    { id: 2, name: 'Nazwa grupy lorem ipsum', dates: '1 sty 2025 - 3 sty 2025', desc: '3 dni zajęć, zajęcia 2x dziennie od 9:30 do 10:30 oraz od 15:30 do 17:30', price: 1400 },
-    { id: 3, name: 'Nazwa grupy lorem ipsum', dates: 'Happy hours', desc: '', price: null, isHappyHours: true },
+    { id: 1, name: 'Nazwa grupy lorem ipsum', dates: '1 sty 2025 - 6 sty 2025', description: '5 dni zajęć, zajęcia 1x dziennie', schedule: 'od 9:30 do 10:30', price: 1400 },
+    { id: 2, name: 'Nazwa grupy lorem ipsum', dates: '1 sty 2025 - 3 sty 2025', description: '3 dni zajęć, zajęcia 2x dziennie', schedule: 'od 9:30 do 10:30 oraz od 15:30 do 17:30', price: 1400 },
+    { id: 3, name: 'Nazwa grupy lorem ipsum', dates: '1 sty 2025 - 6 sty 2025', description: '5 dni zajęć, zajęcia 1x dziennie', schedule: 'od 9:30 do 10:30', isHappyHours: true },
   ]
+
+  // Pagination for slots
+  const visibleSlotsLimit = ref(4)
+
+  const instructors = computed(() => {
+    const names = new Set(availableSlots.filter(s => s.instructor).map(s => s.instructor))
+    return Array.from(names)
+  })
+
+  const filteredSlots = computed(() => {
+    let slots = availableSlots
+    const prefs = selectedType.value === 'individual' ? individualPreferences.value : sharedPreferences.value
+
+    // Filter by Time of Day
+    if (prefs.timeOfDay && prefs.timeOfDay !== 'Dowolna') {
+      slots = slots.filter(s => s.timeOfDay === prefs.timeOfDay)
+    }
+
+    // Filter by "Previously Selected Instructor" (Switch)
+    if (searchPreviouslySelected.value) {
+      slots = slots.filter(s => s.instructor)
+    }
+
+    // Filter by Selected Instructor (if checkbox is checked)
+    if (prefs.findSpecificInstructor && prefs.selectedInstructor) {
+      slots = slots.filter(s => s.instructor === prefs.selectedInstructor)
+    }
+
+    // Filter by Duration
+    if (prefs.duration) {
+      slots = slots.filter(s => s.duration === prefs.duration)
+    }
+
+    // Filter by Gender
+    if (prefs.instructorGender && prefs.instructorGender !== 'Dowolna') {
+      const targetGender = prefs.instructorGender === 'Mężczyzna' ? 'male' : 'female'
+      slots = slots.filter(s => s.gender === targetGender)
+    }
+
+    return slots
+  })
+
+  const displayedSlots = computed(() => filteredSlots.value.slice(0, visibleSlotsLimit.value))
+
+  function loadMoreSlots () {
+    visibleSlotsLimit.value = filteredSlots.value.length
+  }
 
   // Reset state when modal opens/closes or type changes
   watch(() => props.modelValue, val => {
@@ -86,13 +143,19 @@
     currentStep.value = 1
     selectedType.value = null
     showStepper.value = false
-    individualPreferences.value = { searchPreviouslySelected: false, timeOfDay: 'Dowolna', duration: '2h', instructorGender: 'Dowolna', findSpecificInstructor: false }
+    searchPreviouslySelected.value = false
+    individualPreferences.value = { selectedInstructor: null, timeOfDay: 'Dowolna', duration: '2h', instructorGender: 'Dowolna', findSpecificInstructor: false }
     individualSlot.value = null
     savePreferences.value = false
     sharedParticipants.value = []
+    if (stayStore.participants.length > 0) {
+      const p1 = stayStore.participants[0]
+      sharedParticipants.value.push(p1.dynamicId || 0)
+    }
     sharedPreferences.value = { ...individualPreferences.value }
     sharedSlot.value = null
     selectedGroup.value = null
+    visibleSlotsLimit.value = 4
   }
 
   function close () {
@@ -206,6 +269,44 @@
     }
   }
 
+  function getFilters (prefs) {
+    const filters = []
+    if (prefs.timeOfDay) {
+      filters.push({ key: 'timeOfDay', label: prefs.timeOfDay })
+    }
+    if (prefs.duration) {
+      filters.push({ key: 'duration', label: `Lekcje ${prefs.duration}` })
+    }
+    if (prefs.instructorGender) {
+      const genderLabel = prefs.instructorGender === 'Dowolna' ? 'płeć dowolna' : prefs.instructorGender.toLowerCase()
+      filters.push({ key: 'instructorGender', label: `Instruktor ${genderLabel}` })
+    }
+    return filters
+  }
+
+  const individualFilters = computed(() => getFilters(individualPreferences.value))
+  const sharedFilters = computed(() => getFilters(sharedPreferences.value))
+
+  function removeFilter (type, key) {
+    const prefs = type === 'individual' ? individualPreferences.value : sharedPreferences.value
+    if (key === 'timeOfDay') prefs.timeOfDay = 'Dowolna'
+    if (key === 'duration') prefs.duration = '2h'
+    if (key === 'instructorGender') prefs.instructorGender = 'Dowolna'
+  }
+
+  function toggleParticipant (id) {
+    const firstId = stayStore.participants[0]?.dynamicId || 0
+    if (id === firstId) return
+
+    const index = sharedParticipants.value.indexOf(id)
+    if (index === -1) {
+      if (sharedParticipants.value.length < 3) {
+        sharedParticipants.value.push(id)
+      }
+    } else {
+      sharedParticipants.value.splice(index, 1)
+    }
+  }
 </script>
 
 <template>
@@ -220,7 +321,7 @@
       <div class="modal-header pa-4">
         <div class="d-flex justify-space-between align-center">
           <span class="text-h6 font-weight-bold text-primary-900 mb-1">{{ modalTitle }}</span>
-          <VBtn class="special-close-btn" icon="mdi-close" variant="text" @click="close" />
+          <VBtn class="special-close-btn" variant="text" @click="close" />
         </div>
 
         <div class="d-flex align-center text-grey-darken-1">
@@ -282,13 +383,14 @@
                   <span class="text-subtitle-1 font-weight-medium text-primary-900">Dostosuj swoje zajęcia:</span>
                 </div>
 
-                <div class="mb-4">
-                  <VSwitch
-                    v-model="individualPreferences.searchPreviouslySelected"
-                    hide-details
-                    label="Szukaj tylko zajęć z wybranym wcześniej instruktorem"
-                  />
-                </div>
+                <VSwitch
+                  v-model="searchPreviouslySelected"
+                  class="ml-2 mb-2 gap-4"
+                  color="primary"
+                  density="compact"
+                  hide-details
+                  label="Szukaj tylko zajęć z wybranym wcześniej instruktorem"
+                />
 
                 <div>
                   <span class="text-subtitle-2 font-weight-bold mb-1 d-block text-primary-900">Pora dnia</span>
@@ -312,7 +414,7 @@
                   <span class="text-subtitle-2 font-weight-bold mb-1 d-block text-primary-900 mb-2">Płeć instruktora</span>
                   <VBtnToggle
                     v-model="individualPreferences.instructorGender"
-                    class="ga-2 w-100"
+                    class="ga-2 w-100 gender-buttons"
                     mandatory
                   >
                     <VBtn
@@ -326,9 +428,7 @@
                       {{ gender }}
                     </VBtn>
                   </VBtnToggle>
-                </div>
-
-                <div class="mb-4">
+                </div>                <div class="mb-4">
                   <VCheckbox
                     v-model="individualPreferences.findSpecificInstructor"
                     color="primary"
@@ -336,6 +436,17 @@
                     hide-details
                     label="Znajdź konkretnego instruktora"
                   />
+                  <div v-if="individualPreferences.findSpecificInstructor">
+                    <span class="text-subtitle-2 font-weight-bold mt-1 mb-1 d-block text-primary-900">Instruktor</span>
+                    <VSelect
+                      v-model="individualPreferences.selectedInstructor"
+                      class="instructor-select"
+                      density="compact"
+                      :items="instructors"
+                      placeholder="Wybierz instruktora"
+                      variant="outlined"
+                    />
+                  </div>
                 </div>
               </VStepperWindowItem>
 
@@ -345,24 +456,83 @@
                   <span class="text-subtitle-1 font-weight-medium text-primary-900">Wybierz spośród dostępnych terminów:</span>
                 </div>
 
-                <div class="d-flex flex-column gap-3">
+                <div class="d-flex align-center justify-center flex-wrap gap-2 mb-4">
+                  <VChip
+                    v-for="filter in individualFilters"
+                    :key="filter.key"
+                    class="filter-chip"
+                    :class="{ 'filter-chip--error': filter.isProblematic }"
+                    closable
+                    close-icon="mdi-close"
+                    color="grey-lighten-4"
+                    label
+                    size="small"
+                    variant="flat"
+                    @click:close="removeFilter('individual', filter.key)"
+                  >
+                    <span>{{ filter.label }}</span>
+                  </VChip>
+                </div>
+
+                <div v-if="displayedSlots.length > 0" class="d-flex flex-column gap-3">
                   <div
-                    v-for="slot in availableSlots"
+                    v-for="slot in displayedSlots"
                     :key="slot.id"
                     class="slot-card d-flex align-center px-4 py-3 cursor-pointer"
                     :class="{ 'selected': individualSlot === slot.id }"
                     @click="individualSlot = slot.id"
                   >
-                    <div class="selection-circle mr-4 d-flex align-center justify-center" />
-                    <div class="flex-grow-1">
-                      <div class="d-flex justify-space-between align-center">
-                        <span class="font-weight-bold text-primary-900">{{ slot.time }}</span>
-                        <span v-if="slot.price" class="font-weight-bold text-primary-900">{{ slot.price }} zł</span>
+                    <div class="selection-circle mr-4 d-flex align-center justify-center flex-shrink-0" />
+
+                    <div class="flex-grow-1 d-flex justify-space-between align-center">
+                      <div class="d-flex flex-column align-start">
+                        <span class="font-weight-bold fs-14 blue-text">{{ slot.time }}</span>
+                        <div v-if="slot.instructor" class="text-caption-slot mt-1 text-left">
+                          Instruktor wybrany wcześniej:<br>
+                          <span class="font-weight-bold">{{ slot.instructor }}</span>
+                        </div>
                       </div>
-                      <div class="d-flex align-center text-caption text-grey-darken-1">
-                        <span v-if="slot.instructor">{{ slot.instructor }}</span>
-                        <span v-if="slot.isHappyHours" class="text-primary font-weight-bold happy-hours">Happy Hours</span>
+                      <div class="d-flex flex-column align-end justify-center h-100">
+                        <div v-if="slot.isHappyHours" class="happy-hours-badge">
+                          Happy hours
+                        </div>
+                        <span v-if="slot.price" class="font-weight-semibold blue-text fs-14 max-content-width">- {{ slot.price }},00zł</span>
                       </div>
+                    </div>
+                  </div>
+                  <!-- TODO: Remove this button after backend integration -->
+                  <div v-if="filteredSlots.length > visibleSlotsLimit" class="mt-2">
+                    <VBtn
+                      block
+                      class="text-capitalize load-more-btn"
+                      variant="outlined"
+                      @click="loadMoreSlots"
+                    >
+                      Załaduj więcej
+                    </VBtn>
+                  </div>
+                </div>
+
+                <div v-else class="text-center py-4">
+                  <div class="text-h6 font-weight-bold text-primary-900 mb-6">
+                    Brak zajęć z podanymi<br>parametrami
+                  </div>
+
+                  <VBtn
+                    class="text-capitalize mb-8 text-primary-900 border-primary find-other-btn"
+                    color="primary"
+                    height="59"
+                    variant="outlined"
+                    width="100%"
+                  >
+                    Znajdź zajęcia<br>najbliższe preferencjom
+                  </VBtn>
+
+                  <div class="border rounded-lg px-4 py-3 d-flex align-start text-left bg-white border-gray">
+                    <VIcon class="mr-3 mt-1 flex-shrink-0" color="grey-darken-1" icon="mdi-message-text-outline" />
+                    <div class="text-caption text-grey-darken-1" style="line-height: 1.4;">
+                      Jeśli nie znalazłeś/aś dopasowanej oferty, skontaktuj się z naszym
+                      <a class="text-decoration-underline text-grey-darken-1 font-weight-medium cursor-pointer" href="#">biurem obsługi klienta</a>.
                     </div>
                   </div>
                 </div>
@@ -377,15 +547,22 @@
                   <span class="text-subtitle-1 font-weight-medium text-primary-900">Wybierz uczestników:</span>
                 </div>
                 <div class="mb-4">
-                  <p class="text-body-2 text-grey-darken-1 mb-2">Zaznacz osoby, z którymi chcesz mieć zajęcia:</p>
-                  <div v-for="(p, idx) in stayStore.participants" :key="idx" class="d-flex align-center mb-2">
-                    <VCheckbox
-                      v-model="sharedParticipants"
-                      density="compact"
-                      hide-details
-                      :label="p.name || `Uczestnik ${idx + 1}`"
-                      :value="p.dynamicId || idx"
-                    />
+                  <p class="text-caption text-grey-darken-1 mb-6 text-center" style="line-height: 1.4; max-width: 92%; margin: 0 auto;">
+                    Wybierz maksymalnie trzech uczestników o podobnych preferncjach którzy mają uczestniczyć w zajęciach.
+                  </p>
+                  <div class="d-flex flex-column gap-3">
+                    <div
+                      v-for="(p, idx) in stayStore.participants"
+                      :key="idx"
+                      class="selection-card d-flex align-center px-4 py-3 cursor-pointer"
+                      :class="{ 'selected': sharedParticipants.includes(p.dynamicId || idx), 'disabled': idx === 0 }"
+                      @click="toggleParticipant(p.dynamicId || idx)"
+                    >
+                      <div class="selection-circle mr-4 d-flex align-center justify-center flex-shrink-0" />
+                      <span class="font-weight-medium text-primary-900 fs-14">
+                        {{ idx + 1 }} - {{ p.name || `Uczestnik ${idx + 1}` }}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </VStepperWindowItem>
@@ -395,13 +572,14 @@
                 <div class="text-center mb-4">
                   <span class="text-subtitle-1 font-weight-medium text-primary-900">Dostosuj swoje zajęcia:</span>
                 </div>
-                <div class="mb-4">
-                  <VSwitch
-                    v-model="sharedPreferences.searchPreviouslySelected"
-                    hide-details
-                    label="Szukaj tylko zajęć z wybranym wcześniej instruktorem"
-                  />
-                </div>
+                <VSwitch
+                  v-model="searchPreviouslySelected"
+                  class="ml-2 mb-2 gap-4"
+                  color="primary"
+                  density="compact"
+                  hide-details
+                  label="Szukaj tylko zajęć z wybranym wcześniej instruktorem"
+                />
                 <div class="mb-4">
                   <span class="text-subtitle-2 font-weight-bold mb-1 d-block text-primary-900">Pora dnia</span>
                   <VSelect
@@ -421,10 +599,10 @@
                   />
                 </div>
                 <div class="mb-4">
-                  <span class="text-subtitle-2 font-weight-bold mb-1 d-block text-primary-900">Płeć instruktora</span>
+                  <span class="text-subtitle-2 font-weight-bold mb-1 d-block text-primary-900 mb-2">Płeć instruktora</span>
                   <VBtnToggle
                     v-model="sharedPreferences.instructorGender"
-                    class="ga-2 w-100"
+                    class="ga-2 w-100 gender-buttons"
                     mandatory
                   >
                     <VBtn
@@ -440,6 +618,7 @@
                   </VBtnToggle>
                 </div>
                 <div class="mb-4">
+
                   <VCheckbox
                     v-model="sharedPreferences.findSpecificInstructor"
                     color="primary"
@@ -447,6 +626,17 @@
                     hide-details
                     label="Znajdź konkretnego instruktora"
                   />
+                  <div v-if="sharedPreferences.findSpecificInstructor">
+                    <span class="text-subtitle-2 font-weight-bold mt-1 mb-1 d-block text-primary-900">Instruktor</span>
+                    <VSelect
+                      v-model="sharedPreferences.selectedInstructor"
+                      class="instructor-select"
+                      density="compact"
+                      :items="instructors"
+                      placeholder="Wybierz instruktora"
+                      variant="outlined"
+                    />
+                  </div>
                 </div>
               </VStepperWindowItem>
 
@@ -455,24 +645,83 @@
                 <div class="text-center mb-4">
                   <span class="text-subtitle-1 font-weight-medium text-primary-900">Wybierz spośród dostępnych terminów:</span>
                 </div>
-                <div class="d-flex flex-column gap-3">
+
+                <div class="d-flex align-center justify-centerflex-wrap gap-2 mb-4">
+                  <VChip
+                    v-for="filter in sharedFilters"
+                    :key="filter.key"
+                    class="filter-chip"
+                    :class="{ 'filter-chip--error': filter.isProblematic }"
+                    closable
+                    close-icon="mdi-close"
+                    color="grey-lighten-4"
+                    label
+                    size="small"
+                    variant="flat"
+                    @click:close="removeFilter('shared', filter.key)"
+                  >
+                    <span>{{ filter.label }}</span>
+                  </VChip>
+                </div>
+
+                <div v-if="displayedSlots.length > 0" class="d-flex flex-column gap-3">
                   <div
-                    v-for="slot in availableSlots"
+                    v-for="slot in displayedSlots"
                     :key="slot.id"
                     class="slot-card d-flex align-center px-4 py-3 cursor-pointer"
                     :class="{ 'selected': sharedSlot === slot.id }"
                     @click="sharedSlot = slot.id"
                   >
-                    <div class="selection-circle mr-4 d-flex align-center justify-center" />
-                    <div class="flex-grow-1">
-                      <div class="d-flex justify-space-between align-center">
-                        <span class="font-weight-bold text-primary-900">{{ slot.time }}</span>
-                        <span v-if="slot.price" class="font-weight-bold text-primary-900">{{ slot.price }} zł</span>
+                    <div class="selection-circle mr-4 d-flex align-center justify-center flex-shrink-0" />
+                    <div class="flex-grow-1 d-flex justify-space-between align-center">
+                      <div class="d-flex flex-column align-start">
+                        <span class="font-weight-bold fs-14 blue-text">{{ slot.time }}</span>
+                        <div v-if="slot.instructor" class="text-caption-slot mt-1 text-left">
+                          Instruktor wybrany wcześniej:<br>
+                          <span class="font-weight-bold">{{ slot.instructor }}</span>
+                        </div>
                       </div>
-                      <div class="d-flex align-center text-caption text-grey-darken-1">
-                        <span v-if="slot.instructor">{{ slot.instructor }}</span>
-                        <span v-if="slot.isHappyHours" class="text-primary font-weight-bold happy-hours">Happy Hours</span>
+                      <div class="d-flex flex-column align-end justify-center h-100">
+                        <div v-if="slot.isHappyHours" class="happy-hours-badge">
+                          Happy hours
+                        </div>
+                        <span v-if="slot.price" class="font-weight-semibold blue-text fs-14 max-content-width">- {{ slot.price }},00zł</span>
                       </div>
+                    </div>
+                  </div>
+                  <!-- TODO: Remove this button after backend integration -->
+                  <div v-if="availableSlots.length > visibleSlotsLimit" class="mt-2">
+                    <VBtn
+                      block
+                      class="text-capitalize load-more-btn"
+                      variant="outlined"
+                      @click="loadMoreSlots"
+                    >
+                      Załaduj więcej
+                    </VBtn>
+                  </div>
+                </div>
+
+                <div v-else class="text-center py-4">
+                  <div class="text-h6 font-weight-bold text-primary-900 mb-6">
+                    Brak zajęć z podanymi<br>parametrami
+                  </div>
+
+                  <VBtn
+                    class="text-capitalize mb-8 text-primary-900 border-primary"
+                    color="primary"
+                    height="59"
+                    variant="outlined"
+                    width="100%"
+                  >
+                    Znajdź zajęcia<br>najbliższe preferencjom
+                  </VBtn>
+
+                  <div class="border rounded-lg px-4 py-3 d-flex align-start text-left bg-white border-gray">
+                    <VIcon class="mr-3 mt-1 flex-shrink-0" color="grey-darken-1" icon="mdi-message-text-outline" />
+                    <div class="text-caption text-grey-darken-1" style="line-height: 1.4;">
+                      Jeśli nie znalazłeś/aś dopasowanej oferty, skontaktuj się z naszym
+                      <a class="text-decoration-underline text-grey-darken-1 font-weight-medium cursor-pointer" href="#">biurem obsługi klienta</a>.
                     </div>
                   </div>
                 </div>
@@ -482,26 +731,66 @@
             <!-- GROUP FLOW -->
             <template v-if="selectedType === 'group'">
               <VStepperWindowItem :value="1">
-                <div class="text-center mb-4">
-                  <span class="text-subtitle-1 font-weight-medium text-primary-900">Dostępne grupy:</span>
+                <div class="text-center mb-2">
+                  <span class="text-subtitle-1 font-weight-medium text-primary-900">Wybierz zajęcia grupowe:</span>
                 </div>
+                <div class="mb-6">
+                  <p class="text-caption text-grey-darken-1 text-center" style="line-height: 1.4; max-width: 90%; margin: 0 auto;">
+                    Zajęcia grupowe są złożone z serii zajęć trwającej kilka dni. Po wybraniu zajęć, do twojego kalendarza zostanie dodana każda z rozłożonych na kilka dni lekcji.
+                  </p>
+                </div>
+
                 <div class="d-flex flex-column gap-3">
                   <div
                     v-for="group in availableGroups"
                     :key="group.id"
-                    class="slot-card d-flex align-center px-4 py-3 cursor-pointer"
+                    class="slot-card d-flex align-center px-4 py-4 cursor-pointer flex-column"
                     :class="{ 'selected': selectedGroup === group.id }"
                     @click="selectedGroup = group.id"
                   >
-                    <div class="selection-circle mr-4 d-flex align-center justify-center" />
-                    <div class="flex-grow-1">
-                      <div class="d-flex justify-space-between align-center">
-                        <span class="font-weight-bold text-primary-900 fs-14">{{ group.name }}</span>
-                        <span v-if="group.price" class="font-weight-bold text-primary-900">{{ group.price }} zł</span>
+
+                    <div class="d-flex align-center justify-center">
+                      <!-- Checkbox/Circle -->
+                      <div class="selection-circle mr-4 mt-1 d-flex align-center justify-center flex-shrink-0" />
+
+                      <!-- Content -->
+                      <div class="flex-grow-1">
+                        <!-- Title & Happy Hours Badge -->
+                        <div class="d-flex justify-space-between align-start mb-1">
+                          <span class="text-caption text-grey-darken-1">{{ group.name }}</span>
+                          <div v-if="group.isHappyHours" class="happy-hours-badge ml-2 mb-0">Happy hours</div>
+                        </div>
+
+                        <!-- Dates -->
+                        <div class="font-weight-bold text-primary-900 mb-2 fs-14">
+                          {{ group.dates }}
+                        </div>
+
+                        <!-- Description -->
+                        <div class="text-caption text-grey-darken-1 mb-1" style="line-height: 1.4;">
+                          {{ group.description }}
+                        </div>
+
+                        <!-- Schedule (Hours) -->
+                        <div class="text-caption text-grey-darken-1 mb-3" style="line-height: 1.4;" v-html="formatSchedule(group.schedule)" />
+
+                        <!-- Details Button -->
+                        <VBtn
+                          class="text-none text-caption px-3"
+                          color="primary"
+                          density="compact"
+                          height="28"
+                          variant="outlined"
+                          @click.stop="openGroupDetails(group)"
+                        >
+                          Dowiedz się więcej
+                        </VBtn>
                       </div>
-                      <div class="text-caption text-grey-darken-1 mb-1">{{ group.dates }}</div>
-                      <div class="text-caption text-grey-darken-1">{{ group.desc }}</div>
-                      <div v-if="group.isHappyHours" class="text-caption text-primary font-weight-bold happy-hours">Happy Hours</div>
+                    </div>
+
+                    <!-- Price (Absolute Bottom Right) -->
+                    <div v-if="group.price" class="d-flex justify-end w-100 mt-1">
+                      <span class="font-weight-bold text-primary-900 fs-14">-{{ group.price }},00zł</span>
                     </div>
                   </div>
                 </div>
@@ -583,6 +872,16 @@
     background-color: #EFF6FF;
     border-width: 1px;
 
+    span,div {
+      color: #2563EB;
+    }
+  }
+
+  &.disabled {
+    cursor: default;
+    border-color: transparent;
+    background-color: #EFF6FF;
+
     span {
       color: #2563EB;
     }
@@ -592,12 +891,30 @@
 .selection-circle {
   min-width: 20px;
   min-height: 20px;
+  max-width: 20px;
+  max-height: 20px;
   border-radius: 50%;
   border: 2px solid #D1D5DB;
   background: white;
 
   .selected & {
     border-color: #2563EB;
+  }
+
+  .disabled & {
+    border-color: #818CF8;
+    background-color: transparent;
+  }
+}
+
+.inner-circle {
+  width: 10px;
+  height: 10px;
+  background-color: #2563EB;
+  border-radius: 50%;
+
+  .disabled & {
+    background-color: #818CF8;
   }
 }
 
@@ -627,7 +944,7 @@
 :deep(.v-label) {
   font-size: 14px;
   color: #111928;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 500;
 }
 
@@ -662,12 +979,105 @@
   display: none !important;
 }
 
-.happy-hours {
+.happy-hours-badge {
     color: #000 !important;
     font-size: 10px;
     font-weight: 400 !important;
     background: #FACA15;
-    padding: 2px 6px;
+    padding: 2px 3px;
     border-radius: 5px;
+    margin-bottom: 16px !important;
+    width: max-content;
+    min-width: 70px;
+    text-align: center;
+}
+
+.text-caption {
+  line-height: 1.4;
+}
+
+.blue-text {
+  color: #233876!important;
+}
+
+.text-caption-slot {
+  font-size: 11px;
+  color: rgba(35, 56, 118, 0.65);
+}
+
+.max-content-width {
+  width: max-content;
+}
+
+.filter-chip {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 10px !important;
+  font-weight: 600 !important;
+  line-height: 150% !important;
+  color: rgba(0, 0, 0, 0.55);
+  border-radius: 8px!important;
+
+  :deep(.v-chip__content) {
+    font-family: 'Inter', sans-serif !important;
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    line-height: 150% !important;
+    color: rgba(0, 0, 0, 0.55);
+  }
+}
+
+.filter-chip--error {
+  background-color: #FDE8E8 !important;
+}
+
+:deep(.v-chip__close) {
+  font-size: 14px !important;
+  color: rgba(31, 42, 55, 0.55) !important;
+  opacity: 1 !important;
+}
+
+.load-more-btn {
+  border-color: #2563EB !important;
+  color: #2563EB !important;
+  font-weight: 500;
+  line-height: 1;
+}
+
+:deep(.v-chip.v-chip--size-small)  {
+    --v-chip-height: 19px;
+    padding: 0 8px !important;
+}
+
+.gap-2 {
+  gap: 8px;
+}
+
+.footer-actions {
+ :deep(.v-btn) {
+    height: 48px!important;
+    line-height: 1;
+}
+
+}
+
+.find-other-btn {
+    line-height: 1.4!important;
+}
+
+.gender-buttons {
+  height: 38px!important;
+
+  :deep(.v-btn) {
+    height: 38px!important;
+    color: #6B7280;
+  }
+}
+
+:deep(.v-select .v-field .v-field__input > input) {
+    align-self: center !important;
+}
+
+.gap-4 {
+  gap: 4px;
 }
 </style>
