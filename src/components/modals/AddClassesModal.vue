@@ -244,13 +244,13 @@
 
   function getFilters (prefs) {
     const filters = []
-    if (prefs.timeOfDay) {
+    if (prefs.timeOfDay && prefs.timeOfDay !== 'Dowolna') {
       filters.push({ key: 'timeOfDay', label: prefs.timeOfDay })
     }
-    if (prefs.duration) {
+    if (prefs.duration && prefs.duration !== '2h') {
       filters.push({ key: 'duration', label: `Lekcje ${prefs.duration}` })
     }
-    if (prefs.instructorGender) {
+    if (prefs.instructorGender && prefs.instructorGender !== 'Dowolna') {
       const genderLabel = prefs.instructorGender === 'Dowolna' ? 'płeć dowolna' : prefs.instructorGender.toLowerCase()
       filters.push({ key: 'instructorGender', label: `Instruktor ${genderLabel}` })
     }
@@ -266,6 +266,26 @@
     if (key === 'duration') prefs.duration = '2h'
     if (key === 'instructorGender') prefs.instructorGender = 'Dowolna'
   }
+
+  const availableParticipantsForShared = computed(() => {
+    if (stayStore.participants.length === 0) return []
+
+    const firstParticipant = stayStore.participants[0]
+    const allowedType = firstParticipant.participantType
+    const allowedActivity = firstParticipant.activityType
+
+    return stayStore.participants
+      .map((p, index) => ({ data: p, originalIndex: index }))
+      .filter(({ data: p }) => {
+        // Check age category
+        if (p.participantType !== allowedType) return false
+
+        // Check discipline
+        if (p.activityType !== allowedActivity) return false
+
+        return true
+      })
+  })
 
   function toggleParticipant (id) {
     const firstId = stayStore.participants[0]?.dynamicId || 0
@@ -536,15 +556,15 @@
                   </p>
                   <div class="d-flex flex-column gap-3">
                     <div
-                      v-for="(p, idx) in stayStore.participants"
-                      :key="idx"
+                      v-for="item in availableParticipantsForShared"
+                      :key="item.originalIndex"
                       class="selection-card d-flex align-center px-4 py-3 cursor-pointer"
-                      :class="{ 'selected': sharedParticipants.includes(p.dynamicId || idx), 'disabled': idx === 0 }"
-                      @click="toggleParticipant(p.dynamicId || idx)"
+                      :class="{ 'selected': sharedParticipants.includes(item.data.dynamicId || item.originalIndex), 'disabled': item.originalIndex === 0 }"
+                      @click="toggleParticipant(item.data.dynamicId || item.originalIndex)"
                     >
                       <div class="selection-circle mr-4 d-flex align-center justify-center flex-shrink-0" />
                       <span class="font-weight-medium text-primary-900 fs-14">
-                        {{ idx + 1 }} - {{ p.name || `Uczestnik ${idx + 1}` }}
+                        {{ item.originalIndex + 1 }} - {{ item.data.name || `Uczestnik ${item.originalIndex + 1}` }}
                       </span>
                     </div>
                   </div>
