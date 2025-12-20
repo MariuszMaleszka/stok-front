@@ -4,30 +4,121 @@ import { useStayStore } from './StayStore'
 
 export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
   const stayStore = useStayStore()
+
+  // Helper to generate dynamic dates
+  const getFutureDate = daysToAdd => {
+    const d = new Date()
+    d.setDate(d.getDate() + daysToAdd)
+    return d
+  }
+
+  const formatDate = date => {
+    return date.toISOString().split('T')[0]
+  }
+
+  const formatDisplayDate = date => {
+    return date.toLocaleDateString('pl-PL', { day: 'numeric', month: 'short', year: 'numeric' })
+  }
+
+  // Helper to generate classDates array
+  const generateClassDates = count => {
+    return Array.from({ length: count }, (_, i) => formatDate(getFutureDate(i)))
+  }
+
+  // Base slots templates
+  const baseSlots = [
+    { time: '9:00 - 11:00', price: 50, instructor: 'Marcin Kowalik', gender: 'male', duration: '2h', timeOfDay: 'Rano' },
+    { time: '10:00 - 12:00', price: 50, instructor: 'Anna Nowak', gender: 'female', duration: '2h', timeOfDay: 'Rano' },
+    { time: '10:00 - 12:00', price: 50, isHappyHours: true, duration: '2h', timeOfDay: 'Rano' },
+    { time: '10:30 - 12:30', price: 50, duration: '2h', timeOfDay: 'Rano' },
+    { time: '11:00 - 13:00', price: 50, duration: '2h', timeOfDay: 'Rano' },
+    { time: '14:00 - 16:00', price: 50, instructor: 'Piotr Wiśniewski', gender: 'male', duration: '2h', timeOfDay: 'Popołudnie' },
+    { time: '15:00 - 16:00', price: 35, instructor: 'Maria Zielińska', gender: 'female', duration: '1h', timeOfDay: 'Popołudnie' },
+    { time: '18:00 - 20:00', price: 50, instructor: 'Tomasz Kamiński', gender: 'male', duration: '2h', timeOfDay: 'Wieczór' },
+    { time: '19:00 - 20:00', price: 35, instructor: 'Katarzyna Lewandowska', gender: 'female', duration: '1h', timeOfDay: 'Wieczór' },
+  ]
+
+  // Generate slots for next 30 days
+  const generateAvailableSlots = () => {
+    const slots = []
+    const daysToGenerate = 30
+    for (let i = 0; i < daysToGenerate; i++) {
+      const date = getFutureDate(i)
+      const dateStr = formatDate(date)
+      for (const [index, slot] of baseSlots.entries()) {
+        slots.push({
+          ...slot,
+          id: `${dateStr}-${index}`,
+          date: dateStr,
+        })
+      }
+    }
+    return slots
+  }
+
   // Mock Data
-  const availableSlots = ref([
-    { id: 1, time: '9:00 - 11:00', price: 50, instructor: 'Marcin Kowalik', gender: 'male', duration: '2h', timeOfDay: 'Rano' },
-    { id: 2, time: '10:00 - 12:00', price: 50, instructor: 'Anna Nowak', gender: 'female', duration: '2h', timeOfDay: 'Rano' },
-    { id: 3, time: '10:00 - 12:00', price: 50, isHappyHours: true, duration: '2h', timeOfDay: 'Rano' },
-    { id: 4, time: '10:30 - 12:30', price: 50, duration: '2h', timeOfDay: 'Rano' },
-    { id: 5, time: '11:00 - 13:00', price: 50, duration: '2h', timeOfDay: 'Rano' },
-    { id: 6, time: '14:00 - 16:00', price: 50, instructor: 'Piotr Wiśniewski', gender: 'male', duration: '2h', timeOfDay: 'Popołudnie' },
-    { id: 7, time: '15:00 - 16:00', price: 35, instructor: 'Maria Zielińska', gender: 'female', duration: '1h', timeOfDay: 'Popołudnie' },
-    { id: 8, time: '18:00 - 20:00', price: 50, instructor: 'Tomasz Kamiński', gender: 'male', duration: '2h', timeOfDay: 'Wieczór' },
-    { id: 9, time: '19:00 - 20:00', price: 35, instructor: 'Katarzyna Lewandowska', gender: 'female', duration: '1h', timeOfDay: 'Wieczór' },
-  ])
+  const availableSlots = ref(generateAvailableSlots())
 
   const availableGroups = ref([
-    { id: 1, name: 'Grupa 5 dni', dates: '1 sty 2025 - 6 sty 2025', description: '5 dni zajęć, zajęcia 1x dziennie', schedule: 'od 9:30 do 10:30', price: 1400 },
-    { id: 2, name: 'Grupa 3 dni', dates: '1 sty 2025 - 3 sty 2025', description: '3 dni zajęć, zajęcia 2x dziennie', schedule: 'od 9:30 do 10:30 oraz od 15:30 do 17:30', price: 1400 },
-    { id: 3, name: 'Grupa Happy Hours', dates: '1 sty 2025 - 6 sty 2025', description: '5 dni zajęć, zajęcia 1x dziennie', schedule: 'od 9:30 do 10:30', isHappyHours: true },
-    { id: 4, name: 'Grupa Weekendowa', dates: '4 sty 2025 - 5 sty 2025', description: '2 dni zajęć, zajęcia 2x dziennie', schedule: 'od 9:00 do 11:00 oraz od 14:00 do 16:00', price: 600 },
-    { id: 5, name: 'Grupa Trzydniowa', dates: '1 sty 2025 - 3 sty 2025', description: '3 dni zajęć, zajęcia 1x dziennie', schedule: 'od 10:00 do 12:00', price: 500 },
-    { id: 6, name: 'Grupa Czterodniowa', dates: '1 sty 2025 - 4 sty 2025', description: '4 dni zajęć, zajęcia 1x dziennie', schedule: 'od 12:00 do 14:00', price: 800 },
+    {
+      id: 1,
+      name: 'Grupa 5 dni',
+      dates: `${formatDisplayDate(getFutureDate(0))} - ${formatDisplayDate(getFutureDate(4))}`,
+      classDates: generateClassDates(5),
+      description: '5 dni zajęć, zajęcia 1x dziennie',
+      schedule: 'od 9:30 do 10:30',
+      price: 1400,
+    },
+    {
+      id: 2,
+      name: 'Grupa 3 dni',
+      dates: `${formatDisplayDate(getFutureDate(0))} - ${formatDisplayDate(getFutureDate(2))}`,
+      classDates: generateClassDates(3),
+      description: '3 dni zajęć, zajęcia 2x dziennie',
+      schedule: 'od 9:30 do 10:30 oraz od 15:30 do 17:30',
+      price: 1400,
+    },
+    {
+      id: 3,
+      name: 'Grupa Happy Hours',
+      dates: `${formatDisplayDate(getFutureDate(0))} - ${formatDisplayDate(getFutureDate(4))}`,
+      classDates: generateClassDates(5),
+      description: '5 dni zajęć, zajęcia 1x dziennie',
+      schedule: 'od 9:30 do 10:30',
+      isHappyHours: true,
+    },
+    {
+      id: 4,
+      name: 'Grupa Weekendowa',
+      dates: `${formatDisplayDate(getFutureDate(0))} - ${formatDisplayDate(getFutureDate(1))}`,
+      classDates: [formatDate(getFutureDate(0)), formatDate(getFutureDate(1))],
+      description: '2 dni zajęć, zajęcia 2x dziennie',
+      schedule: 'od 9:00 do 11:00 oraz od 14:00 do 16:00',
+      price: 600,
+    },
+    {
+      id: 5,
+      name: 'Grupa Trzydniowa',
+      dates: `${formatDisplayDate(getFutureDate(0))} - ${formatDisplayDate(getFutureDate(2))}`,
+      classDates: generateClassDates(3),
+      description: '3 dni zajęć, zajęcia 1x dziennie',
+      schedule: 'od 10:00 do 12:00',
+      price: 500,
+    },
+    {
+      id: 6,
+      name: 'Grupa Czterodniowa',
+      dates: `${formatDisplayDate(getFutureDate(0))} - ${formatDisplayDate(getFutureDate(3))}`,
+      classDates: generateClassDates(4),
+      description: '4 dni zajęć, zajęcia 1x dziennie',
+      schedule: 'od 12:00 do 14:00',
+      price: 800,
+    },
   ])
 
   // State
   const searchPreviouslySelected = ref(false)
+  const selectedDate = ref(formatDate(new Date()))
 
   // Individual Preferences
   const individualPreferences = ref({
@@ -66,6 +157,12 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
 
   const getFilteredSlots = type => {
     let slots = availableSlots.value
+
+    // Filter by Date
+    if (selectedDate.value) {
+      slots = slots.filter(s => s.date === selectedDate.value)
+    }
+
     const prefs = type === 'individual' ? individualPreferences.value : sharedPreferences.value
 
     // Filter by Time of Day
@@ -128,10 +225,19 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
   const displayedSharedSlots = computed(() => sharedFilteredSlots.value.slice(0, visibleSlotsLimit.value))
 
   const getBookedClass = (participantId, dateStr) => {
+    // Deprecated: returns first booking
     return bookedClasses.value.find(c => c.participantId === participantId && c.dateStr === dateStr)
   }
 
+  const getBookedClasses = (participantId, dateStr) => {
+    return bookedClasses.value.filter(c => c.participantId === participantId && c.dateStr === dateStr)
+  }
+
   // Actions
+  function setSelectedDate(date) {
+    selectedDate.value = date
+  }
+
   function loadMoreSlots(type) {
     visibleSlotsLimit.value = type === 'individual'
       ? individualFilteredSlots.value.length
@@ -149,18 +255,28 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
   }
 
   function addBookedClass(booking) {
-    // Remove existing booking for this participant and date if exists
-    const index = bookedClasses.value.findIndex(c => c.participantId === booking.participantId && c.dateStr === booking.dateStr)
-    if (index !== -1) {
-      bookedClasses.value.splice(index, 1)
+    // Add unique ID
+    const newBooking = {
+      ...booking,
+      id: Date.now() + Math.random().toString(36).slice(2, 11),
     }
-    bookedClasses.value.push(booking)
+    bookedClasses.value.push(newBooking)
   }
 
-  function removeBookedClass(participantId, dateStr) {
-    const index = bookedClasses.value.findIndex(c => c.participantId === participantId && c.dateStr === dateStr)
-    if (index !== -1) {
-      bookedClasses.value.splice(index, 1)
+  function removeBookedClass(bookingId) {
+    const bookingToRemove = bookedClasses.value.find(c => c.id === bookingId)
+    if (!bookingToRemove) {
+      return
+    }
+
+    if (bookingToRemove.groupBookingId) {
+      // Remove all with same groupBookingId
+      bookedClasses.value = bookedClasses.value.filter(c => c.groupBookingId !== bookingToRemove.groupBookingId)
+    } else {
+      const index = bookedClasses.value.findIndex(c => c.id === bookingId)
+      if (index !== -1) {
+        bookedClasses.value.splice(index, 1)
+      }
     }
   }
 
@@ -169,6 +285,7 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
     availableSlots,
     availableGroups,
     searchPreviouslySelected,
+    selectedDate,
     individualPreferences,
     sharedPreferences,
     individualSlot,
@@ -185,8 +302,10 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
     displayedIndividualSlots,
     displayedSharedSlots,
     getBookedClass,
+    getBookedClasses,
 
     // Actions
+    setSelectedDate,
     loadMoreSlots,
     resetState,
     addBookedClass,

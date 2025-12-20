@@ -71,7 +71,8 @@
       d.setDate(d.getDate() + i)
       const dayName = d.toLocaleDateString(locale.value === 'pl' ? 'pl-PL' : 'en-US', { weekday: 'long' })
       const dateStr = d.toLocaleDateString(locale.value === 'pl' ? 'pl-PL' : 'en-US', { day: '2-digit', month: 'long', year: 'numeric' })
-      result.push({ dayName, dateStr })
+      const dateIso = d.toISOString().split('T')[0]
+      result.push({ dayName, dateStr, dateIso })
     }
     return result
   })
@@ -85,11 +86,13 @@
 
   const showAddClassesModal = ref(false)
   const selectedDateForAdd = ref('')
+  const selectedDateForAddIso = ref('')
   const currentDayForBooking = ref(null)
 
   function openAddClassesModal (day) {
     currentDayForBooking.value = day
     selectedDateForAdd.value = `${day.dayName.charAt(0).toUpperCase() + day.dayName.slice(1)} ${day.dateStr}`
+    selectedDateForAddIso.value = day.dateIso
     showAddClassesModal.value = true
   }
 
@@ -108,8 +111,63 @@
           }
           pickedClassesStore.addBookedClass(booking)
         }
+      } else if (type === 'group' && props.participant && data.group && data.group.description) {
+        // Handle group classes - add for multiple days
+        const groupBookingId = `group-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+
+        if (data.group.classDates && Array.isArray(data.group.classDates)) {
+          const totalDays = data.group.classDates.length
+
+          for (const [index, dateStr] of data.group.classDates.entries()) {
+            // dateStr should be 'YYYY-MM-DD'
+            // We need to format it to display format if needed, but the store uses dateStr as key usually?
+            // Actually getBookedClass uses dateStr matching 'day.dateStr' which is 'DD month YYYY' in Polish/English
+            // So we need to convert 'YYYY-MM-DD' to the display format used in 'days' array.
+
+            const d = new Date(dateStr)
+            const displayDateStr = d.toLocaleDateString(locale.value === 'pl' ? 'pl-PL' : 'en-US', { day: '2-digit', month: 'long', year: 'numeric' })
+
+            const booking = {
+              participantId: props.participant.dynamicId,
+              dateStr: displayDateStr,
+              type,
+              groupBookingId,
+              data: {
+                ...data,
+                groupDayIndex: index + 1,
+                groupTotalDays: totalDays,
+              },
+            }
+            pickedClassesStore.addBookedClass(booking)
+          }
+        } else {
+          // Fallback to old regex method if classDates not present (should not happen with new data)
+          const match = data.group.description.match(/(\d+)\s+dni/)
+          const duration = match ? Number.parseInt(match[1], 10) : 1
+          const startIndex = days.value.findIndex(d => d.dateStr === currentDayForBooking.value.dateStr)
+
+          if (startIndex !== -1) {
+            for (let i = 0; i < duration; i++) {
+              if (startIndex + i < days.value.length) {
+                const day = days.value[startIndex + i]
+                const booking = {
+                  participantId: props.participant.dynamicId,
+                  dateStr: day.dateStr,
+                  type,
+                  groupBookingId,
+                  data: {
+                    ...data,
+                    groupDayIndex: i + 1,
+                    groupTotalDays: duration,
+                  },
+                }
+                pickedClassesStore.addBookedClass(booking)
+              }
+            }
+          }
+        }
       } else if (props.participant) {
-        // Handle individual/group classes - add for current participant only
+        // Handle individual classes - add for current participant only
         const booking = {
           participantId: props.participant.dynamicId,
           dateStr: currentDayForBooking.value.dateStr,
@@ -123,29 +181,23 @@
     showAddClassesModal.value = false
   }
 
-  function getBookedClassDisplay (day) {
-    const booking = pickedClassesStore.getBookedClass(props.participant?.dynamicId, day.dateStr)
-    if (!booking) return null
+  function getBookedClasses (day) {
+    return pickedClassesStore.getBookedClasses(props.participant?.dynamicId, day.dateStr)
+  }
 
-    switch (booking.type) {
-      case 'individual': {
-        return 'Zajęcia indywidualne'
-      }
-      case 'group': {
-        const progress = getGroupProgress(booking)
-        return `Zajęcia grupowe ${progress}`.trim()
-      }
-      case 'shared': {
-        return 'Zajęcia wspólne'
-      }
-      default: {
-        return 'Zajęcia'
-      }
-    }
+  function hasBookedClasses (day) {
+    const classes = getBookedClasses(day)
+    return classes && classes.length > 0
   }
 
   function getGroupProgress (booking) {
-    if (booking.type !== 'group' || !booking.data.group || !booking.data.group.description) return ''
+    if (booking.type !== 'group') return ''
+
+    if (booking.data.groupDayIndex && booking.data.groupTotalDays) {
+      return `(${booking.data.groupDayIndex}/${booking.data.groupTotalDays})`
+    }
+
+    if (!booking.data.group || !booking.data.group.description) return ''
     const match = booking.data.group.description.match(/(\d+)\s+dni/)
     if (match) {
       // For now default to 1/X as we don't track day index in mock
@@ -155,8 +207,7 @@
   }
 
   // Helper to get slot time if available
-  function getBookingTime (day) {
-    const booking = pickedClassesStore.getBookedClass(props.participant?.dynamicId, day.dateStr)
+  function getBookingTime (booking) {
     if (!booking) return ''
 
     // If slot object is available in data
@@ -179,8 +230,7 @@
     return ''
   }
 
-  function getBookingPrice (day) {
-    const booking = pickedClassesStore.getBookedClass(props.participant?.dynamicId, day.dateStr)
+  function getBookingPrice (booking) {
     if (!booking) return ''
     if (booking.type === 'individual' || booking.type === 'shared') {
       if (booking.data.slot && booking.data.slot.price) {
@@ -192,8 +242,7 @@
     return ''
   }
 
-  function getBookingSubtitle (day) {
-    const booking = pickedClassesStore.getBookedClass(props.participant?.dynamicId, day.dateStr)
+  function getBookingSubtitle (booking) {
     if (!booking) return ''
     if (booking.type === 'individual' || booking.type === 'shared') {
       if (booking.data.slot && booking.data.slot.instructor) {
@@ -205,20 +254,38 @@
     return ''
   }
 
-  function getBookingColorClass (day) {
-    const booking = pickedClassesStore.getBookedClass(props.participant?.dynamicId, day.dateStr)
+  function getBookingColorClass (booking) {
     if (!booking) return ''
     if (booking.type === 'group') return 'booking-card--group'
     return 'booking-card--individual'
   }
 
-  function getBookingIcon (day) {
-    const booking = pickedClassesStore.getBookedClass(props.participant?.dynamicId, day.dateStr)
+  function getBookingIcon (booking) {
     if (!booking) return null
     if (booking.type === 'individual') return UserIcon
     if (booking.type === 'shared') return UsersIcon
     if (booking.type === 'group') return UsersGroupIcon
     return UserIcon
+  }
+
+  function getBookingTitle (booking) {
+    if (!booking) return ''
+
+    switch (booking.type) {
+      case 'individual': {
+        return 'Zajęcia indywidualne'
+      }
+      case 'group': {
+        const progress = getGroupProgress(booking)
+        return `Zajęcia grupowe ${progress}`.trim()
+      }
+      case 'shared': {
+        return 'Zajęcia wspólne'
+      }
+      default: {
+        return 'Zajęcia'
+      }
+    }
   }
 </script>
 
@@ -279,14 +346,14 @@
             <VSlideGroupItem v-for="(day, idx) in days" :key="idx" :value="idx">
               <VCard
                 class="ma-2 day-card"
-                :class="{ 'day-card--booked': getBookedClassDisplay(day) }"
+                :class="{ 'day-card--booked': hasBookedClasses(day) }"
                 elevation="0"
               >
                 <VCardText class="class-card">
                   <div class="d-flex justify-start align-start border-bottom flex-column">
                     <span class="fs-12 text-primary-08 d-flex justify-end w-100">{{ idx + 1 }}/{{ days.length }}</span>
 
-                    <div v-if="getBookedClassDisplay(day)" class="d-flex align-center ga-3 w-100">
+                    <div v-if="hasBookedClasses(day)" class="d-flex align-center ga-3 w-100">
                       <img
                         alt="Selected"
                         height="20"
@@ -312,11 +379,13 @@
                     </div>
                   </div>
 
-                  <div v-if="getBookedClassDisplay(day)" class="h-100 w-100">
-                    <p class="text-center text-gray-600 fs-14 mb-2 mt-3">Wybrane zajęcia:</p>
+                  <div v-if="hasBookedClasses(day)" class="h-100 w-100 overflow-y-auto" style="max-height: 180px;">
+                    <p class="text-center text-gray-600 fs-14 mb-2 mt-1">Wybrane zajęcia:</p>
                     <div
+                      v-for="booking in getBookedClasses(day)"
+                      :key="booking.id"
                       class="booking-card w-100 d-flex flex-column pa-3 rounded-lg position-relative mb-2"
-                      :class="getBookingColorClass(day)"
+                      :class="getBookingColorClass(booking)"
                     >
                       <VBtn
                         class="booking-remove-btn"
@@ -324,28 +393,28 @@
                         icon="mdi-close"
                         size="small"
                         variant="text"
-                        @click="pickedClassesStore.removeBookedClass(props.participant?.dynamicId, day.dateStr)"
+                        @click="pickedClassesStore.removeBookedClass(booking.id)"
                       />
 
                       <div class="d-flex justify-space-between align-center mb-1 pr-6">
-                        <span class="booking-card-title text-truncate" :class="{ 'fs-12 font-weight-medium': getBookingColorClass(day) !== 'booking-card--group' }">{{ getBookedClassDisplay(day) }}</span>
+                        <span class="booking-card-title text-truncate" :class="{ 'fs-12 font-weight-medium': getBookingColorClass(booking) !== 'booking-card--group' }">{{ getBookingTitle(booking) }}</span>
                       </div>
 
-                      <template v-if="getBookingColorClass(day) === 'booking-card--group'">
+                      <template v-if="getBookingColorClass(booking) === 'booking-card--group'">
                         <div class="d-flex align-center justify-space-between w-100">
                           <div>
                             <div class="d-flex align-center ga-2 mb-1">
                               <VIcon icon="mdi-clock-outline" size="16" />
-                              <span class="booking-time">{{ getBookingTime(day) }}</span>
+                              <span class="booking-time">{{ getBookingTime(booking) }}</span>
                             </div>
 
-                            <div v-if="getBookingSubtitle(day)" class="d-flex align-center ga-2 mt-1">
+                            <div v-if="getBookingSubtitle(booking)" class="d-flex align-center ga-2">
                               <img
                                 alt=""
-                                :src="getBookingIcon(day)"
+                                :src="getBookingIcon(booking)"
                                 width="16"
                               >
-                              <span class="booking-subtitle text-truncate">{{ getBookingSubtitle(day) }}</span>
+                              <span class="booking-subtitle text-truncate">{{ getBookingSubtitle(booking) }}</span>
                             </div>
                           </div>
                         </div>
@@ -355,32 +424,32 @@
                         <div class="d-flex align-center justify-space-between mb-1">
                           <div class="d-flex align-center ga-2 text-truncate" style="min-width: 0;">
                             <VIcon icon="mdi-clock-outline" size="16" />
-                            <span class="fs-14 font-weight-medium text-truncate">{{ getBookingTime(day) }}</span>
+                            <span class="fs-14 font-weight-medium text-truncate">{{ getBookingTime(booking) }}</span>
                           </div>
-                          <span v-if="getBookingPrice(day)" class="fs-14 font-weight-bold ml-2 flex-shrink-0">{{ getBookingPrice(day) }}</span>
+                          <span v-if="getBookingPrice(booking)" class="fs-14 font-weight-bold ml-2 flex-shrink-0">{{ getBookingPrice(booking) }}</span>
                         </div>
 
-                        <div v-if="getBookingSubtitle(day)" class="d-flex align-center ga-2 mt-1">
+                        <div v-if="getBookingSubtitle(booking)" class="d-flex align-center ga-2">
                           <img
                             alt=""
-                            :src="getBookingIcon(day)"
+                            :src="getBookingIcon(booking)"
                             width="14"
                           >
-                          <span class="fs-11 text-truncate">{{ getBookingSubtitle(day) }}</span>
+                          <span class="fs-11 text-truncate">{{ getBookingSubtitle(booking) }}</span>
                         </div>
                       </template>
                     </div>
                   </div>
                   <div v-else class="text-center text-gray-600 h-100 d-flex align-center justify-center">{{ t('no_classes_selected') || 'Nie wybrano zajęć' }}</div>
-                  <div v-if="!getBookedClassDisplay(day)" class="d-flex justify-center">
+                  <div class="d-flex justify-center mt-2">
                     <VBtn
                       class="px-6"
-                      color="blue"
+                      color="blue normal-text"
                       prepend-icon="mdi-plus-circle"
                       variant="flat"
                       @click="openAddClassesModal(day)"
                     >
-                      {{ t('add_classes') || 'Dodaj zajęcia' }}
+                      {{ hasBookedClasses(day) ? (t('add_more_classes') || 'Dodaj kolejne') : (t('add_classes') || 'Dodaj zajęcia') }}
                     </VBtn>
                   </div>
                 </VCardText>
@@ -427,6 +496,7 @@
 
   <AddClassesModal
     v-model="showAddClassesModal"
+    :date-iso="selectedDateForAddIso"
     :date-str="selectedDateForAdd"
     @next="handleAddClassesNext"
   />
@@ -487,6 +557,12 @@
   background: #E1EFFE !important;
   border: 2px solid #C3DDFD!important;
   box-shadow: none!important;
+  .bg-blue {
+    background: transparent!important;
+     border: 1px solid #1a56db!important;
+     color: #1a56db!important;
+
+  }
 }
 
 :deep(.v-overlay__scrim) {
@@ -549,7 +625,7 @@
 }
 
 .booking-card {
-  padding-right: 30px!important;
+  padding: 8px 30px 8px 8px!important;
 }
 
 .booking-card {
@@ -613,4 +689,7 @@
   right: 4px;
 }
 
+.normal-text {
+  text-transform: none!important;
+}
 </style>

@@ -11,6 +11,7 @@
   const props = defineProps({
     modelValue: { type: Boolean, default: false },
     dateStr: { type: String, default: '' },
+    dateIso: { type: String, default: '' },
   })
 
   const emit = defineEmits(['update:modelValue', 'next'])
@@ -63,6 +64,13 @@
       resetState()
     }
   })
+
+  // Update store selected date when prop changes
+  watch(() => props.dateIso, val => {
+    if (val) {
+      pickedClassesStore.setSelectedDate(val)
+    }
+  }, { immediate: true })
 
   function resetState () {
     currentStep.value = 1
