@@ -77,6 +77,11 @@
     return result
   })
 
+  const hasAnyBookedClasses = computed(() => {
+    if (!props.participant?.dynamicId) return false
+    return pickedClassesStore.bookedClasses.some(c => c.participantId === props.participant.dynamicId)
+  })
+
   function prevDay () {
     carouselIndex.value = Math.max(0, carouselIndex.value - 1)
   }
@@ -482,6 +487,7 @@
               'back-btn'
             ]"
             color="blue normal-text"
+            :disabled="!hasAnyBookedClasses"
             size="x-large"
             variant="flat"
             @click="emit('save')"

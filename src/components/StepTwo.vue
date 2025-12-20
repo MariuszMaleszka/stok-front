@@ -4,6 +4,7 @@
   import ClassesModal from '@/components/modals/ClassesModal.vue'
   import ParticipantCard from '@/components/ParticipantCard.vue'
   import { useToast } from '@/composables/useToast'
+  import { usePickedClassesStore } from '@/stores/PickedClassesStore.js'
   import { useStayStore } from '@/stores/StayStore.js'
   import { useTimerStore } from '@/stores/TimerStore.js'
 
@@ -11,6 +12,7 @@
 
   const { showSimpleToast } = useToast()
   const stayStore = useStayStore()
+  const pickedClassesStore = usePickedClassesStore()
 
   const { t } = useI18n()
 
@@ -23,6 +25,27 @@
   function closeClassesModal () {
     classesModalOpen.value = false
     selectedParticipant.value = null
+  }
+
+  function getParticipantClassesTotalPrice (participantId) {
+    const participantClasses = pickedClassesStore.bookedClasses.filter(c => c.participantId === participantId)
+    if (!participantClasses || participantClasses.length === 0) return 0
+
+    return participantClasses.reduce((sum, booking) => {
+      let price = 0
+      if (booking.type === 'individual' || booking.type === 'shared') {
+        if (booking.data.slot && booking.data.slot.price) {
+          price = booking.data.slot.price
+        }
+      } else if (booking.type === 'group' && booking.data.group && booking.data.group.price) {
+        price = booking.data.group.price
+      }
+      return sum + price
+    }, 0)
+  }
+
+  function hasParticipantBookedClasses (participantId) {
+    return pickedClassesStore.bookedClasses.some(c => c.participantId === participantId)
   }
 
   watch(() => timerStore.timeRemaining, remaining => {
@@ -63,13 +86,13 @@
           :key="p.dynamicId || i"
           :activity-type="p.activityType === t('snowboard') ? 'snowboard' : 'ski'"
           :age="p.age"
-          :completed="false"
+          :completed="hasParticipantBookedClasses(p.dynamicId)"
           :currency="stayStore.currency"
           :index="i"
           :name="p.name || '-'"
           :participant-type="p.participantType"
           :subtitle="`${t(p.participantType || 'adult')} - ${p.activityType || t('ski')} - Poz. ${p.skillLevel || '-'}`"
-          :total-price="stayStore.participantClassesTotalPrice(p.dynamicId)"
+          :total-price="getParticipantClassesTotalPrice(p.dynamicId)"
           @click="openClassesModal(p)"
           @edit="openClassesModal(p)"
         />
