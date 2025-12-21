@@ -172,8 +172,8 @@
           <p class="custom-input-label mb-2">{{ $t('childminder_name') }}</p>
           <VTextField
             v-model="participant.anotherChildminderName"
-            clear-icon="mdi-close"
             autocomplete="off"
+            clear-icon="mdi-close"
             clearable
             density="default"
             hide-details="auto"
@@ -188,8 +188,8 @@
           <p class="custom-input-label mb-2">{{ $t('surname') }}</p>
           <VTextField
             v-model="participant.anotherChildminderSurname"
-            clear-icon="mdi-close"
             autocomplete="off"
+            clear-icon="mdi-close"
             clearable
             density="default"
             hide-details="auto"

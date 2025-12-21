@@ -11,12 +11,10 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
-    ActionToast: typeof import('./src/components/toasts/ActionToast.vue')['default']
     AppFooter: typeof import('./src/components/AppFooter.vue')['default']
     AppHeader: typeof import('./src/components/AppHeader.vue')['default']
     DatePicker: typeof import('./src/components/DatePicker.vue')['default']
     DatePickerResponsive: typeof import('./src/components/DatePickerResponsive.vue')['default']
-    DateRangePicker: typeof import('./src/components/DateRangePicker.vue')['default']
     DateRangePickerModal: typeof import('./src/components/modals/DateRangePickerModal.vue')['default']
     HelloWorld: typeof import('./src/components/HelloWorld.vue')['default']
     PackageInfoBox: typeof import('./src/components/PackageInfoBox.vue')['default']

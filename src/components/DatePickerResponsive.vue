@@ -211,9 +211,9 @@
 
     <VTextField
       v-else
+      clear-icon="mdi-close"
       clearable
       control-variant="hidden"
-      clear-icon="mdi-close"
       density="default"
       hide-details="auto"
       :model-value="formatDateRange(modelValue)"
@@ -252,15 +252,15 @@
           <VueDatePicker
             :key="modelValue ? modelValue.toString() : 'empty'"
             ref="datePickerRef"
+            :action-row="{ showSelect: false, showCancel: false, showNow: false }"
             clearable
             :day-names="dayNames"
-            :action-row="{ showSelect: false, showCancel: false, showNow: false }"
             :format="formatDateRange"
-            inline
-            :locale="normalizedLocale"
             :formats="{
               month: 'LLLL',
             }"
+            inline
+            :locale="normalizedLocale"
             :model-value="modelValue"
             multi-calendars
             :range="{ maxRange: 14 }"
