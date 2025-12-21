@@ -1,4 +1,5 @@
 <script setup>
+  import { ref } from 'vue'
   import { useI18n } from 'vue-i18n'
   import { useDisplay } from 'vuetify'
   import InsuranceIMG from '@/assets/insurance_img.png'
@@ -19,6 +20,8 @@
       required: true,
     },
   })
+
+  const emit = defineEmits(['delete-class'])
 
   const { t } = useI18n()
   const { mobile } = useDisplay()
@@ -48,12 +51,7 @@
   // Confirm deletion
   function confirmDeleteClass () {
     if (classToDelete.value) {
-      const index = props.participant.selectedClasses.findIndex(
-        c => c.dynamicId === classToDelete.value.dynamicId,
-      )
-      if (index !== -1) {
-        props.participant.selectedClasses.splice(index, 1)
-      }
+      emit('delete-class', classToDelete.value.dynamicId)
       classToDelete.value = null
     }
     confirmClassDeletationDialog.value = false

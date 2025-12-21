@@ -1,10 +1,7 @@
 import { defineStore } from 'pinia'
-import { computed, ref } from 'vue'
-import { useI18n } from 'vue-i18n'
+import { ref } from 'vue'
 
 export const useViewControlStore = defineStore('viewStore', () => {
-  const { t } = useI18n()
-
   // const STEP_ONE_ID = 'STEP_ONE'
   // const STEP_ONE_DATA_ID = 'STEP_ONE_DATA'
   // const STEP_ONE_PREFERENCES_ID = 'STEP_ONE_PREFERENCES'

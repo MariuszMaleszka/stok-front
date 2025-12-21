@@ -21,7 +21,6 @@
 
 <script setup>
   import { useDebounceFn } from '@vueuse/core'
-  import { useCookies } from '@vueuse/integrations/useCookies'
   // ============================================================================
   // IMPORTS - Vue & Utilities
   // ============================================================================
@@ -37,7 +36,6 @@
   // ============================================================================
   // IMPORTS - Components
   // ============================================================================
-  import DatePickerResponsive from '@/components/DatePickerResponsive.vue'
   import PopupSmall from '@/components/modals/PopupSmall.vue'
   import ParticipantData from '@/components/ParticipantData.vue'
   import SelectedParticipantClasses from '@/components/SelectedParticipantClasses.vue'
@@ -55,11 +53,10 @@
   // ============================================================================
   // COMPOSABLES & STORE INITIALIZATION
   // ============================================================================
-  const { showSimpleToast, showActionToast } = useToast()
+  const { showSimpleToast } = useToast()
   const stayStore = useStayStore()
   const configStore = useStayConfigStore()
   const viewStore = useViewControlStore()
-  const cookies = useCookies(['locale'])
   const { mobile, lgAndUp } = useDisplay()
   const { t } = useI18n()
 
@@ -223,6 +220,21 @@
   // ============================================================================
   // ACTIONS - Loyalty Card Validation
   // ============================================================================
+
+  /**
+   * Handles deletion of a selected class for a participant
+   * Triggered by event from SelectedParticipantClasses component
+   *
+   * @param {Object} participant - The participant object
+   * @param {string} classId - The dynamicId of the class to remove
+   */
+  function handleClassDeletion (participant, classId) {
+    if (!participant.selectedClasses) return
+    const index = participant.selectedClasses.findIndex(c => c.dynamicId === classId)
+    if (index !== -1) {
+      participant.selectedClasses.splice(index, 1)
+    }
+  }
 
   /**
    * Debounced handler for loyalty card number validation
@@ -510,6 +522,7 @@
                   class="ga-4"
                   :index="index"
                   :participant="participant"
+                  @delete-class="handleClassDeletion(participant, $event)"
                 />
               </div>
             </div>
@@ -712,7 +725,7 @@
               >
                 <ul class="list-style-none pa-0 ma-0">
                   <li
-                    v-for="(participant, idx) in stayStore.participants"
+                    v-for="participant in stayStore.participants"
                     :key="participant.dynamicId"
                     class="pb-2 mb-2"
                   >
@@ -817,6 +830,7 @@
             class="ga-4"
             :index="index"
             :participant="participant"
+            @update:participant="Object.assign(participant, $event)"
           />
 
           <!-- =========================================================== -->
@@ -1145,7 +1159,7 @@
             >
               <ul class="list-style-none pa-0 ma-0">
                 <li
-                  v-for="(participant, idx) in stayStore.participants"
+                  v-for="participant in stayStore.participants"
                   :key="participant.dynamicId"
                   class="pb-2 mb-2"
                 >

@@ -132,7 +132,7 @@ const blankParticipant = {
   availableLessonTypes: [], // Lesson types available for this participant
   showGroupLessons: true, // Whether to show group lesson options
   classLang: 'Polski', // Preferred language for classes
-  selectedClasses: DUMMY_SELECTED_CLASSES, // Classes enrolled in
+  selectedClasses: [], // Classes enrolled in
 }
 
 // ============================================================================
@@ -540,7 +540,7 @@ export const useStayStore = defineStore('stayStore', () => {
           dynamicId: generateUniqueId(),
           participantType: isAdult ? 'adult' : 'child',
           age: isAdult ? null : null, // Age will be set by user input
-          selectedClasses: JSON.parse(JSON.stringify(blankParticipant.selectedClasses)), // Deep clone to avoid shared reference
+          selectedClasses: structuredClone(blankParticipant.selectedClasses), // Deep clone to avoid shared reference
         })
       })
       participants.value.push(...newParticipants)

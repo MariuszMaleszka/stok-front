@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { computed, h, ref, watch } from 'vue'
+import { computed, h, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import TimerToastContent from '@/components/toasts/TimerToast.vue'
@@ -8,7 +8,7 @@ import { useToast } from '@/composables/useToast'
 export const useTimerStore = defineStore('timerStore', () => {
   const { t } = useI18n()
   const router = useRouter()
-  const timeRemaining = ref(0.1 * 60)
+  const timeRemaining = ref(20 * 60)
   const timerInterval = ref(null)
   const resetTimeout = ref(null)
   const isTimerActive = ref(false)
