@@ -1,38 +1,38 @@
 <script setup>
-import { useDisplay } from 'vuetify'
+  import { useDisplay } from 'vuetify'
 
-const { mobile } = useDisplay()
+  const { mobile } = useDisplay()
 
-defineProps({
-  modelValue: {
-    type: Boolean,
-    required: true
-  },
-  title: {
-    type: String,
-    required: true
-  },
-  maxWidth: {
-    type: String,
-    default: '320px'
-  },
-  showActions: {
-    type: Boolean,
-    default: true
+  defineProps({
+    modelValue: {
+      type: Boolean,
+      required: true,
+    },
+    title: {
+      type: String,
+      required: true,
+    },
+    maxWidth: {
+      type: String,
+      default: '320px',
+    },
+    showActions: {
+      type: Boolean,
+      default: true,
+    },
+  })
+
+  const emit = defineEmits(['update:modelValue'])
+
+  function closeDialog () {
+    emit('update:modelValue', false)
   }
-})
-
-const emit = defineEmits(['update:modelValue'])
-
-const closeDialog = () => {
-  emit('update:modelValue', false)
-}
 </script>
 
 <template>
   <VDialog
-    :model-value="modelValue"
     :max-width="maxWidth"
+    :model-value="modelValue"
     @update:model-value="emit('update:modelValue', $event)"
   >
     <VCard class="rounded-xl">
@@ -40,20 +40,20 @@ const closeDialog = () => {
         <div
           class="d-flex py-4 justify-space-between align-center"
         >
-          <slot name="icon"></slot>
+          <slot name="icon" />
           <span class="lh-normal" :class="mobile ? 'fs-14' : 'fs-16'">
             {{ title }}
           </span>
           <VIcon
-            class="close-btn ml-auto mb-auto"
             aria-label="Close"
+            class="close-btn ml-auto mb-auto"
             icon="mdi-close"
             @click="closeDialog"
-         />
+          />
         </div>
       </VCardTitle>
 
-      <VCardText >
+      <VCardText>
         <slot name="content">
           <p :class="mobile ? 'fs-12' : 'fs-14'">
             Default content
@@ -67,8 +67,8 @@ const closeDialog = () => {
       >
         <slot name="actions">
           <VBtn
-            variant="flat"
             class="px-4 text-capitalize"
+            variant="flat"
             @click="closeDialog"
           >
             Ok
@@ -78,4 +78,3 @@ const closeDialog = () => {
     </VCard>
   </VDialog>
 </template>
-

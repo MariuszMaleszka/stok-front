@@ -1,58 +1,56 @@
 <script setup>
-import {computed, ref, watch} from "vue"
-import {useCookies} from "@vueuse/integrations/useCookies"
-import {useDisplay} from 'vuetify'
-import {useI18n} from "vue-i18n"
-import UserPlusIcon from '@/assets/user-plus.svg'
-import DatePickerResponsive from "@/components/DatePickerResponsive.vue"
-import ParticipantAccordion from "@/components/ParticipantAccordion.vue"
-import {useStayStore} from '@/stores/StayStore.js'
-import {useStayConfigStore} from "@/stores/StayConfigStore.js";
-import {useViewControlStore} from "@/stores/ViewControlStore.js"
-import {useToast} from '@/composables/useToast'
+  import { useCookies } from '@vueuse/integrations/useCookies'
+  import { computed, ref, watch } from 'vue'
+  import { useI18n } from 'vue-i18n'
+  import { useDisplay } from 'vuetify'
+  import UserPlusIcon from '@/assets/user-plus.svg'
+  import DatePickerResponsive from '@/components/DatePickerResponsive.vue'
+  import ParticipantAccordion from '@/components/ParticipantAccordion.vue'
+  import { useToast } from '@/composables/useToast'
+  import { useStayConfigStore } from '@/stores/StayConfigStore.js'
+  import { useStayStore } from '@/stores/StayStore.js'
+  import { useViewControlStore } from '@/stores/ViewControlStore.js'
 
-const {t} = useI18n()
-const {showSimpleToast} = useToast()
-const stayStore = useStayStore()
-const configStore = useStayConfigStore()
-const viewStore = useViewControlStore()
-const cookies = useCookies(['locale'])
-const {mobile} = useDisplay()
-const currentLocale = computed(() => cookies.get('locale') || 'pl')
+  const { t } = useI18n()
+  const { showSimpleToast } = useToast()
+  const stayStore = useStayStore()
+  const configStore = useStayConfigStore()
+  const viewStore = useViewControlStore()
+  const cookies = useCookies(['locale'])
+  const { mobile } = useDisplay()
+  const currentLocale = computed(() => cookies.get('locale') || 'pl')
 
-const stepOneNestedRef = ref(null)
-const activeChildStep = ref(1)
+  const stepOneNestedRef = ref(null)
+  const activeChildStep = ref(1)
 
-const dataForm = ref(null)
-const participantForms = ref([])
+  const dataForm = ref(null)
+  const participantForms = ref([])
 
-const validateCurrentStep = async () => {
-  const results = await Promise.all(
-    participantForms.value.map(form => form?.validate())
-  )
+  async function validateCurrentStep () {
+    const results = await Promise.all(
+      participantForms.value.map(form => form?.validate()),
+    )
 
-  const allValid = results.every(result => result?.valid === true)
+    const allValid = results.every(result => result?.valid === true)
 
-  if (!allValid) {
-    showSimpleToast(t('please_fill_required_fields'), 'error')
+    if (!allValid) {
+      showSimpleToast(t('please_fill_required_fields'), 'error')
+    }
+
+    return allValid
   }
 
-  return allValid
-}
-
-
-watch(() => stayStore.participants.length, () => {
-  participantForms.value = []
-})
-watch(activeChildStep, async (newStep) => {
-  await nextTick()
-  viewStore.currentStep.child = newStep
-})
-defineExpose({
-  stepOneNestedRef,
-  validateCurrentStep
-})
-
+  watch(() => stayStore.participants.length, () => {
+    participantForms.value = []
+  })
+  watch(activeChildStep, async newStep => {
+    await nextTick()
+    viewStore.currentStep.child = newStep
+  })
+  defineExpose({
+    stepOneNestedRef,
+    validateCurrentStep,
+  })
 
 </script>
 
@@ -65,36 +63,36 @@ defineExpose({
   >
     <VStepperHeader class="mt-2">
       <VStepperItem
-        :value="1"
-        :title="$t('stay_datails')"
         class="px-1 py-0"
         :complete="viewStore.isStepOneDataCompleted"
+        :title="$t('stay_datails')"
+        :value="1"
       >
         <template #icon>
-            1.
+          1.
         </template>
       </VStepperItem>
       <VStepperItem
-        :value="2"
         class="px-1 py-0"
         :title="$t('participants_preferences')"
-     >
+        :value="2"
+      >
         <template #icon>
-            2.
+          2.
         </template>
       </VStepperItem>
     </VStepperHeader>
 
     <VStepperWindow class="flex-1">
       <VStepperWindowItem :value="1">
-        <div  class="container-narrow">
+        <div class="container-narrow">
           <p class="fs-24 font-weight-bold my-4">
             {{ $t('booking_classes') }}:
           </p>
           <div class="my-4">
             <p
-              :class="mobile ? 'fs-18' : 'fs-20'"
               class="font-weight-medium"
+              :class="mobile ? 'fs-18' : 'fs-20'"
             >
               {{ $t('provide_details_of_your_stay') }}:
             </p>
@@ -108,8 +106,8 @@ defineExpose({
               <p class="custom-input-label mb-2">{{ $t('length_of_stay') }}</p>
               <DatePickerResponsive
                 v-model="stayStore.dateOfStay"
-                :locale="currentLocale"
                 class="mb-2"
+                :locale="currentLocale"
                 :rules="[v => !!v || 'Required']"
               />
             </div>
@@ -118,13 +116,13 @@ defineExpose({
               <VNumberInput
                 v-model="stayStore.adultsNumber"
                 class="mb-2"
-                variant="outlined"
-                controlVariant="split"
+                control-variant="split"
                 hide-details="auto"
-                :step="1"
-                :min="stayStore.childrenNumber === 0 ? 1 : 0"
                 :max="stayStore.maxAdults"
                 max-width="165px"
+                :min="stayStore.childrenNumber === 0 ? 1 : 0"
+                :step="1"
+                variant="outlined"
               />
               <p class="fs-12 fc-gray">
                 {{ $t('enter_number_of_participants_adult') }}
@@ -135,13 +133,13 @@ defineExpose({
               <VNumberInput
                 v-model="stayStore.childrenNumber"
                 class="mb-2"
-                variant="outlined"
-                controlVariant="split"
+                control-variant="split"
                 hide-details="auto"
-                :step="1"
-                :min="stayStore.adultsNumber === 0 ? 1 : 0"
                 :max="stayStore.maxChildren"
                 max-width="165px"
+                :min="stayStore.adultsNumber === 0 ? 1 : 0"
+                :step="1"
+                variant="outlined"
               />
               <p class="fs-12 fc-gray">
                 {{ $t('enter_number_of_participants_children') }}
@@ -149,14 +147,14 @@ defineExpose({
             </div>
             <VSheet class="rounded-lg pa-4">
               <div
-                :class="mobile ? 'align-start' : 'align-center'"
                 class="d-flex ga-2 "
+                :class="mobile ? 'align-start' : 'align-center'"
               >
-                <img class="mt-1" :src="UserPlusIcon" alt="user">
-              <p class="fs-12 fc-gray">
-                {{ $t('book_more_info') }}
-                <a class="fc-gray" target="_blank" :href="configStore.CUSTOMER_SERVICE_LINK">{{ $t('with_customers_service') }}</a>
-              </p>
+                <img alt="user" class="mt-1" :src="UserPlusIcon">
+                <p class="fs-12 fc-gray">
+                  {{ $t('book_more_info') }}
+                  <a class="fc-gray" :href="configStore.CUSTOMER_SERVICE_LINK" target="_blank">{{ $t('with_customers_service') }}</a>
+                </p>
               </div>
             </VSheet>
           </VForm>
@@ -179,9 +177,9 @@ defineExpose({
 
           <div class="d-flex flex-column ga-4 my-4">
             <ParticipantAccordion
-              ref="participantForms"
               v-for="(participant, index) in stayStore.participants"
               :key="participant.dynamicId"
+              ref="participantForms"
               :ref="el => participantForms[index] = el"
               class="ga-4"
               :index="index"

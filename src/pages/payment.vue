@@ -1,66 +1,66 @@
 <script setup>
-import {useDisplay} from 'vuetify'
-import {useStayStore} from "@/stores/StayStore.js";
-import CheckGreenIcon from '@/assets/check-circle.svg'
-import ExclamationIcon from '@/assets/exclamation.svg'
+  import { useDisplay } from 'vuetify'
+  import CheckGreenIcon from '@/assets/check-circle.svg'
+  import ExclamationIcon from '@/assets/exclamation.svg'
+  import { useStayStore } from '@/stores/StayStore.js'
 
-const stayStore = useStayStore()
-const {mobile} = useDisplay()
+  const stayStore = useStayStore()
+  const { mobile } = useDisplay()
 </script>
 
 <template>
   <VContainer
-    max-width="990"
-    :class="mobile ? 'px-2': ''"
     class="d-flex flex-column flex-1 mt-4 mb-12"
+    :class="mobile ? 'px-2': ''"
+    max-width="990"
   >
     <VCard
       v-if="stayStore.isPaymentCompleted"
-      flat
       class="my-8 bg-transparent"
+      flat
     >
       <VCardText>
         <div class="d-flex flex-column justify-center items-center ga-4 text-center">
           <img
-            width="32px"
-            :src="CheckGreenIcon"
             alt="check"
             class="mx-auto"
+            :src="CheckGreenIcon"
+            width="32px"
           >
           <div>
-          <h2>
-            {{ $t('booking_confirmed') }}
-          </h2>
-          <p>
-            {{ $t('booking_confirmed_info') }}
-          </p>
+            <h2>
+              {{ $t('booking_confirmed') }}
+            </h2>
+            <p>
+              {{ $t('booking_confirmed_info') }}
+            </p>
           </div>
-        <VBtn
-          class="mx-auto  text-transform-none"
-          variant="flat"
-          color="primary"
-          size="large"
-          @click="$router.push({ name: '/' })"
-        >
-          {{ $t('back_to_homepage') }}
-        </VBtn>
+          <VBtn
+            class="mx-auto  text-transform-none"
+            color="primary"
+            size="large"
+            variant="flat"
+            @click="$router.push({ name: '/' })"
+          >
+            {{ $t('back_to_homepage') }}
+          </VBtn>
         </div>
 
       </VCardText>
     </VCard>
-<!--Failed-->
+    <!--Failed-->
     <VCard
       v-if="stayStore.isPaymentFailed"
-      flat
       class="my-8 bg-transparent"
+      flat
     >
       <VCardText>
         <div class="d-flex flex-column justify-center items-center ga-4 text-center">
           <img
-            width="32px"
-            :src="ExclamationIcon"
             alt="check"
             class="mx-auto"
+            :src="ExclamationIcon"
+            width="32px"
           >
           <div>
             <h2>
@@ -72,9 +72,9 @@ const {mobile} = useDisplay()
           </div>
           <VBtn
             class="mx-auto text-transform-none"
-            variant="flat"
             color="primary"
             size="large"
+            variant="flat"
 
             @click="$router.push({ name: '/' })"
           >
@@ -87,12 +87,12 @@ const {mobile} = useDisplay()
 
     <VCard
       v-if="stayStore.isPaymentFailed"
-      flat
       class="my-8 bg-transparent"
+      flat
     >
       <VCardText>
         <div class="d-flex flex-column justify-center items-center ga-4 text-center">
-        <VIcon size="32" icon="mdi-progress-clock" class="mx-auto" />
+          <VIcon class="mx-auto" icon="mdi-progress-clock" size="32" />
           <div>
             <h2>
               {{ $t('payment_in_process') }}
@@ -103,9 +103,9 @@ const {mobile} = useDisplay()
           </div>
           <VBtn
             class="mx-auto text-transform-none"
-            variant="flat"
             color="primary"
             size="large"
+            variant="flat"
             @click="$router.push({ name: '/payment' })"
           >
             {{ $t('back_to_payment') }}
@@ -114,8 +114,6 @@ const {mobile} = useDisplay()
 
       </VCardText>
     </VCard>
-
-
 
   </VContainer>
 

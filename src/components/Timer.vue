@@ -1,10 +1,10 @@
 <script setup>
-import {useTimerStore} from "@/stores/TimerStore.js";
+  import { useTimerStore } from '@/stores/TimerStore.js'
 
-const timerStore = useTimerStore();
-onMounted(() => {
-  timerStore.startTimer()
-})
+  const timerStore = useTimerStore()
+  onMounted(() => {
+    timerStore.startTimer()
+  })
 </script>
 
 <template>

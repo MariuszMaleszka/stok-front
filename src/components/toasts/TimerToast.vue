@@ -1,25 +1,25 @@
 <script setup>
-import { useTimerStore } from '@/stores/TimerStore.js'
-import ClockIcon from '@/assets/clock.svg'
+  import ClockIcon from '@/assets/clock.svg'
+  import { useTimerStore } from '@/stores/TimerStore.js'
 
-defineProps({
-  timeExpireWarning: {
-    type: String,
-    required: true
-  },
-  timeLeftLabel: {
-    type: String,
-    required: true
-  }
-})
+  defineProps({
+    timeExpireWarning: {
+      type: String,
+      required: true,
+    },
+    timeLeftLabel: {
+      type: String,
+      required: true,
+    },
+  })
 
-const timerStore = useTimerStore()
+  const timerStore = useTimerStore()
 </script>
 
 <template>
   <div style="display: flex; flex-direction: column; gap: 12px;">
     <div style="display: flex; align-items: center; gap: 8px;">
-      <img :src="ClockIcon" alt="clock" style="width: 32px; height: 32px;" />
+      <img alt="clock" :src="ClockIcon" style="width: 32px; height: 32px;">
       <span style="font-size: 14px;">{{ timeExpireWarning }}</span>
     </div>
     <div style="font-size: 14px; padding-left: 40px;">

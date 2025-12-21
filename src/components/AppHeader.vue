@@ -1,23 +1,23 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import Logo from '@/assets/stok-logo.svg'
-import {useI18n} from "vue-i18n";
-import {useCookies} from "@vueuse/integrations/useCookies";
-import plFlag from '@/assets/pl-flag.svg'
-import enFlag from '@/assets/en-flag.svg'
-import Timer from "@/components/Timer.vue";
-import {useDisplay} from "vuetify";
+  import { useCookies } from '@vueuse/integrations/useCookies'
+  import { computed, ref } from 'vue'
+  import { useI18n } from 'vue-i18n'
+  import { useDisplay } from 'vuetify'
+  import enFlag from '@/assets/en-flag.svg'
+  import plFlag from '@/assets/pl-flag.svg'
+  import Logo from '@/assets/stok-logo.svg'
+  import Timer from '@/components/Timer.vue'
 
-const { locale } = useI18n()
-const { mobile } = useDisplay()
-const menu = ref(false)
-const cookies = useCookies(['locale'])
+  const { locale } = useI18n()
+  const { mobile } = useDisplay()
+  const menu = ref(false)
+  const cookies = useCookies(['locale'])
 
-// Switch language
-const changeLanguage = (lang) => {
-  locale.value = lang
-  cookies.set('locale', lang, { path: '/', maxAge: 60 * 60 * 24 * 365 }) // 1 year
-}
+  // Switch language
+  function changeLanguage (lang) {
+    locale.value = lang
+    cookies.set('locale', lang, { path: '/', maxAge: 60 * 60 * 24 * 365 }) // 1 year
+  }
 // Start timer when component mounts
 
 </script>
@@ -25,17 +25,17 @@ const changeLanguage = (lang) => {
 <template>
   <VAppBar :elevation="0">
     <VImg
-      :src="Logo"
-      :max-width="mobile? 78: 120"
-      :width="mobile? 78:120 "
-      contain
       class="ml-2"
+      contain
+      :max-width="mobile? 78: 120"
+      :src="Logo"
+      :width="mobile? 78:120 "
     />
     <VSpacer />
-    <Timer :class="mobile ? '' :'ml-auto'"/>
+    <Timer :class="mobile ? '' :'ml-auto'" />
 
     <VMenu v-model="menu" class="ml-auto">
-      <template v-slot:activator="{ props }">
+      <template #activator="{ props }">
         <VBtn v-bind="props" variant="text">
           {{ locale.toUpperCase() }}
         </VBtn>
@@ -44,13 +44,13 @@ const changeLanguage = (lang) => {
       <VList density="compact">
         <VListItem @click="changeLanguage('pl')">
           <template #prepend>
-            <img class="mr-2" :src="plFlag" alt="pl">
+            <img alt="pl" class="mr-2" :src="plFlag">
           </template>
           PL
         </VListItem>
         <VListItem @click="changeLanguage('en')">
           <template #prepend>
-            <img class="mr-2" :src="enFlag" alt="en">
+            <img alt="en" class="mr-2" :src="enFlag">
           </template>
           EN
         </VListItem>

@@ -1,9 +1,9 @@
 import { defineStore } from 'pinia'
-import { useToast } from '@/composables/useToast'
-import { useI18n } from "vue-i18n"
-import { computed, ref, watch, h } from 'vue'
+import { computed, h, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import TimerToastContent from '@/components/toasts/TimerToast.vue'
+import { useToast } from '@/composables/useToast'
 
 export const useTimerStore = defineStore('timerStore', () => {
   const { t } = useI18n()
@@ -23,7 +23,9 @@ export const useTimerStore = defineStore('timerStore', () => {
   })
 
   const startTimer = () => {
-    if (timerInterval.value) return
+    if (timerInterval.value) {
+      return
+    }
 
     isTimerActive.value = true
     timerInterval.value = setInterval(() => {
@@ -35,11 +37,11 @@ export const useTimerStore = defineStore('timerStore', () => {
           showActionToast(
             h(TimerToastContent, {
               timeExpireWarning: t('time_expire_warning'),
-              timeLeftLabel: t('time_left')
+              timeLeftLabel: t('time_left'),
             }),
             t('extend_time_by_5'),
             () => addFiveMinutes(),
-            'margin-left: 40px; width:calc(100% - 40px); background: #1a56db; margin-top: 8px;'
+            'margin-left: 40px; width:calc(100% - 40px); background: #1a56db; margin-top: 8px;',
           )
         }
       } else {
@@ -92,6 +94,6 @@ export const useTimerStore = defineStore('timerStore', () => {
     startTimer,
     stopTimer,
     resetTimer,
-    addFiveMinutes
+    addFiveMinutes,
   }
 })

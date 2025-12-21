@@ -1,23 +1,22 @@
 <script setup>
-defineProps({
-  buttonText: {
-    type: String,
-    required: true,
-  },
-  buttonStyle: {
-    type: String,
-    default: ''
-  },
-  onAction: {
-    type: Function,
-    required: true,
-  },
-})
+  defineProps({
+    buttonText: {
+      type: String,
+      required: true,
+    },
+    buttonStyle: {
+      type: String,
+      default: '',
+    },
+    onAction: {
+      type: Function,
+      required: true,
+    },
+  })
 
-
-const handleAction = () => {
-  onAction()
-}
+  function handleAction () {
+    onAction()
+  }
 
 </script>
 

@@ -1,73 +1,72 @@
 <script setup>
-import GreenShieldIcon from "@/assets/shield-check-green.svg";
-import YellowShieldIcon from "@/assets/shield-check-yellow.svg";
-import OrangeShieldIcon from "@/assets/shield-check-orange.svg";
-import TagIcon from "@/assets/tag.svg";
-import {useDisplay} from "vuetify";
-import PopupSmall from "@/components/modals/PopupSmall.vue";
-import {useStayConfigStore} from "@/stores/StayConfigStore.js";
-import PercentIcon from "@/assets/percentage.svg";
+  import { useDisplay } from 'vuetify'
+  import PercentIcon from '@/assets/percentage.svg'
+  import GreenShieldIcon from '@/assets/shield-check-green.svg'
+  import OrangeShieldIcon from '@/assets/shield-check-orange.svg'
+  import YellowShieldIcon from '@/assets/shield-check-yellow.svg'
+  import TagIcon from '@/assets/tag.svg'
+  import PopupSmall from '@/components/modals/PopupSmall.vue'
+  import { useStayConfigStore } from '@/stores/StayConfigStore.js'
 
-const props = defineProps({
-  color: {
-    type: String,
-    default: 'yellow',
-    validator: (value) => ['yellow', 'green', 'orange'].includes(value)
-  },
-  showIcon: {
-    type: Boolean,
-    default: true
-  }
-});
-const {mobile} = useDisplay();
-const configStore = useStayConfigStore();
+  const props = defineProps({
+    color: {
+      type: String,
+      default: 'yellow',
+      validator: value => ['yellow', 'green', 'orange'].includes(value),
+    },
+    showIcon: {
+      type: Boolean,
+      default: true,
+    },
+  })
+  const { mobile } = useDisplay()
+  const configStore = useStayConfigStore()
 
-const popup = ref(false);
+  const popup = ref(false)
 
-const icon = computed(() => {
-  const iconMap = {
-    green: GreenShieldIcon,
-    yellow: TagIcon,
-    orange: OrangeShieldIcon
-  };
-  return iconMap[props.color];
-});
+  const icon = computed(() => {
+    const iconMap = {
+      green: GreenShieldIcon,
+      yellow: TagIcon,
+      orange: OrangeShieldIcon,
+    }
+    return iconMap[props.color]
+  })
 
-const backgroundColor = computed(() => {
-  const bgMap = {
-    green: 'bg-green-light',
-    yellow: 'bg-yellow-light',
-    orange: 'bg-orange-light'
-  };
-  return bgMap[props.color];
-});
+  const backgroundColor = computed(() => {
+    const bgMap = {
+      green: 'bg-green-light',
+      yellow: 'bg-yellow-light',
+      orange: 'bg-orange-light',
+    }
+    return bgMap[props.color]
+  })
 </script>
 
 <template>
   <div>
     <div
       :class="[
-      mobile ? 'pa-4 pt-2' : 'px-4 pb-4 py-2',
-      'package-card-info',
-      'rounded-lg',
-      'position-relative',
-      'my-4',
-      backgroundColor
-    ]"
+        mobile ? 'pa-4 pt-2' : 'px-4 pb-4 py-2',
+        'package-card-info',
+        'rounded-lg',
+        'position-relative',
+        'my-4',
+        backgroundColor
+      ]"
     >
-      <div class="d-flex justify-end position-relative z-10">
-      </div>
+      <div class="d-flex justify-end position-relative z-10" />
       <VListItem
         class="package-list-item pa-0 position-relative "
       >
         <template v-if="showIcon" #prepend>
-          <img class="mt-1 mr-2" width="18px" :src="icon" alt="">
+          <img alt="" class="mt-1 mr-2" :src="icon" width="18px">
         </template>
         <div :class="mobile ? 'fs-12' : 'fs-14'">
           <slot />
         </div>
         <template #append>
-          <VIcon @click.stop="popup = true" class="mb-auto" color="grey" icon="mdi-information-slab-circle" />
+          <VIcon class="mb-auto" color="grey" icon="mdi-information-slab-circle" @click.stop="popup = true" />
 
         </template>
 
@@ -75,11 +74,13 @@ const backgroundColor = computed(() => {
 
     </div>
     <PopupSmall
-      :title="$t('price_packages')" v-model="popup">
+      v-model="popup"
+      :title="$t('price_packages')"
+    >
       <template #icon>
-        <img class="mr-2" :src="PercentIcon" alt="icon">
+        <img alt="icon" class="mr-2" :src="PercentIcon">
       </template>
-      <template #content >
+      <template #content>
         <div
           :class="mobile?'fs-11' : 'fs-12'"
         >
@@ -156,13 +157,13 @@ const backgroundColor = computed(() => {
                 {{ $t('price_package.info_1') }}
               </li>
               <li>
-                {{  $t('price_package.info_2') }}
+                {{ $t('price_package.info_2') }}
               </li>
               <li>
-                {{  $t('price_package.info_3') }}
+                {{ $t('price_package.info_3') }}
               </li>
               <li>
-                {{  $t('price_package.info_4') }}
+                {{ $t('price_package.info_4') }}
               </li>
             </ul>
           </div>

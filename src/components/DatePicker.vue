@@ -2,9 +2,9 @@
   import { VueDatePicker } from '@vuepic/vue-datepicker'
   import { pl } from 'date-fns/locale'
   import { computed, ref } from 'vue'
-  import '@vuepic/vue-datepicker/dist/main.css'
   import { useDisplay } from 'vuetify'
   import { formatDateRange } from '@/utils/dates'
+  import '@vuepic/vue-datepicker/dist/main.css'
 
   const props = defineProps({
     modelValue: { type: [Date, Array], default: null },
@@ -60,7 +60,7 @@
       }
     }
   })
-  const handleClose = () => {
+  function handleClose () {
     datePickerRef.value?.closeMenu()
   }
 
@@ -70,7 +70,7 @@
   const customDayNames = ['Pn', 'Wt', 'Śr', 'Czw', 'Pt', 'Sb', 'Nd']
   const customDayNamesEN = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
-  const handlePrevMonth = () => {
+  function handlePrevMonth () {
     if (currentMonth.value === 0) {
       currentMonth.value = 11
       currentYear.value--
@@ -80,7 +80,7 @@
     datePickerRef.value?.setMonthYear({ month: currentMonth.value, year: currentYear.value })
   }
 
-  const handleNextMonth = () => {
+  function handleNextMonth () {
     if (currentMonth.value === 11) {
       currentMonth.value = 0
       currentYear.value++
@@ -89,68 +89,67 @@
     }
     datePickerRef.value?.setMonthYear({ month: currentMonth.value, year: currentYear.value })
   }
-  function onChange(newValue) {
+  function onChange (newValue) {
     emit('update:modelValue', newValue)
   }
 </script>
 
 <template>
   <VueDatePicker
-    :model-value="modelValue"
     ref="datePickerRef"
-    :format="formatDateRange"
-    :day-names="customDayNames"
     v-bind="pickerConfig"
-    clearable
     :action-row="{
       selectBtnLabel: $t('save'),
       cancelBtnLabel: $t('cancel'),
-      nowBtnLabel:  $t('current')
+      nowBtnLabel: $t('current')
     }"
-    :locale="props.locale"
-    :time-config="{ enableTimePicker: props.enableTimePicker }"
+    clearable
+    :day-names="customDayNames"
+    :format="formatDateRange"
     :formats="{
       month: 'LLLL',
     }"
+    :locale="props.locale"
+    :model-value="modelValue"
+    :time-config="{ enableTimePicker: props.enableTimePicker }"
     @update:model-value="onChange"
   >
     <template #menu-header>
       <div v-if="showHeader" class="fs-16 mb-3 d-flex justify-space-between">
         {{ $t('select_your_stay_dates') }}
-        <button class="close-btn" aria-label="Close" @click="handleClose">
-          <VIcon size="18" icon="mdi-close" />
+        <button aria-label="Close" class="close-btn" @click="handleClose">
+          <VIcon icon="mdi-close" size="18" />
         </button>
       </div>
       <div class="mb-3">
-      <VAlert
-        class="mb-2 fs-13 border alert-info"
-        density="compact"
-      >
-        <span class="fc-blue">
-          {{ $t('maximum_length_of_stay') }}
-        </span>
-      </VAlert>
+        <VAlert
+          class="mb-2 fs-13 border alert-info"
+          density="compact"
+        >
+          <span class="fc-blue">
+            {{ $t('maximum_length_of_stay') }}
+          </span>
+        </VAlert>
       </div>
       <div class="d-flex justify-space-between px-4">
-        <VIcon @click="handlePrevMonth" icon="mdi-chevron-left">
-        </VIcon>
-          {{ $t('select_month') }}
-        <VIcon  @click="handleNextMonth" icon="mdi-chevron-right" />
+        <VIcon icon="mdi-chevron-left" @click="handlePrevMonth" />
+        {{ $t('select_month') }}
+        <VIcon icon="mdi-chevron-right" @click="handleNextMonth" />
       </div>
     </template>
     <template #trigger>
       <VTextField
-        variant="outlined"
-        readonly
+        clear-icon="mdi-close"
         clearable
-        clearIcon="mdi-close"
-        hide-details
         control-variant="hidden"
+        hide-details
         :model-value="formatDateRange(modelValue)"
         :placeholder="$t('select')"
+        readonly
+        variant="outlined"
       >
         <template #prepend-inner>
-          <VIcon size="16" icon="mdi-calendar-blank-outline" />
+          <VIcon icon="mdi-calendar-blank-outline" size="16" />
         </template>
 
       </VTextField>

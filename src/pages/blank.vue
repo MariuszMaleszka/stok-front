@@ -1,47 +1,47 @@
 <script setup>
-import PackageInfoBox from "@/components/PackageInfoBox.vue";
-import {useDisplay} from "vuetify";
-import {useI18n} from "vue-i18n";
-import {useStayStore} from "@/stores/StayStore.js";
-import PopupSmall from "@/components/modals/PopupSmall.vue";
-import {useToast} from "@/composables/useToast.js";
+  import { useI18n } from 'vue-i18n'
+  import { useDisplay } from 'vuetify'
+  import PopupSmall from '@/components/modals/PopupSmall.vue'
+  import PackageInfoBox from '@/components/PackageInfoBox.vue'
+  import { useToast } from '@/composables/useToast.js'
+  import { useStayStore } from '@/stores/StayStore.js'
 
-const stayStore = useStayStore();
-const {showSimpleToast, showActionToast} = useToast()
+  const stayStore = useStayStore()
+  const { showSimpleToast, showActionToast } = useToast()
 
-// Simple Toast Examples
-const showSuccessToast = () => {
-  showSimpleToast('Operation completed successfully!', 'success')
-}
+  // Simple Toast Examples
+  function showSuccessToast () {
+    showSimpleToast('Operation completed successfully!', 'success')
+  }
 
-const showErrorToast = () => {
-  showSimpleToast('An error occurred', 'error')
-}
+  function showErrorToast () {
+    showSimpleToast('An error occurred', 'error')
+  }
 
-const showWarningToast = () => {
-  showSimpleToast('This is a warning', 'warning')
-}
+  function showWarningToast () {
+    showSimpleToast('This is a warning', 'warning')
+  }
 
-const showInfoToast = () => {
-  showSimpleToast('Informational message', 'info')
-}
+  function showInfoToast () {
+    showSimpleToast('Informational message', 'info')
+  }
 
-// Action Toast Example
-const showUndoToast = () => {
-  showActionToast(
-    'Item deleted',
-    'Undo',
-    () => {
-      // Action to perform when button is clicked
-      console.log('Undo action triggered')
-      showSimpleToast('Action undone!', 'success')
-    }
-  )
-}
-const popup = ref(false);
+  // Action Toast Example
+  function showUndoToast () {
+    showActionToast(
+      'Item deleted',
+      'Undo',
+      () => {
+        // Action to perform when button is clicked
+        console.log('Undo action triggered')
+        showSimpleToast('Action undone!', 'success')
+      },
+    )
+  }
+  const popup = ref(false)
 
-const {mobile} = useDisplay();
-const { t } = useI18n();
+  const { mobile } = useDisplay()
+  const { t } = useI18n()
 </script>
 <template>
   <VContainer max-width="990">
@@ -49,34 +49,33 @@ const { t } = useI18n();
     <!--INFO BOX FIRST LEVEL DISCOUNT-->
 
     <PackageInfoBox v-if="stayStore.firstPackageEligible" class="my-4" color="yellow">
-      <span class="fw-500"><span class="fw-600">{{stayStore.allParticipantsTotalHours}}</span>/10h w {{ $t('in_package') }}.</span>
+      <span class="fw-500"><span class="fw-600">{{ stayStore.allParticipantsTotalHours }}</span>/10h w {{ $t('in_package') }}.</span>
       <div class="d-flex justify-space-between">
         <p class="mb-2 ">{{ $t('lower_price_package_activated') }}
         </p>
-          <span class="fc-gray fw-500 ml-auto">
-            -{{ ((stayStore.allParticipantsTotalPrice / (1 - stayStore.FIRST_LEVEL_DISCOUNT / 100)) * (stayStore.FIRST_LEVEL_DISCOUNT / 100)).toFixed(2) }}&nbsp;{{ stayStore.currency }}
-          </span>
+        <span class="fc-gray fw-500 ml-auto">
+          -{{ ((stayStore.allParticipantsTotalPrice / (1 - stayStore.FIRST_LEVEL_DISCOUNT / 100)) * (stayStore.FIRST_LEVEL_DISCOUNT / 100)).toFixed(2) }}&nbsp;{{ stayStore.currency }}
+        </span>
       </div>
-      <div :class="mobile? 'fs-10':'fs-12'" class="custom-badge info">
+      <div class="custom-badge info" :class="mobile? 'fs-10':'fs-12'">
         {{ $t('you_save') }} -{{ stayStore.FIRST_LEVEL_DISCOUNT }}%
       </div>
     </PackageInfoBox>
 
     <!--INFO BOX SECOND LEVEL DISCOUNT-->
-    <PackageInfoBox v-if="stayStore.secondPackageEligible" class="my-4" color="yellow" >
-      <span class="fw-500"><span class="fw-600">{{stayStore.allParticipantsTotalHours}}</span>/20h w {{ $t('in_package') }}.</span>
+    <PackageInfoBox v-if="stayStore.secondPackageEligible" class="my-4" color="yellow">
+      <span class="fw-500"><span class="fw-600">{{ stayStore.allParticipantsTotalHours }}</span>/20h w {{ $t('in_package') }}.</span>
       <div class="d-flex justify-space-between">
         <p class="mb-2 ">{{ $t('cheaper_price_package_activated') }}
         </p>
         <span class="fc-gray fw-500 ml-auto">
-            -{{ ((stayStore.allParticipantsTotalPrice / (1 - stayStore.SECOND_LEVEL_DISCOUNT / 100)) * (stayStore.SECOND_LEVEL_DISCOUNT / 100)).toFixed(2) }}&nbsp;{{ stayStore.currency }}
-          </span>
+          -{{ ((stayStore.allParticipantsTotalPrice / (1 - stayStore.SECOND_LEVEL_DISCOUNT / 100)) * (stayStore.SECOND_LEVEL_DISCOUNT / 100)).toFixed(2) }}&nbsp;{{ stayStore.currency }}
+        </span>
       </div>
-      <div :class="mobile? 'fs-10':'fs-12'" class="custom-badge info">
+      <div class="custom-badge info" :class="mobile? 'fs-10':'fs-12'">
         {{ $t('you_save') }} -{{ stayStore.SECOND_LEVEL_DISCOUNT }}%
       </div>
     </PackageInfoBox>
-
 
     <!--INFO BOX MISSING HOURS-->
     <PackageInfoBox
@@ -84,7 +83,7 @@ const { t } = useI18n();
         (stayStore.firstPackageEligible && stayStore.missingHoursToSecondThreshold > 0)"
       class="my-4"
       color="green"
-      :showIcon="false"
+      :show-icon="false"
     >
       <div class="d-flex justify-space-between mb-2">
         <p class="fw-500">
@@ -93,15 +92,15 @@ const { t } = useI18n();
           {{ $t('to_activate_the_package') }}
         </p>
         <VBtn
-          variant="outlined"
-          color="green"
-          :class="mobile? 'fs-12':'fs-14'"
           class="text-capitalize pa-2 mt-4 mb-2 ml-2"
+          :class="mobile? 'fs-12':'fs-14'"
+          color="green"
+          variant="outlined"
         >
           {{ $t('add_classes') }}
         </VBtn>
       </div>
-      <div :class="mobile ? 'fs-10' : 'fs-12'" class="custom-badge green">
+      <div class="custom-badge green" :class="mobile ? 'fs-10' : 'fs-12'">
         {{ $t('you_gain') }} {{ stayStore.firstPackageEligible ? stayStore.SECOND_LEVEL_DISCOUNT : stayStore.FIRST_LEVEL_DISCOUNT }}%
       </div>
     </PackageInfoBox>
@@ -112,7 +111,7 @@ const { t } = useI18n();
     <h2>This is based on <code>stayStore</code></h2>
     <p>
 
-   total hours (no group classes): {{ stayStore.allParticipantsTotalHours }}
+      total hours (no group classes): {{ stayStore.allParticipantsTotalHours }}
     </p>
     <p>
       missing hours to first discount package: {{ stayStore.missingHoursToFirstThreshold }}
@@ -131,36 +130,37 @@ const { t } = useI18n();
 
       <!-- Simple Toasts -->
       <div class="my-4">
-        <VBtn @click="showSuccessToast" color="success" class="mr-2">
+        <VBtn class="mr-2" color="success" @click="showSuccessToast">
           Success Toast
         </VBtn>
-        <VBtn @click="showErrorToast" color="error" class="mr-2">
+        <VBtn class="mr-2" color="error" @click="showErrorToast">
           Error Toast
         </VBtn>
-        <VBtn @click="showWarningToast" color="warning" class="mr-2">
+        <VBtn class="mr-2" color="warning" @click="showWarningToast">
           Warning Toast
         </VBtn>
-        <VBtn @click="showInfoToast" color="info">
+        <VBtn color="info" @click="showInfoToast">
           Info Toast
         </VBtn>
       </div>
 
       <!-- Action Toast -->
       <div class="my-4">
-        <VBtn @click="showUndoToast" color="primary">
+        <VBtn color="primary" @click="showUndoToast">
           Show Action Toast
         </VBtn>
       </div>
     </div>
 
-
-<!--POPUP-->
+    <!--POPUP-->
     <VBtn @click="popup = true">
       popup
     </VBtn>
 
     <PopupSmall
-      title="Mateusz" v-model="popup">
+      v-model="popup"
+      title="Mateusz"
+    >
       <template #content>
         KĄTĘNT
       </template>
@@ -174,7 +174,6 @@ const { t } = useI18n();
 
     </PopupSmall>
   </VContainer>
-
 
 </template>
 <style lang="scss"></style>

@@ -1,10 +1,9 @@
-import {defineStore} from 'pinia'
-import {computed, ref} from 'vue'
-import {useI18n} from 'vue-i18n'
-
+import { defineStore } from 'pinia'
+import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 export const useViewControlStore = defineStore('viewStore', () => {
-  const {t} = useI18n()
+  const { t } = useI18n()
 
   // const STEP_ONE_ID = 'STEP_ONE'
   // const STEP_ONE_DATA_ID = 'STEP_ONE_DATA'
@@ -16,9 +15,9 @@ export const useViewControlStore = defineStore('viewStore', () => {
   // const STEP_THREE_PAYMENT_ID = 'STEP_THREE_PAYMENT'
 
   const currentStep = ref({
-      parent: 1,
-      child: 1
-    }
+    parent: 1,
+    child: 1,
+  },
   )
 
   const parentStepperRef = ref(null) // Reference to the parent stepper component
@@ -33,9 +32,7 @@ export const useViewControlStore = defineStore('viewStore', () => {
   const isStepThreeParticipantsCompleted = ref(false) // step three - participants
   const isStepThreePaymentCompleted = ref(false) // step three - payment
 
-
-
-  const setParentStepper = (stepperRef) => {
+  const setParentStepper = stepperRef => {
     parentStepperRef.value = stepperRef
   }
 
@@ -49,8 +46,7 @@ export const useViewControlStore = defineStore('viewStore', () => {
     isStepThreePaymentCompleted, // step three - payment
     isStepThreeCompleted, // step three - overall
     parentStepperRef,
-    setParentStepper
-
+    setParentStepper,
 
   }
 })

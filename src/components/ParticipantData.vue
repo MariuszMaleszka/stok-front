@@ -1,115 +1,113 @@
 <script setup>
-import { ref } from 'vue'
-import { useI18n } from 'vue-i18n'
-import { useStayStore } from '@/stores/StayStore.js'
-import UserIcon from '@/assets/user-circle-blue.svg'
-import { VDateInput } from 'vuetify/labs/VDateInput'
-import {useDisplay} from "vuetify"
-const props = defineProps({
-  participant: {
-    type: Object,
-    required: true
-  },
-  index: {
-    type: Number,
-    required: true
+  import { ref } from 'vue'
+  import { useI18n } from 'vue-i18n'
+  import { useDisplay } from 'vuetify'
+  import { VDateInput } from 'vuetify/labs/VDateInput'
+  import UserIcon from '@/assets/user-circle-blue.svg'
+  import { useStayStore } from '@/stores/StayStore.js'
+  const props = defineProps({
+    participant: {
+      type: Object,
+      required: true,
+    },
+    index: {
+      type: Number,
+      required: true,
+    },
+  })
+
+  const { t } = useI18n()
+  const { mobile } = useDisplay()
+  const stayStore = useStayStore()
+  const form = ref(null)
+  const showErrors = ref(false)
+
+  const rules = {
+    required: value => !!value || t('fill_the_field_properly'),
+    phone: value => {
+      const phoneRegex = /^\+?[0-9]{9,15}$/
+      return !value || phoneRegex.test(value) || t('invalid_phone_number')
+    },
   }
-})
 
-const { t } = useI18n()
-const {mobile} = useDisplay()
-const stayStore = useStayStore()
-const form = ref(null)
-const showErrors = ref(false)
+  // Get adult participants for childminder selection
+  const adultParticipants = computed(() => {
+    return stayStore.participants.filter(p => p.participantType === 'adult')
+  })
 
-const rules = {
-  required: value => !!value || t('fill_the_field_properly'),
-  phone: value => {
-    const phoneRegex = /^\+?[0-9]{9,15}$/
-    return !value || phoneRegex.test(value) || t('invalid_phone_number')
-  }
-}
+  const isAnotherChildminder = computed(() =>
+    props.participant.childminder === 'another',
+  )
 
-// Get adult participants for childminder selection
-const adultParticipants = computed(() => {
-  return stayStore.participants.filter(p => p.participantType === 'adult')
-})
+  // Prepare select items with "Another childminder" option
+  const childminderOptions = computed(() => {
+    return [
+      ...adultParticipants.value,
+      { name: t('another_childminder'), dynamicId: 'another' },
+    ]
+  })
 
-const isAnotherChildminder = computed(() =>
-  props.participant.childminder === 'another'
-)
+  defineExpose({
+    validate: async () => {
+      showErrors.value = true
+      const formValid = await form.value?.validate()
 
-// Prepare select items with "Another childminder" option
-const childminderOptions = computed(() => {
-  return [
-    ...adultParticipants.value,
-    { name: t('another_childminder'), dynamicId: 'another' }
-  ]
-})
+      // Additional validation for childminder if child
+      const hasChildminder = props.participant.participantType === 'child'
+        ? !!props.participant.childminder
+        : true
 
-defineExpose({
-  validate: async () => {
-    showErrors.value = true
-    const formValid = await form.value?.validate()
-
-    // Additional validation for childminder if child
-    const hasChildminder = props.participant.participantType === 'child'
-      ? !!props.participant.childminder
-      : true
-
-    return {
-      valid: formValid?.valid && hasChildminder
-    }
-  }
-})
+      return {
+        valid: formValid?.valid && hasChildminder,
+      }
+    },
+  })
 </script>
 
 <template>
   <VForm ref="form" class="bg-white fc-black pa-4 rounded-lg my-4 box-shadow-sm">
     <div class="border-b mb-4 pb-4">
-      <img :src="UserIcon" alt="user-icon">
+      <img alt="user-icon" :src="UserIcon">
       <div class="d-flex align-center fs-16 fw-500 mt-2">
 
-      {{ index + 1 }}. {{ participant.name}}
+        {{ index + 1 }}. {{ participant.name }}
       </div>
     </div>
-    <VRow >
+    <VRow>
       <VCol :cols="mobile ? 12 : 6">
 
-          <p class="custom-input-label mb-2">{{ $t('name') }}</p>
-          <VTextField
-            v-model="participant.name"
-            variant="outlined"
-            density="default"
-            clearable
-            clearIcon="mdi-close"
-            autocomplete="off"
-            hide-details="auto"
-            maxLength="50"
-            minLength="2"
-            :rules="[rules.required]"
-            @keydown="(e) => /\d/.test(e.key) && e.preventDefault()"
-          >
-          </VTextField>
+        <p class="custom-input-label mb-2">{{ $t('name') }}</p>
+        <VTextField
+          v-model="participant.name"
+          autocomplete="off"
+          clear-icon="mdi-close"
+          clearable
+          density="default"
+          hide-details="auto"
+          max-length="50"
+          min-length="2"
+          :rules="[rules.required]"
+          variant="outlined"
+          @keydown="(e) => /\d/.test(e.key) && e.preventDefault()"
+        />
 
       </VCol>
 
       <VCol :cols="mobile ? 12 : 6">
-          <p class="custom-input-label mb-2">{{ $t('surname') }}</p>
-          <VTextField
-            v-model="participant.surname"
-            variant="outlined"
-            density="default"
-            clearable
-            clearIcon="mdi-close"
-            autocomplete="off"
-            hide-details="auto"
-            maxLength="50"
-            minLength="2"
-            :rules="[rules.required]"
-            @keydown="(e) => /\d/.test(e.key) && e.preventDefault()"
-          >
-          </VTextField>
+        <p class="custom-input-label mb-2">{{ $t('surname') }}</p>
+        <VTextField
+          v-model="participant.surname"
+          autocomplete="off"
+          clear-icon="mdi-close"
+          clearable
+          density="default"
+          hide-details="auto"
+          max-length="50"
+          min-length="2"
+          :rules="[rules.required]"
+          variant="outlined"
+          @keydown="(e) => /\d/.test(e.key) && e.preventDefault()"
+        />
 
       </VCol>
 
@@ -117,17 +115,16 @@ defineExpose({
         <p class="custom-input-label mb-2">{{ $t('phone_number') }}</p>
         <VTextField
           v-model="participant.phone"
-          variant="outlined"
-          density="default"
-          clearable
-          clearIcon="mdi-close"
           autocomplete="off"
+          clear-icon="mdi-close"
+          clearable
+          density="default"
           hide-details="auto"
-          maxLength="11"
+          max-length="11"
           :rules="[rules.required, rules.phone]"
+          variant="outlined"
           @keydown="(e) => !/[\d+]/.test(e.key) && e.key !== 'Backspace' && e.preventDefault()"
-        >
-        </VTextField>
+        />
       </VCol>
 
       <VCol :cols="mobile ? 12 : 6">
@@ -135,14 +132,14 @@ defineExpose({
         <!--      <input v-model="participant.birthDate" type="date"/>-->
         <VDateInput
           v-model="participant.birthDate"
-          variant="outlined"
           density="default"
-          prepend-icon=""
           hide-details="auto"
+          prepend-icon=""
           :rules="[rules.required]"
+          variant="outlined"
         >
           <template #prepend-inner>
-            <VIcon size="18" icon="mdi-calendar"/>
+            <VIcon icon="mdi-calendar" size="18" />
           </template>
         </VDateInput>
       </VCol>
@@ -154,19 +151,17 @@ defineExpose({
         <p class="custom-input-label mb-2">{{ $t('childminder') }}</p>
         <VSelect
           v-model="participant.childminder"
-          :items="childminderOptions"
+          clear-icon="mdi-close"
+          clearable
+          density="default"
+          hide-details="auto"
           item-title="name"
           item-value="dynamicId"
-          clearable
-          clearIcon="mdi-close"
-          variant="outlined"
-          density="default"
+          :items="childminderOptions"
           :placeholder="$t('select_childminder')"
-          hide-details="auto"
           :rules="[rules.required]"
-        >
-
-        </VSelect>
+          variant="outlined"
+        />
         <small v-if="showErrors && !participant.childminder" class="fs-12 fc-error pl-4 pt-2">
           {{ $t('select_childminder') }}
         </small>
@@ -177,15 +172,15 @@ defineExpose({
           <p class="custom-input-label mb-2">{{ $t('childminder_name') }}</p>
           <VTextField
             v-model="participant.anotherChildminderName"
-            variant="outlined"
-            density="default"
-            clearable
-            clearIcon="mdi-close"
-            maxLength="50"
-            minLength="2"
+            clear-icon="mdi-close"
             autocomplete="off"
+            clearable
+            density="default"
             hide-details="auto"
+            max-length="50"
+            min-length="2"
             :rules="[rules.required]"
+            variant="outlined"
           />
         </VCol>
 
@@ -193,15 +188,15 @@ defineExpose({
           <p class="custom-input-label mb-2">{{ $t('surname') }}</p>
           <VTextField
             v-model="participant.anotherChildminderSurname"
-            variant="outlined"
-            density="default"
-            clearable
-            maxLength="50"
-            minLength="2"
-            clearIcon="mdi-close"
+            clear-icon="mdi-close"
             autocomplete="off"
+            clearable
+            density="default"
             hide-details="auto"
+            max-length="50"
+            min-length="2"
             :rules="[rules.required]"
+            variant="outlined"
           />
         </VCol>
 
@@ -209,14 +204,14 @@ defineExpose({
           <p class="custom-input-label mb-2">{{ $t('childminder_phone') }}</p>
           <VTextField
             v-model="participant.anotherChildminderPhone"
-            variant="outlined"
-            density="default"
-            clearable
-            maxLength="11"
-            clearIcon="mdi-close"
             autocomplete="off"
+            clear-icon="mdi-close"
+            clearable
+            density="default"
             hide-details="auto"
+            max-length="11"
             :rules="[rules.required, rules.phone]"
+            variant="outlined"
             @keydown="(e) => !/[\d+]/.test(e.key) && e.key !== 'Backspace' && e.preventDefault()"
           />
           <p class="fs-12 px-4 fc-gray">

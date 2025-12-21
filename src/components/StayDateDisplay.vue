@@ -1,8 +1,8 @@
 <script setup>
-import {useStayStore} from '@/stores/StayStore.js'
-import {formatDateRangeSimple} from '@/utils/dates.js'
+  import { useStayStore } from '@/stores/StayStore.js'
+  import { formatDateRangeSimple } from '@/utils/dates.js'
 
-const stayStore = useStayStore()
+  const stayStore = useStayStore()
 
 </script>
 
