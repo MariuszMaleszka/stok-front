@@ -1,17 +1,24 @@
 <script setup lang="ts">
   import { useCookies } from '@vueuse/integrations/useCookies'
-  import { ref } from 'vue'
+  import { computed, ref } from 'vue'
   import { useI18n } from 'vue-i18n'
+  import { useDisplay } from 'vuetify'
+  import enFlag from '@/assets/en-flag.svg'
+  import plFlag from '@/assets/pl-flag.svg'
   import Logo from '@/assets/stok-logo.svg'
+  import Timer from '@/components/Timer.vue'
 
   const { locale } = useI18n()
+  const { mobile } = useDisplay()
   const menu = ref(false)
   const cookies = useCookies(['locale'])
+
   // Switch language
   function changeLanguage (lang) {
     locale.value = lang
     cookies.set('locale', lang, { path: '/', maxAge: 60 * 60 * 24 * 365 }) // 1 year
   }
+// Start timer when component mounts
 
 </script>
 
@@ -20,29 +27,34 @@
     <VImg
       class="ml-2"
       contain
-      max-width="78"
+      :max-width="mobile? 78: 120"
       :src="Logo"
+      :width="mobile? 78:120 "
     />
-
     <VSpacer />
+    <Timer :class="mobile ? '' :'ml-auto'" />
 
-    <VMenu v-model="menu">
+    <VMenu v-model="menu" class="ml-auto">
       <template #activator="{ props }">
-        <VAppBarNavIcon v-bind="props" />
+        <VBtn v-bind="props" variant="text">
+          {{ locale.toUpperCase() }}
+        </VBtn>
       </template>
 
-      <VList>
-        <VListItem>
-          <VBtn @click="changeLanguage('pl')">pl</VBtn>
+      <VList density="compact">
+        <VListItem @click="changeLanguage('pl')">
+          <template #prepend>
+            <img alt="pl" class="mr-2" :src="plFlag">
+          </template>
+          PL
         </VListItem>
-        <VListItem>
-          <VBtn @click="changeLanguage('en')">en</VBtn>
+        <VListItem @click="changeLanguage('en')">
+          <template #prepend>
+            <img alt="en" class="mr-2" :src="enFlag">
+          </template>
+          EN
         </VListItem>
       </VList>
     </VMenu>
   </VAppBar>
 </template>
-
-<style scoped lang="scss">
-
-</style>

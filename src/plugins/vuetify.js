@@ -4,12 +4,14 @@
  * Framework documentation: https://vuetifyjs.com`
  */
 
-// Composables
+import DateFnsAdapter from '@date-io/date-fns'
+import { enGB, pl } from 'date-fns/locale'
 import { useI18n } from 'vue-i18n'
+
+// Composables
 import { createVuetify } from 'vuetify'
 import { createVueI18nAdapter } from 'vuetify/locale/adapters/vue-i18n'
 import i18n from './i18n'
-
 // Styles
 import '@mdi/font/css/materialdesignicons.css'
 import 'vuetify/styles'
@@ -19,6 +21,13 @@ import '@fontsource/inter/index.css'
 export default createVuetify({
   locale: {
     adapter: createVueI18nAdapter({ i18n, useI18n }),
+  },
+  date: {
+    adapter: DateFnsAdapter,
+    locale: {
+      en: enGB,
+      pl,
+    },
   },
   theme: {
     defaultTheme: 'light',

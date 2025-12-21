@@ -96,6 +96,9 @@
 .fc-error {
   color: $error !important;
 }
+.fc-green-dark {
+  color: $green-dark !important;
+}
 
 .ff-inter {
   font-family: 'Inter', sans-serif !important;
@@ -168,6 +171,9 @@
 
 .w-max-content {
   width: max-content;
+}
+.w-40 {
+  width: 40%;
 }
 
 // Box shadow utility classes
@@ -247,6 +253,20 @@
   color: #000 !important;
   background-color: #FDBA8C;
 }
+// Containers custom
+.container-narrow {
+    max-width: 585px;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+}
+.container-actions {
+  max-width: 450px;
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 
 .line-height-1 {
   line-height: 1 !important;

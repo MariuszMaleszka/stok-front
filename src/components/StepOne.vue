@@ -3,16 +3,18 @@
   import { computed, ref, watch } from 'vue'
   import { useI18n } from 'vue-i18n'
   import { useDisplay } from 'vuetify'
-
+  import UserPlusIcon from '@/assets/user-plus.svg'
   import DatePickerResponsive from '@/components/DatePickerResponsive.vue'
   import ParticipantAccordion from '@/components/ParticipantAccordion.vue'
   import { useToast } from '@/composables/useToast'
+  import { useStayConfigStore } from '@/stores/StayConfigStore.js'
   import { useStayStore } from '@/stores/StayStore.js'
   import { useViewControlStore } from '@/stores/ViewControlStore.js'
 
   const { t } = useI18n()
   const { showSimpleToast } = useToast()
   const stayStore = useStayStore()
+  const configStore = useStayConfigStore()
   const viewStore = useViewControlStore()
   const cookies = useCookies(['locale'])
   const { mobile } = useDisplay()
@@ -83,13 +85,13 @@
 
     <VStepperWindow class="flex-1">
       <VStepperWindowItem :value="1">
-        <div>
+        <div class="container-narrow">
           <p class="fs-24 font-weight-bold my-4">
             {{ $t('booking_classes') }}:
           </p>
           <div class="my-4">
             <p
-              class="font-weight-medium mb-n2"
+              class="font-weight-medium"
               :class="mobile ? 'fs-18' : 'fs-20'"
             >
               {{ $t('provide_details_of_your_stay') }}:
@@ -143,17 +145,29 @@
                 {{ $t('enter_number_of_participants_children') }}
               </p>
             </div>
+            <VSheet class="rounded-lg pa-4">
+              <div
+                class="d-flex ga-2 "
+                :class="mobile ? 'align-start' : 'align-center'"
+              >
+                <img alt="user" class="mt-1" :src="UserPlusIcon">
+                <p class="fs-12 fc-gray">
+                  {{ $t('book_more_info') }}
+                  <a class="fc-gray" :href="configStore.CUSTOMER_SERVICE_LINK" target="_blank">{{ $t('with_customers_service') }}</a>
+                </p>
+              </div>
+            </VSheet>
           </VForm>
         </div>
       </VStepperWindowItem>
 
       <VStepperWindowItem :value="2">
-        <div class="px-1">
+        <div class="container-narrow px-1">
           <p class="fs-20 font-weight-bold my-4">
             {{ $t('booking_classes') }}:
           </p>
           <div class="my-4">
-            <p class="fs-18 fc-blue font-weight-medium mb-n2">
+            <p class="fs-18 fc-blue font-weight-medium">
               {{ $t('participants_preferences') }}:
             </p>
             <small class="fs-11">
@@ -165,6 +179,7 @@
             <ParticipantAccordion
               v-for="(participant, index) in stayStore.participants"
               :key="participant.dynamicId"
+              ref="participantForms"
               :ref="el => participantForms[index] = el"
               class="ga-4"
               :index="index"

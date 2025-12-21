@@ -2,6 +2,7 @@
   import { computed, ref } from 'vue'
   import { useI18n } from 'vue-i18n'
   import { useDisplay } from 'vuetify'
+  import { useStayConfigStore } from '@/stores/StayConfigStore.js'
   import { useStayStore } from '@/stores/StayStore.js'
 
   const props = defineProps({
@@ -15,13 +16,13 @@
     },
   })
   const stayStore = useStayStore()
+  const configStore = useStayConfigStore()
   const { mobile } = useDisplay()
   const { t } = useI18n()
 
-  const CUSTOMER_SERVICE_LINK = 'https://szkolastok.pl/kontakt'
   const infoDialog = ref(false)
 
-  const panel = ref([0]) // To control expansion panel opened/closed state
+  const panel = ref(props.index === 0 ? [0] : []) // To control expansion panel opened/closed state
   const form = ref(null) // Reference to the form (participant details)
   const showErrors = ref(false) // To control error display
 
@@ -31,9 +32,6 @@
 
   const selectedSkillLevel = ref(null)
   const selectedClassType = ref(null)
-  const age = ref(props.participant.age ?? null)
-  const name = ref(props.participant.name ?? '')
-  const classLang = ref(props.participant.classLang ?? '')
 
   const availableSkillLevels = computed(() => {
     if (props.participant.participantType === 'adult') {
@@ -63,10 +61,7 @@
     return []
   })
 
-  const currentSkillLevelInfo = computed(() => {
-    if (!selectedSkillLevel.value || !selectedSkillLevel.value[0]) return null
-    return availableSkillLevels.value.find(level => level === selectedSkillLevel.value[0])
-  })
+  const currentSkillLevelInfo = ref(null)
 
   const isSnowboardDisabled = computed(() => {
     return props.participant.participantType === 'child'
@@ -77,32 +72,22 @@
   function selectSkillLevel (level) {
     for (const l of availableSkillLevels.value) l.selected = false
     level.selected = true
-    stayStore.participants[props.index].skillLevel = level.name
+    props.participant.skillLevel = level.name
     selectedSkillLevel.value = [level]
     infoDialog.value = false
   }
 
   watch(selectedSkillLevel, newValue => {
-    stayStore.participants[props.index].skillLevel = newValue && newValue[0] ? newValue[0].name : ''
+    props.participant.skillLevel = newValue && newValue[0] ? newValue[0].name : ''
   })
 
   watch(() => props.participant.age, newAge => {
     if (props.participant.participantType === 'child' && newAge !== null && newAge < 8 && selectedClassType.value === 1) {
       selectedClassType.value = null
-      stayStore.participants[props.index].activityType = ''
+      props.participant.activityType = ''
       selectedSkillLevel.value = null
-      stayStore.participants[props.index].skillLevel = ''
+      props.participant.skillLevel = ''
     }
-  })
-
-  watch(age, val => {
-    stayStore.participants[props.index].age = val
-  })
-  watch(name, val => {
-    stayStore.participants[props.index].name = val
-  })
-  watch(classLang, val => {
-    stayStore.participants[props.index].classLang = val
   })
 
   // Expose validate method for parent
@@ -135,8 +120,12 @@
           <div v-if="participant.participantType === 'child'" class="mb-4">
             <p class="custom-input-label mb-2">{{ $t('child_age') }}</p>
             <VNumberInput
-              v-model="age"
+              v-model="participant.age"
+              control-variant="split"
+              density="default"
+              hide-details="auto"
               :max="16"
+              max-width="165px"
               :min="4"
               :rules="[rules.required]"
               :step="1"
@@ -144,14 +133,14 @@
             />
             <p class="fs-12 fc-gray">
               {{ $t('min_child_age') }}
-              <a class="fc-gray" :href="CUSTOMER_SERVICE_LINK" target="_blank">{{ $t('with_customers_service') }}</a>
+              <a class="fc-gray" :href="configStore.CUSTOMER_SERVICE_LINK" target="_blank">{{ $t('with_customers_service') }}</a>
             </p>
           </div>
 
           <div class="mb-4">
             <p class="custom-input-label mb-2">{{ $t('name') }}</p>
             <VTextField
-              v-model="name"
+              v-model="participant.name"
               autocomplete="off"
               clear-icon="mdi-close"
               clearable
@@ -161,7 +150,7 @@
               :placeholder="$t('enter_name')"
               :rules="[rules.required]"
               variant="outlined"
-              @click:clear="name = ''"
+              @click:clear="participant.name = ''"
               @keydown="(e) => /\d/.test(e.key) && e.preventDefault()"
               @paste="(e) => {
                 const pastedText = e.clipboardData.getData('text')
@@ -179,7 +168,7 @@
             <p class="custom-input-label mb-2">{{ $t('classes_lang') }}</p>
 
             <VSelect
-              v-model="classLang"
+              v-model="participant.classLang"
               density="default"
               hide-details="auto"
               item-title="name"
@@ -199,7 +188,7 @@
               class="ga-2 w-100"
               mandatory
               @update:model-value="(val) => {
-                stayStore.participants[index].activityType = val === 0 ? t('ski') : t('snowboard')
+                participant.activityType = val === 0 ? t('ski') : t('snowboard')
               }"
             >
               <VBtn
@@ -243,6 +232,7 @@
                 :key="i"
                 class="border rounded-lg mb-2"
                 color="primary"
+                :ripple="false"
                 :value="item"
                 @click="selectSkillLevel(item)"
               >
@@ -252,19 +242,25 @@
                     size="16"
                   />
                 </template>
-                <VListItemTitle>
-                  <p class="mb-0 fs-14 text-pre-wrap lh-normal">
-                    {{ item.name }}
-                  </p>
-                </VListItemTitle>
-                <p class="mb-0 fs-11 text-pre-wrap">
-                  {{ item.description }}
-                </p>
+
+                <template #default>
+                  <VListItemTitle>
+                    <p class="mb-0 fs-14 text-pre-wrap lh-normal">
+                      {{ item.name }}
+                    </p>
+                  </VListItemTitle>
+                  <VListItemSubtitle>
+                    <p class="mb-0 fs-11 text-pre-wrap">
+                      {{ item.description }}
+                    </p>
+                  </VListItemSubtitle>
+                </template>
+
                 <template #append>
                   <VIcon
                     icon="mdi-information-slab-circle"
-                    size="16"
-                    @click.stop="selectedSkillLevel = [item]; infoDialog = true"
+                    size="18"
+                    @click.stop="currentSkillLevelInfo = item; infoDialog = true"
                   />
                 </template>
               </VListItem>
@@ -289,9 +285,7 @@
             </button>
           </div>
         </VCardTitle>
-        <VCardText
-          :class="mobile ? 'pt-0':''"
-        >
+        <VCardText :class="mobile ? 'pt-0':''">
           <p :class="mobile ? 'fs-12':'fs-14'">
             {{ currentSkillLevelInfo.additionalInfo }}
           </p>

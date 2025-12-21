@@ -1,8 +1,28 @@
+/**
+ * StayStore - Main Pinia store for managing ski school stay reservations
+ *
+ * This store handles all data related to a stay booking including:
+ * - Date and participant selection
+ * - Class/lesson assignments for each participant
+ * - Pricing calculations (classes, insurance, discounts)
+ * - Manager, payer, and invoice data
+ * - Loyalty program integration
+ * - Legal agreements acceptance
+ */
+
 import { defineStore } from 'pinia'
 import { computed, reactive, ref, watch } from 'vue'
 import { generateUniqueId } from '@/utils/numbers.js'
 import { useStayConfigStore } from './StayConfigStore.js'
-// To be removed
+
+// ============================================================================
+// DUMMY DATA (TO BE REMOVED IN PRODUCTION)
+// ============================================================================
+
+/**
+ * Temporary dummy data for selected classes during development
+ * @deprecated Will be removed and replaced with actual API data
+ */
 const DUMMY_SELECTED_CLASSES = [
   {
     dynamicId: 'mjsjg7s6',
@@ -15,7 +35,7 @@ const DUMMY_SELECTED_CLASSES = [
     dates: [
       { date: '01.01.2025', time: '9:00 - 9:55' },
     ],
-    price: 100,
+    price: 1000, // is calculated per date
     insurance: {
       title: 'NNW Turystyczno-Sportowe lorem ipsum amet dolor blabla tututut',
       enabled: false,
@@ -34,10 +54,9 @@ const DUMMY_SELECTED_CLASSES = [
     instructor: 'Marcin Kowalik',
     dates: [
       { date: '01.01.2025', time: '9:00 - 9:55' },
-      { date: '02.01.2025', time: '9:00 - 9:55' },
-      { date: '03.01.2025', time: '9:00 - 9:55' },
+      { date: '01.01.2025', time: '9:00 - 10:00' },
     ],
-    price: 100,
+    price: 100, // is calculated per date
     insurance: {
       title: 'NNW Turystyczno-Sportowe lorem ipsum amet dolor blabla tututut',
       enabled: false,
@@ -59,10 +78,26 @@ const DUMMY_SELECTED_CLASSES = [
       { date: '01.01.2025', time: '9:00 - 9:55' },
       { date: '02.01.2025', time: '9:00 - 9:55' },
       { date: '03.01.2025', time: '9:00 - 9:55' },
-      { date: '04.01.2025', time: '9:00 - 9:55' },
-      { date: '05.01.2025', time: '9:00 - 9:55' },
+      { date: '03.01.2025', time: '9:00 - 9:55' },
+      { date: '03.01.2025', time: '9:00 - 9:55' },
+      { date: '03.01.2025', time: '9:00 - 9:55' },
+      { date: '03.01.2025', time: '9:00 - 9:55' },
+      { date: '03.01.2025', time: '9:00 - 9:55' },
+      { date: '03.01.2025', time: '9:00 - 9:55' },
+      { date: '03.01.2025', time: '9:00 - 9:55' },
+      { date: '03.01.2025', time: '9:00 - 9:55' },
+      { date: '03.01.2025', time: '9:00 - 9:55' },
+      { date: '03.01.2025', time: '9:00 - 9:55' },
+      { date: '03.01.2025', time: '9:00 - 9:55' },
+      { date: '03.01.2025', time: '9:00 - 9:55' },
+      { date: '03.01.2025', time: '9:00 - 9:55' },
+      { date: '03.01.2025', time: '9:00 - 9:55' },
+      { date: '03.01.2025', time: '9:00 - 9:55' },
+      { date: '03.01.2025', time: '9:00 - 9:55' },
+      { date: '03.01.2025', time: '9:00 - 9:55' },
+      { date: '03.01.2025', time: '9:00 - 9:55' },
     ],
-    price: 250,
+    price: 350, // is calculated per date
     insurance: {
       title: 'NNW Turystyczno-Sportowe lorem ipsum amet dolor blabla tututut',
       enabled: false,
@@ -74,67 +109,209 @@ const DUMMY_SELECTED_CLASSES = [
   },
 ]
 
-// Blank participant template
+// ============================================================================
+// PARTICIPANT TEMPLATE
+// ============================================================================
+
+/**
+ * Blank participant template object
+ * Used to initialize new participants when they are added to the stay
+ * Contains all required fields with default values
+ */
 const blankParticipant = {
-  dynamicId: '',
-  name: '',
-  surname: '',
-  phone: null,
-  birthDate: null,
-  participantType: '',
-  age: null,
-  activityType: '',
-  skillLevel: '',
-  availableActivityTypes: [],
-  availableLessonTypes: [],
-  showGroupLessons: true,
-  classLang: 'Polski',
-  selectedClasses: DUMMY_SELECTED_CLASSES,
-  loyaltyProgram: {},
+  dynamicId: '', // Unique identifier generated at runtime
+  name: '', // Participant's first name
+  surname: '', // Participant's last name
+  phone: null, // Contact phone number
+  birthDate: null, // Date of birth (used to calculate age)
+  participantType: '', // Either 'adult' or 'child'
+  age: null, // Calculated age or manually entered
+  activityType: '', // Selected activity (ski/snowboard)
+  skillLevel: '', // Skill level (beginner/intermediate/advanced)
+  availableActivityTypes: [], // Activity types this participant can choose
+  availableLessonTypes: [], // Lesson types available for this participant
+  showGroupLessons: true, // Whether to show group lesson options
+  classLang: 'Polski', // Preferred language for classes
+  selectedClasses: DUMMY_SELECTED_CLASSES, // Classes enrolled in
 }
 
+// ============================================================================
+// STORE DEFINITION
+// ============================================================================
+
 export const useStayStore = defineStore('stayStore', () => {
+  // Get access to configuration store for shared settings
   const configStore = useStayConfigStore()
 
-  // States
+  // ==========================================================================
+  // STATE - BASIC STAY INFORMATION
+  // ==========================================================================
+
+  /** Selected date range for the stay */
   const dateOfStay = ref(null)
+
+  /** Number of adult participants (1-12) */
   const adultsNumber = ref(1)
+
+  /** Number of child participants (0-12) */
   const childrenNumber = ref(0)
+
+  /** Array of all participants with their complete data */
   const participants = ref([])
-  const hasLoyaltyCard = ref(false) // Loyalty card checkbox
+
+  // ==========================================================================
+  // STATE - LOYALTY PROGRAM
+  // ==========================================================================
+
+  /** Whether the user has a loyalty card checkbox state */
+  const hasLoyaltyCard = ref(false)
+
+  /** Loyalty program details */
   const loyaltyProgram = ref({
-    loyaltyCard: false,
-    loyaltyCardOwnerName: '',
-    loyaltyCardOwnerSurname: '',
-    loyaltyCardNumber: null,
+    loyaltyCard: false, // Redundant with hasLoyaltyCard, may be unified later
+    loyaltyCardOwnerName: '', // Card owner's first name
+    loyaltyCardOwnerSurname: '', // Card owner's last name
+    loyaltyCardNumber: null, // Loyalty card number
   })
 
-  // 👉 Computed event object
+  // ==========================================================================
+  // COMPUTED - COMPLETE EVENT OBJECT
+  // ==========================================================================
+
+  /**
+   * Computed event object that aggregates all booking data
+   * This represents the complete state that would be sent to the backend
+   * Note: Some fields (regulations) are set to null here but updated from store refs
+   */
   const event = computed(() => ({
-    id: null,
-    dateOfStay: dateOfStay.value,
-    adultsNumber: adultsNumber.value,
-    childrenNumber: childrenNumber.value,
-    participants: participants.value,
-    additionalOptions: {},
+    id: null, // Reservation ID (assigned by backend)
+    dateOfStay: dateOfStay.value, // Selected stay date range
+    adultsNumber: adultsNumber.value, // Number of adults
+    childrenNumber: childrenNumber.value, // Number of children
+    participants: participants.value, // Complete participant data array
+    additionalOptions: {}, // Reserved for future additional options
     loyaltyProgram: {
       loyaltyCard: hasLoyaltyCard.value,
       loyaltyCardOwnerName: loyaltyProgram.value.loyaltyCardOwnerName,
       loyaltyCardOwnerSurname: loyaltyProgram.value.loyaltyCardOwnerSurname,
       loyaltyCardNumber: loyaltyProgram.value.loyaltyCardNumber,
     },
+    stayManagerData: stayManagerData.value, // Person managing the booking
+    anotherPayerData: anotherPayerData.value, // Whether payer is different from manager
+    payerData: anotherPayerData.value ? payerData.value : null, // Payer info (if different)
+    receiveInvoice: receiveInvoice.value, // Whether customer wants an invoice
+    invoiceData: receiveInvoice.value ? invoiceData.value : null, // Invoice details (if requested)
+    stokSchoolRegulationsAccepted: null, // School regulations agreement
+    stokSchoolRodoAccepted: null, // RODO/GDPR agreement
+    stokSchoolPaymentRegulationsAccepted: null, // Payment terms agreement
   }))
 
-  // Computed max values based on total constraint
+  // ==========================================================================
+  // STATE - STAY MANAGER DATA
+  // ==========================================================================
+
+  /**
+   * Information about the person managing/organizing the stay
+   * This is the primary contact person for the reservation
+   */
+  const stayManagerData = ref({
+    managerId: null, // Manager ID (if returning customer)
+    name: '', // Manager's first name
+    surname: '', // Manager's last name
+    phone: '', // Contact phone number
+    email: '', // Contact email address
+  })
+
+  // ==========================================================================
+  // STATE - PAYER DATA (IF DIFFERENT FROM MANAGER)
+  // ==========================================================================
+
+  /** Whether the person paying is different from the stay manager */
+  const anotherPayerData = ref(false)
+
+  /**
+   * Payer information (only used if anotherPayerData is true)
+   * Person responsible for payment if different from the manager
+   */
+  const payerData = ref({
+    name: '', // Payer's first name
+    surname: '', // Payer's last name
+    email: '', // Payer's email address
+  })
+
+  // ==========================================================================
+  // STATE - LEGAL AGREEMENTS
+  // ==========================================================================
+
+  /** Acceptance of school regulations checkbox */
+  const stokSchoolRegulationsAccepted = ref(false)
+
+  /** Acceptance of RODO/GDPR privacy policy checkbox */
+  const stokSchoolRodoAccepted = ref(false)
+
+  /** Acceptance of payment regulations checkbox */
+  const stokSchoolPaymentRegulationsAccepted = ref(false)
+
+  /**
+   * Combined check - all three agreements must be accepted to proceed
+   * Used to enable/disable the final confirmation button
+   */
+  const agreementsAcceptedCombined = computed(() => {
+    return stokSchoolRegulationsAccepted.value
+      && stokSchoolRodoAccepted.value
+      && stokSchoolPaymentRegulationsAccepted.value
+  })
+
+  // ==========================================================================
+  // STATE - INVOICE DATA
+  // ==========================================================================
+
+  /** Whether the customer wants to receive an invoice checkbox */
+  const receiveInvoice = ref(false)
+
+  /**
+   * Invoice/company details (only used if receiveInvoice is true)
+   * Required for business customers who need tax documentation
+   */
+  const invoiceData = ref({
+    companyName: '', // Company/business name
+    taxId: '', // Tax identification number (NIP)
+    companyAddress: '', // Registered company address
+  })
+
+  // ==========================================================================
+  // COMPUTED - PARTICIPANT NUMBER CONSTRAINTS
+  // ==========================================================================
+
+  /**
+   * Maximum number of adults allowed
+   * Constrained by total limit (12) minus current children number
+   */
   const maxAdults = computed(() => 12 - childrenNumber.value)
+
+  /**
+   * Maximum number of children allowed
+   * Constrained by total limit (12) minus current adults number
+   */
   const maxChildren = computed(() => 12 - adultsNumber.value)
 
-  // Participants number condition
+  /**
+   * Validation check - at least one participant must be selected
+   * Used to enable/disable next step buttons
+   */
   const participantsNumberCondition = computed(() => {
     return adultsNumber.value > 0 || childrenNumber.value > 0
   })
 
-  // 👉 Participant (singular) classes total price
+  // ==========================================================================
+  // COMPUTED - PRICING CALCULATIONS
+  // ==========================================================================
+
+  /**
+   * Calculate total price of classes for a single participant
+   * @param {string} participantId - The unique ID of the participant
+   * @returns {number} Total price of all classes for this participant
+   */
   const participantClassesTotalPrice = computed(() => {
     return participantId => {
       const participant = participants.value.find(p => p.dynamicId === participantId)
@@ -143,11 +320,20 @@ export const useStayStore = defineStore('stayStore', () => {
       }
 
       return participant.selectedClasses.reduce((sum, classItem) => {
-        return sum + (classItem.price || 0)
+        const numberOfDates = classItem.dates?.length || 1
+        return sum + (classItem.price * numberOfDates)
       }, 0)
     }
   })
-  // 👉 Participant (singular) insurance total price
+
+  /**
+   * Calculate total insurance price for a single participant
+   * @param {string} participantId - The unique ID of the participant
+   * @returns {number} Total insurance cost for this participant
+   *
+   * Note: Insurance is skipped for children in group classes
+   * For other cases, price is multiplied by number of days if perDay is true
+   */
   const participantInsuranceTotalPrice = computed(() => {
     return participantId => {
       const participant = participants.value.find(p => p.dynamicId === participantId)
@@ -172,7 +358,11 @@ export const useStayStore = defineStore('stayStore', () => {
     }
   })
 
-  // 👉 All participants total price (combined classes + insurance)
+  /**
+   * Calculate total price for all participants combined
+   * Sums up all classes and insurance costs, then applies generic discount
+   * @returns {number} Final total price for the entire booking (never negative)
+   */
   const allParticipantsTotalPrice = computed(() => {
     const classesTotal = participants.value.reduce((total, participant) => {
       return total + participantClassesTotalPrice.value(participant.dynamicId)
@@ -182,36 +372,175 @@ export const useStayStore = defineStore('stayStore', () => {
       return total + participantInsuranceTotalPrice.value(participant.dynamicId)
     }, 0)
 
-    return Math.max(0, (classesTotal + insuranceTotal) - discountGeneric)
+    return Math.max(0, (classesTotal + insuranceTotal) - finalDiscount.value)
   })
 
-  // 👉 Promotions/discounts/suggestions
-  const discountPackage_10 = ref(false) // not used for now
-  const discountPackage_20 = ref(false) // not used for now
-  const discountGeneric = 50 // a generic discount value for demonstration
-  const missingClassesForDiscount = ref(false) // not used for now
+  // ==========================================================================
+  // STATE - DISCOUNTS AND PROMOTIONS
+  // ==========================================================================
 
-  // Additional options
-  const insuranceSelected = ref({}) // selections per participant
+  /**
+   * Discount and promotional features
+   * Currently in development, will be used for implementing package deals
+   */
 
-  // CRUCIAL: Watchers to sync participants with adults/children numbers
-  // This is responsible for adding/removing participant entries
+  /**
+   * Calculate total hours of classes across ALL participants excluding group classes
+   * @returns {number} Total hours of all classes for all participants combined
+   *
+   * Parses time ranges from class dates (e.g., "9:00 - 9:55") and sums up
+   * the duration in hours across all participants and their enrolled classes
+   */
+
+  const allParticipantsTotalHours = computed(() => {
+    const totalHours = participants.value.reduce((totalHours, participant) => {
+      if (!participant?.selectedClasses || participant.selectedClasses.length === 0) {
+        return totalHours
+      }
+
+      const participantHours = participant.selectedClasses.reduce((classTotal, classItem) => {
+        // Exclude group classes from total hours calculation
+        if (classItem.type === 'group') {
+          return classTotal
+        }
+
+        if (!classItem.dates || classItem.dates.length === 0) {
+          return classTotal
+        }
+
+        // Calculate hours for each date in this class
+        const classHours = classItem.dates.reduce((dateHours, dateObj) => {
+          if (!dateObj.time) {
+            return dateHours
+          }
+
+          // Parse time range (e.g., "9:00 - 9:55")
+          const timeParts = dateObj.time.split(' - ')
+          if (timeParts.length !== 2) {
+            return dateHours
+          }
+
+          const [startTime, endTime] = timeParts
+
+          // Convert time strings to hours (e.g., "9:00" -> 9, "9:55" -> 9.916...)
+          const parseTime = timeStr => {
+            const [hours, minutes] = timeStr.split(':').map(Number)
+            return hours + (minutes / 60)
+          }
+
+          const startHours = parseTime(startTime)
+          const endHours = parseTime(endTime)
+          const duration = endHours - startHours
+
+          return dateHours + duration
+        }, 0)
+
+        return classTotal + classHours
+      }, 0)
+
+      return totalHours + participantHours
+    }, 0)
+
+    return Number.parseFloat(totalHours.toFixed(1))
+  })
+  // thresholds:
+  const FIRST_PACKAGE_THRESHOLD = 10 // hours
+  const SECOND_PACKAGE_THRESHOLD = 20 // hours
+  const FIRST_LEVEL_DISCOUNT = 5.7 // percent
+  const SECOND_LEVEL_DISCOUNT = 11.4 // percent
+  const LOYALTY_CARD_DISCOUNT = 12 // percent
+
+  // first package eligibility
+  const firstPackageEligible = computed(() => {
+    return allParticipantsTotalHours.value >= FIRST_PACKAGE_THRESHOLD
+      && allParticipantsTotalHours.value < SECOND_PACKAGE_THRESHOLD
+  })
+
+  // second package eligibility
+  const secondPackageEligible = computed(() => {
+    return allParticipantsTotalHours.value >= SECOND_PACKAGE_THRESHOLD
+  })
+
+  // final discount calculation
+  const finalDiscount = computed(() => {
+    if (secondPackageEligible.value) {
+      return SECOND_LEVEL_DISCOUNT
+    }
+    if (firstPackageEligible.value) {
+      return FIRST_LEVEL_DISCOUNT
+    }
+    if (isValidLoyaltyCardNumber.value) {
+      return LOYALTY_CARD_DISCOUNT
+    }
+    return 0
+  })
+
+  // missing hours to thresholds
+  const missingHoursToFirstThreshold = computed(() => {
+    if (allParticipantsTotalHours.value >= FIRST_PACKAGE_THRESHOLD) {
+      return 0
+    }
+    return FIRST_PACKAGE_THRESHOLD - allParticipantsTotalHours.value
+  })
+  const missingHoursToSecondThreshold = computed(() => {
+    if (allParticipantsTotalHours.value >= SECOND_PACKAGE_THRESHOLD) {
+      return 0
+    }
+    return SECOND_PACKAGE_THRESHOLD - allParticipantsTotalHours.value
+  })
+
+  /**
+   * Tracks how many more class hours are needed to reach discount thresholds
+   * Used to inform users how close they are to unlocking package deals
+   */
+  const missingClassesForDiscount = computed(() => {
+    if (firstPackageEligible.value || secondPackageEligible.value) {
+      return missingHoursToSecondThreshold.value
+    }
+    return (missingHoursToFirstThreshold.value).toFixed(1)
+  })
+
+  // ==========================================================================
+  // STATE - ADDITIONAL OPTIONS
+  // ==========================================================================
+
+  /**
+   * Insurance selections per participant
+   * Object structure: { participantId: insuranceOption }
+   */
+  const insuranceSelected = ref({})
+
+  // ==========================================================================
+  // WATCHER - PARTICIPANT SYNCHRONIZATION
+  // ==========================================================================
+
+  /**
+   * CRUCIAL: Automatically sync the participants array with adults/children counts
+   *
+   * This watcher ensures that:
+   * - When counts increase: new participant objects are created
+   * - When counts decrease: excess participants are removed
+   * - Adult participants are added first, then children
+   * - Each new participant gets a unique ID and proper type
+   */
   watch([adultsNumber, childrenNumber], ([newAdults, newChildren]) => {
     const totalNeeded = newAdults + newChildren
     const currentLength = participants.value.length
 
+    // Add new participants if needed
     if (totalNeeded > currentLength) {
       const toAdd = totalNeeded - currentLength
       const adultsToAdd = Math.max(0, newAdults - participants.value.filter(p => p.participantType === 'adult').length)
 
+      // Create new participant objects with proper type assignment
       const newParticipants = Array.from({ length: toAdd }, (_, i) => {
         const isAdult = i < adultsToAdd
         return reactive({
           ...blankParticipant,
           dynamicId: generateUniqueId(),
           participantType: isAdult ? 'adult' : 'child',
-          age: isAdult ? null : null, // Age will be set by user for children
-          selectedClasses: JSON.parse(JSON.stringify(blankParticipant.selectedClasses)),
+          age: isAdult ? null : null, // Age will be set by user input
+          selectedClasses: JSON.parse(JSON.stringify(blankParticipant.selectedClasses)), // Deep clone to avoid shared reference
         })
       })
       participants.value.push(...newParticipants)
@@ -220,9 +549,16 @@ export const useStayStore = defineStore('stayStore', () => {
       const toRemove = currentLength - totalNeeded
       participants.value.splice(-toRemove)
     }
-  }, { immediate: true })
+  }, { immediate: true }) // Execute immediately on store initialization
 
-  // Reset function
+  // ==========================================================================
+  // ACTIONS - RESET FUNCTIONALITY
+  // ==========================================================================
+
+  /**
+   * Reset the entire booking to initial state
+   * Clears all selections and returns to default values
+   */
   const resetEvent = () => {
     dateOfStay.value = null
     adultsNumber.value = 1
@@ -230,60 +566,120 @@ export const useStayStore = defineStore('stayStore', () => {
     participants.value = []
   }
 
-  // Loyalty card number checking simulation
+  // ==========================================================================
+  // ACTIONS - LOYALTY CARD VALIDATION
+  // ==========================================================================
+
+  /** Loading state during loyalty card number validation */
   const checkingLoyaltyCardNumber = ref(false)
+
+  /** Result of loyalty card number validation (true/false/null) */
   const isValidLoyaltyCardNumber = ref(null)
+
+  /**
+   * Validate loyalty card number (simulated with timeout)
+   * @param {string} number - The loyalty card number to check
+   * @returns {Promise<boolean>} Promise resolving to validation result
+   *
+   * Validation logic (temporary): Card is valid if last digit is even
+   * TODO: Replace with actual API call to loyalty program service
+   */
   const checkLoyaltyCardNumber = number => {
     checkingLoyaltyCardNumber.value = true
     isValidLoyaltyCardNumber.value = null // Reset validation state
     return new Promise(resolve => {
       setTimeout(() => {
+        // Temporary validation: even last digit = valid card
         const isValid = Number.parseInt(number.slice(-1)) % 2 === 0
         isValidLoyaltyCardNumber.value = isValid
         checkingLoyaltyCardNumber.value = false
         resolve(isValid)
-      }, 1000)
+      }, 1000) // Simulate network delay
     })
   }
+  // ==========================================================================
+  // CART
+  // ==========================================================================
+
+  const isPaymentCompleted = ref(true)
+  const isPaymentInProgress = ref(true)
+  const isPaymentFailed = ref(true)
+
+  // ==========================================================================
+  // STORE EXPORTS
+  // ==========================================================================
 
   return {
-    // State
-    event,
-    dateOfStay,
-    adultsNumber,
-    childrenNumber,
-    participants,
-    discountPackage_10,
-    discountPackage_20,
-    missingClassesForDiscount,
-    insuranceSelected,
-    hasLoyaltyCard,
-    loyaltyProgram,
-    isValidLoyaltyCardNumber,
-    discountGeneric,
-    // Computed
-    maxAdults,
-    maxChildren,
-    participantsNumberCondition,
-    participantClassesTotalPrice,
-    participantInsuranceTotalPrice,
-    allParticipantsTotalPrice,
-    checkingLoyaltyCardNumber,
+    // ==========================================================================
+    // STATE REFS
+    // ==========================================================================
 
-    // Actions
-    resetEvent,
+    event, // Complete event object (computed)
+    dateOfStay, // Selected date range
+    adultsNumber, // Number of adults
+    childrenNumber, // Number of children
+    participants, // Participants array
+    missingClassesForDiscount, // Discount threshold tracking
+    insuranceSelected, // Insurance selections per participant
+    hasLoyaltyCard, // Loyalty card checkbox state
+    loyaltyProgram, // Loyalty program data
+    isValidLoyaltyCardNumber, // Loyalty card validation result
+    finalDiscount, // Generic discount amount
+    stayManagerData, // Stay manager information
+    anotherPayerData, // Different payer checkbox
+    payerData, // Payer information
+    receiveInvoice, // Invoice request checkbox
+    invoiceData, // Invoice/company details
+    stokSchoolRegulationsAccepted, // School regulations acceptance
+    stokSchoolRodoAccepted, // RODO/GDPR acceptance
+    stokSchoolPaymentRegulationsAccepted, // Payment regulations acceptance
+    agreementsAcceptedCombined, // All agreements check (computed)
+    isPaymentCompleted, // Payment completed state
+    isPaymentInProgress, // Payment in progress state
+    isPaymentFailed, // Payment failed state
+    firstPackageEligible,
+    secondPackageEligible,
+    missingHoursToFirstThreshold,
+    missingHoursToSecondThreshold,
+    FIRST_LEVEL_DISCOUNT,
+    SECOND_LEVEL_DISCOUNT,
+    LOYALTY_CARD_DISCOUNT,
 
-    // Configuration (from config store)
-    activityTypes: configStore.activityTypes,
-    skillLevels_ADULTS: configStore.skillLevels_ADULTS,
-    skillLevels_CHILDREN_SKI: configStore.skillLevels_CHILDREN_SKI,
-    skillLevels_CHILDREN_SNOWBOARD: configStore.skillLevels_CHILDREN_SNOWBOARD,
-    availableLanguages: configStore.availableLanguages,
-    currency: configStore.currency,
+    // ==========================================================================
+    // COMPUTED PROPERTIES
+    // ==========================================================================
 
-    // Temporary
-    DUMMY_SELECTED_CLASSES,
-    // Methods
-    checkLoyaltyCardNumber,
+    maxAdults, // Maximum adults allowed
+    maxChildren, // Maximum children allowed
+    participantsNumberCondition, // Validation: at least one participant
+    participantClassesTotalPrice, // Single participant classes price calculator
+    participantInsuranceTotalPrice, // Single participant insurance price calculator
+    allParticipantsTotalPrice, // Total price for all participants
+    allParticipantsTotalHours, // Total hours of classes for all participants excluding groups
+    checkingLoyaltyCardNumber, // Loyalty card validation loading state
+
+    // ==========================================================================
+    // ACTIONS/METHODS
+    // ==========================================================================
+
+    resetEvent, // Reset booking to initial state
+    checkLoyaltyCardNumber, // Validate loyalty card number
+
+    // ==========================================================================
+    // CONFIGURATION (from StayConfigStore)
+    // ==========================================================================
+
+    activityTypes: configStore.activityTypes, // Available activities (ski/snowboard)
+    skillLevels_ADULTS: configStore.skillLevels_ADULTS, // Adult skill levels
+    skillLevels_CHILDREN_SKI: configStore.skillLevels_CHILDREN_SKI, // Children ski skill levels
+    skillLevels_CHILDREN_SNOWBOARD: configStore.skillLevels_CHILDREN_SNOWBOARD, // Children snowboard skill levels
+    availableLanguages: configStore.availableLanguages, // Available class languages
+    currency: configStore.currency, // Currency settings
+
+    // ==========================================================================
+    // TEMPORARY/DEVELOPMENT
+    // ==========================================================================
+
+    DUMMY_SELECTED_CLASSES, // Temporary dummy data (to be removed)
   }
 })

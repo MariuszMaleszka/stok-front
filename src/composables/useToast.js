@@ -16,17 +16,16 @@ export function useToast () {
       hideProgressBar: true,
     })
   }
-
-  const showActionToast = (message, buttonText, onAction) => {
+  const showActionToast = (content, buttonText, onAction, buttonStyle = '') => {
     const toastId = toast(h(ToastWithAction, {
-      message,
       buttonText,
+      buttonStyle,
       onAction: () => {
         onAction()
-        toast.dismiss(toastId)
+        toast.remove(toastId)
       },
-    }), {
-      autoClose: false, // Set a timeout or keep false
+    }, () => content), {
+      autoClose: false,
       closeButton: true,
       hideProgressBar: true,
     })

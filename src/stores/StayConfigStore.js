@@ -6,6 +6,37 @@ export const useStayConfigStore = defineStore('stayConfig', () => {
   const { t } = useI18n()
 
   const currency = 'zł'
+  // Per hour prices (DEFAULT FOR COMBINED CLASSES)
+  /**
+   * Combined pricing structure for classes based on participant count
+   */
+  const combinedClassesPrices = ref({
+    firstParticipant: 174.99, // Price for first participant
+    secondParticipant: 40, // Price for second participant
+    additionalParticipant: 30, // Price for each participant beyond the second
+  })
+
+  const combinedClassesPrices_10h = ref({
+    firstParticipant: 164.99, // Price for first participant
+    secondParticipant: 38, // Price for second participant
+    additionalParticipant: 28, // Price for each participant beyond the second
+  })
+
+  const combinedClassesPrices_20h = ref({
+    firstParticipant: 154.99, // Price for first participant
+    secondParticipant: 37, // Price for second participant
+    additionalParticipant: 27, // Price for each participant beyond the second
+  })
+
+  const combinedClassesPrices_HH = ref({
+    firstParticipant: 164.99, // Price for first participant
+    secondParticipant: 38, // Price for second participant
+    additionalParticipant: 28, // Price for each participant beyond the second
+  })
+
+  const CUSTOMER_SERVICE_LINK = 'https://szkolastok.pl/kontakt'
+  const REGULATIONS_LINK = 'https://szkolastok.pl/kontakt'
+  const PAYMENT_REGULATIONS_LINK = 'https://szkolastok.pl/kontakt'
 
   const activityTypes = reactive([
     { name: t('ski'), selected: false },
@@ -13,14 +44,14 @@ export const useStayConfigStore = defineStore('stayConfig', () => {
   ])
 
   const skillLevels_ADULTS = reactive([
+    // {
+    //   name: t('firstime'),
+    //   description: t('firstime_desc'),
+    //   additionalInfo: t('firstime_info'),
+    //   selected: false
+    // },
     {
-      name: t('firstime'),
-      description: t('firstime_desc'),
-      additionalInfo: t('firstime_info'),
-      selected: false,
-    },
-    {
-      name: t('novice'),
+      name: t('begginer'),
       description: t('novice_desc'),
       additionalInfo: t('novice_info'),
       selected: false,
@@ -113,5 +144,12 @@ export const useStayConfigStore = defineStore('stayConfig', () => {
     skillLevels_CHILDREN_SNOWBOARD,
     availableLanguages,
     currency,
+    CUSTOMER_SERVICE_LINK,
+    REGULATIONS_LINK,
+    PAYMENT_REGULATIONS_LINK,
+    combinedClassesPrices,
+    combinedClassesPrices_10h,
+    combinedClassesPrices_20h,
+    combinedClassesPrices_HH,
   }
 })

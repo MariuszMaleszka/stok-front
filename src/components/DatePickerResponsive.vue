@@ -199,7 +199,7 @@
           </template>
         </VTextField>
       </template>
-      <template #action-preview>
+      <template #action-preview="{ value }">
         <div class="custom-preview fs-13 mr-auto">
           {{ $t('selected') }}:
           <span class="fw-600">
@@ -294,7 +294,7 @@
               </div>
             </template>
 
-            <template #action-preview>
+            <template #action-preview="{ value }">
               <div class="custom-preview fs-13 mr-auto">
                 {{ $t('selected') }}:
                 <span class="fw-600">
@@ -334,7 +334,7 @@
 
 <style lang="scss">
 .dp__outer_menu_wrap {
-  @media (max-width: 960px) {
+  @media (max-width: 600px) {
   width: 100%;
   }
 
@@ -342,7 +342,7 @@
 .dp__menu {
   font-family: 'Inter', sans-serif;
   border: none;
-  @media (min-width: 960px) {
+  @media (min-width: 600px) {
     margin-top: unset;
     border-radius: 16px;
     padding: 16px;
@@ -378,7 +378,7 @@
   padding-bottom: 0;
   column-gap: 10px;
 
-  @media (min-width: 960px) {
+  @media (min-width: 600px) {
     padding: 16px 16px 0 16px !important;
 
   }
@@ -387,7 +387,7 @@
 .dp__calendar_header {
   font-size: 11px;
   font-weight: 200;
-  @media (min-width: 960px) {
+  @media (min-width: 600px) {
     font-size: 13px;
   }
 }
@@ -424,7 +424,7 @@
   border-radius: $border-radius;
   height: 24px !important;
   font-size: 11px;
-  @media (min-width: 960px) {
+  @media (min-width: 600px) {
     font-size: 13px;
     height: 28px !important;
     padding: 1px 8px !important;

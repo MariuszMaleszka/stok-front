@@ -1,12 +1,12 @@
 <script setup>
   defineProps({
-    message: {
-      type: String,
-      required: true,
-    },
     buttonText: {
       type: String,
       required: true,
+    },
+    buttonStyle: {
+      type: String,
+      default: '',
     },
     onAction: {
       type: Function,
@@ -17,30 +17,55 @@
   function handleAction () {
     onAction()
   }
+
 </script>
+
 <template>
   <div class="toast-with-action">
-    <p class="toast-message">{{ message }}</p>
+    <div class="toast-content">
+      <slot />
+    </div>
     <button
       class="toast-button"
-      @click="handleAction"
+      :style="buttonStyle"
+      @click="onAction"
     >
       {{ buttonText }}
     </button>
   </div>
 </template>
+
 <style scoped lang="scss">
 .toast-with-action {
+
+}
+
+.toast-content {
+
+}
+
+.toast-icon {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 0.5rem;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.toast-text {
+  flex: 1;
+  font-size: 14px;
+  line-height: normal;
+}
+
+.toast-title {
+  font-weight: 600;
 }
 
 .toast-message {
-  flex: 1;
   margin: 0;
+  font-size: 0.875rem;
   color: inherit;
+  opacity: 0.9;
 }
 
 .toast-button {
@@ -53,6 +78,7 @@
   font-size: 0.875rem;
   font-weight: 500;
   transition: background-color 0.2s;
+  flex-shrink: 0;
 
   &:hover {
     background-color: #1565c0;

@@ -108,3 +108,176 @@ Copyright (c) 2016-present Vuetify, LLC
 ## Date Picker
 
 This project uses [@vuepic/vue-datepicker](https://vue3datepicker.com/) for date selection components. For usage details and API documentation, see the [official documentation](https://vue3datepicker.com/).
+
+## 🏪 Pinia Stores
+
+This application uses three main Pinia stores for state management:
+
+### 1. StayStore (`src/stores/StayStore.js`)
+
+The **StayStore** is the main store for managing ski school stay reservations. It handles all booking-related data and business logic.
+
+#### Key Features:
+- **Participant Management**: Handles adults and children (up to 12 total participants)
+- **Date Selection**: Manages stay date ranges
+- **Class Enrollment**: Tracks selected classes for each participant (group and individual lessons)
+- **Pricing Calculations**:
+  - Per-participant class pricing with per-date calculations
+  - Insurance pricing (skipped for children in group classes)
+  - Total pricing with discount application
+  - Hour-based package discount system
+- **Discount System**:
+  - First package (10+ hours): 5.7% discount
+  - Second package (20+ hours): 11.4% discount
+  - Loyalty card: 12% discount
+  - Real-time missing hours calculation
+- **Loyalty Program**: Card validation and owner information
+- **Payment Data**: Stay manager, payer (if different), and invoice details
+- **Legal Agreements**: RODO/GDPR and regulations acceptance tracking
+
+#### Usage Example:
+```vue
+<script setup>
+import { useStayStore } from '@/stores/StayStore'
+
+const stayStore = useStayStore()
+
+// Access data
+const totalPrice = stayStore.allParticipantsTotalPrice
+const totalHours = stayStore.allParticipantsTotalHours
+const discount = stayStore.finalDiscount
+
+// Modify state
+stayStore.adultsNumber = 2
+stayStore.childrenNumber = 1
+stayStore.dateOfStay = [new Date(), new Date()]
+
+// Check loyalty card
+await stayStore.checkLoyaltyCardNumber('12345678')
+</script>
+```
+
+#### Key Computed Properties:
+- `event` - Complete booking object with all data
+- `allParticipantsTotalPrice` - Final total price after discounts
+- `allParticipantsTotalHours` - Total class hours (excluding group classes)
+- `firstPackageEligible` - Whether 10h threshold is reached
+- `secondPackageEligible` - Whether 20h threshold is reached
+- `missingClassesForDiscount` - Hours needed for next discount level
+- `participantClassesTotalPrice(id)` - Price calculator per participant
+- `participantInsuranceTotalPrice(id)` - Insurance calculator per participant
+
+### 2. StayConfigStore (`src/stores/StayConfigStore.js`)
+
+The **StayConfigStore** provides configuration data and constants used throughout the application.
+
+#### Key Features:
+- **Pricing Tiers**: Different pricing for various hour thresholds
+  - `combinedClassesPrices` - Default pricing (first: 174.99, second: 40, additional: 30)
+  - `combinedClassesPrices_10h` - 10+ hours pricing (first: 164.99, second: 38, additional: 28)
+  - `combinedClassesPrices_20h` - 20+ hours pricing (first: 154.99, second: 37, additional: 27)
+  - `combinedClassesPrices_HH` - Happy hours pricing (first: 164.99, second: 38, additional: 28)
+- **Activity Types**: Ski and Snowboard options
+- **Skill Levels**:
+  - Adults: Beginner, Intermediate, Advanced
+  - Children Ski: Orange, Bronze, Silver, Gold, Diamond groups (with age ranges)
+  - Children Snowboard: Yellow, Wide, Narrow groups
+- **Languages**: Polish and English class options
+- **External Links**: Customer service, regulations, payment terms
+
+#### Usage Example:
+```vue
+<script setup>
+import { useStayConfigStore } from '@/stores/StayConfigStore'
+
+const configStore = useStayConfigStore()
+
+// Access pricing
+const prices = configStore.combinedClassesPrices
+// { firstParticipant: 174.99, secondParticipant: 40, additionalParticipant: 30 }
+
+// Access skill levels
+const adultLevels = configStore.skillLevels_ADULTS
+const childSkiLevels = configStore.skillLevels_CHILDREN_SKI
+
+// Currency
+const currency = configStore.currency // 'zł'
+</script>
+```
+
+### 3. ViewControlStore (`src/stores/ViewControlStore.js`)
+
+The **ViewControlStore** manages the multi-step booking flow and UI state.
+
+#### Key Features:
+- **Step Navigation**: Tracks current parent and child step positions
+- **Step Completion States**:
+  - Step One (Date & Participant Selection)
+  - Step Two (Class Selection)
+  - Step Three with substeps:
+    - Cart Review
+    - Participant Data Entry
+    - Payment Processing
+- **Stepper Reference**: Manages connection to parent stepper component for programmatic navigation
+
+#### Usage Example:
+```vue
+<script setup>
+import { useViewControlStore } from '@/stores/ViewControlStore'
+
+const viewStore = useViewControlStore()
+
+// Check completion status
+if (viewStore.isStepOneCompleted) {
+  // Proceed to next step
+}
+
+// Set stepper reference (in parent component)
+const stepperRef = ref(null)
+viewStore.setParentStepper(stepperRef)
+
+// Navigate using stepper
+viewStore.parentStepperRef?.next()
+viewStore.parentStepperRef?.prev()
+</script>
+```
+
+#### Current Step Structure:
+```javascript
+{
+  parent: 1, // Main step (1-3)
+  child: 1   // Sub-step within parent
+}
+```
+
+### Store Communication
+
+The stores work together to provide a complete booking experience:
+
+1. **StayStore** references **StayConfigStore** for pricing and configuration data
+2. **ViewControlStore** manages the UI flow while **StayStore** handles the business logic
+3. All stores are reactive and can be used together in components
+
+```vue
+<script setup>
+import { useStayStore } from '@/stores/StayStore'
+import { useStayConfigStore } from '@/stores/StayConfigStore'
+import { useViewControlStore } from '@/stores/ViewControlStore'
+
+const stayStore = useStayStore()
+const configStore = useStayConfigStore()
+const viewStore = useViewControlStore()
+
+// Example: Complete step one
+const completeStepOne = () => {
+  if (stayStore.participantsNumberCondition && stayStore.dateOfStay) {
+    viewStore.isStepOneCompleted = true
+    viewStore.currentStep.parent = 2
+  }
+}
+</script>
+```
+
+### Resources
+- [Pinia Documentation](https://pinia.vuejs.org/)
+- [Vue 3 Composition API](https://vuejs.org/guide/extras/composition-api-faq.html)

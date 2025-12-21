@@ -1,5 +1,5 @@
 <script setup>
-  import { computed, ref } from 'vue'
+  import { computed, ref, watch } from 'vue'
   import { useI18n } from 'vue-i18n'
   import { useDisplay } from 'vuetify'
   import StepOne from '@/components/StepOne.vue'
@@ -43,9 +43,11 @@
   }
 
   async function handleNext () {
+    // Step 1/1 (stay data) - proceed to Step 1/2
     if (viewStore.currentStep.parent === 1 && viewStore.currentStep.child === 1) {
       stepOneComponentRef.value.stepOneNestedRef.next()
     }
+    // Step 1/2 (participants data) - validate and proceed to Step 2
     if (viewStore.currentStep.parent === 1 && viewStore.currentStep.child === 2) {
       const isValid = await stepOneComponentRef.value?.validateCurrentStep()
       if (isValid) {
@@ -56,26 +58,42 @@
       }
       return
     }
+    // Step 2 (classes data) - proceed to Step 3
     if (viewStore.currentStep.parent === 2) {
       viewStore.currentStep = { parent: 2, child: 1 } // reset child step to 1 to remain flow
       parentStepperRef.value.next()
     }
-    if (viewStore.currentStep.parent === 3) {
+    // Step 3/1 (cart) - no validations -  proceed to Step 3/2
+    if (viewStore.currentStep.parent === 3 && viewStore.currentStep.child === 1) {
       stepThreeComponentRef.value.stepThreeNestedRef.next()
+    }
+    // Step 3/2 (participants data)  - proceed to payment
+    if (viewStore.currentStep.parent === 3 && viewStore.currentStep.child === 2) {
+      const isValid = await stepThreeComponentRef.value?.validateCurrentStep()
+      if (isValid) {
+        viewStore.isStepThreeCompleted = true
+        stepThreeComponentRef.value.stepThreeNestedRef.next()
+      } else {
+        viewStore.isStepThreeCompleted = false
+      }
+      return
     }
   }
 
   watch(parentActiveStep, newStep => {
     viewStore.currentStep.parent = newStep
   })
+
+  onMounted(() => {
+    viewStore.setParentStepper(parentStepperRef.value)
+  })
 </script>
 
 <template>
-  {{ viewStore.currentStep }}
   <VContainer
-    class="d-flex flex-column flex-1 mt-4"
+    class="d-flex flex-column flex-1 mt-4 mb-12"
     :class="mobile ? 'px-2': ''"
-    max-width="800"
+    max-width="990"
   >
     <VStepper
       ref="parentStepperRef"
@@ -84,7 +102,7 @@
       min-height="100%"
     >
       <VStepperHeader
-        class="pa-4 box-shadow-sm"
+        class="container-narrow pa-4 box-shadow-sm"
         :class="mobile ? 'px-2 py-4' : ''"
       >
         <VStepperItem
@@ -108,11 +126,16 @@
       </VStepperHeader>
 
       <VStepperWindow class="flex-1">
-        <VStepperWindowItem :value="1">
+        <VStepperWindowItem
+          :value="1"
+        >
           <StepOne ref="stepOneComponentRef" />
         </VStepperWindowItem>
 
-        <VStepperWindowItem :value="2">
+        <VStepperWindowItem
+          class="container-narrow"
+          :value="2"
+        >
           <StepTwo ref="stepTwoComponentRef" />
         </VStepperWindowItem>
 
@@ -122,38 +145,39 @@
       </VStepperWindow>
 
       <template #actions>
-        <div class="d-flex justify-space-between mt-4 mb-2">
-          <VBtn
-            v-if="viewStore.currentStep.parent !== 1 || viewStore.currentStep.child !== 1"
-            class="fs-16 text-capitalize"
-            color="blue"
-            prepend-icon="mdi-arrow-left"
-            variant="outlined"
-            @click="handlePrev"
+        <div class="fixed-bar box-shadow-sm">
+          <div
+            class=" container-actions d-flex ga-4"
           >
-            {{ t('previous') }}
-          </VBtn>
+            <VBtn
+              v-if="viewStore.currentStep.parent !== 1 || viewStore.currentStep.child !== 1"
+              class="fs-16 text-capitalize flex-1 bg-light-gray"
+              color="blue"
+              prepend-icon="mdi-arrow-left"
+              size="large"
+              variant="outlined"
+              @click="handlePrev"
+            >
+              {{ t('previous') }}
+            </VBtn>
 
-          <VBtn
-            v-if="viewStore.currentStep.parent !== 3 || viewStore.currentStep.child !== 3"
-            class="fs-16 text-capitalize px-8 ml-auto"
-            color="blue"
-            :disabled="!stayStore.dateOfStay"
-            variant="flat"
-            @click="handleNext"
-          >
-            {{ t('next') }}
-          </VBtn>
-          <VBtn
-            v-else
-            class="fs-16 text-capitalize px-8 ml-auto"
-            color="blue"
-            :disabled="false"
-            variant="flat"
-            @click="console.log('Finish clicked')"
-          >
-            {{ t('finalize') }}
-          </VBtn>
+            <VBtn
+              class="fs-16  px-8 ml-auto flex-2"
+              color="blue"
+              :disabled="!stayStore.dateOfStay"
+              size="large"
+              variant="flat"
+              @click="handleNext"
+            >
+              <span v-if="viewStore.currentStep.parent === 3 && viewStore.currentStep.child === 2">
+                {{ t('proceed_to_payment') }}
+              </span>
+              <span v-else>
+                {{ t('next') }}
+              </span>
+            </VBtn>
+
+          </div>
 
         </div>
       </template>
@@ -194,6 +218,7 @@
 
 // Parent stepper
 .parent-stepper {
+  box-shadow: none !important;
   &:not(.child-stepper) {
     > .v-stepper-header {
       border-radius: $border-radius;
@@ -270,5 +295,15 @@
       border-color: $blue;
     }
   }
+}
+.fixed-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  z-index: 10;
+  padding: .5rem;
+  background-color: $bg-gray-light;
 }
 </style>

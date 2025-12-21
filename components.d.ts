@@ -11,14 +11,12 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
-    ActionToast: typeof import('./src/components/toasts/ActionToast.vue')['default']
     AddClassesModal: typeof import('./src/components/modals/AddClassesModal.vue')['default']
     AppFooter: typeof import('./src/components/AppFooter.vue')['default']
     AppHeader: typeof import('./src/components/AppHeader.vue')['default']
     ClassesModal: typeof import('./src/components/modals/ClassesModal.vue')['default']
     DatePicker: typeof import('./src/components/DatePicker.vue')['default']
     DatePickerResponsive: typeof import('./src/components/DatePickerResponsive.vue')['default']
-    DateRangePicker: typeof import('./src/components/DateRangePicker.vue')['default']
     DateRangePickerModal: typeof import('./src/components/modals/DateRangePickerModal.vue')['default']
     HelloWorld: typeof import('./src/components/HelloWorld.vue')['default']
     PackageInfoBox: typeof import('./src/components/PackageInfoBox.vue')['default']
@@ -29,9 +27,12 @@ declare module 'vue' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     SelectedParticipantClasses: typeof import('./src/components/SelectedParticipantClasses.vue')['default']
+    StayDateDisplay: typeof import('./src/components/StayDateDisplay.vue')['default']
     StepOne: typeof import('./src/components/StepOne.vue')['default']
     StepThree: typeof import('./src/components/StepThree.vue')['default']
     StepTwo: typeof import('./src/components/StepTwo.vue')['default']
+    Timer: typeof import('./src/components/Timer.vue')['default']
+    TimerToast: typeof import('./src/components/toasts/TimerToast.vue')['default']
     Toast: typeof import('./src/components/toasts/Toast.vue')['default']
   }
 }

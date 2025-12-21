@@ -35,17 +35,18 @@
     :model-value="modelValue"
     @update:model-value="emit('update:modelValue', $event)"
   >
-    <VCard>
+    <VCard class="rounded-xl">
       <VCardTitle class="bg-light-gray text-pre-wrap border-b ">
         <div
           class="d-flex py-4 justify-space-between align-center"
         >
+          <slot name="icon" />
           <span class="lh-normal" :class="mobile ? 'fs-14' : 'fs-16'">
             {{ title }}
           </span>
           <VIcon
             aria-label="Close"
-            class="close-btn mb-auto"
+            class="close-btn ml-auto mb-auto"
             icon="mdi-close"
             @click="closeDialog"
           />
