@@ -399,9 +399,43 @@ export const useStayStore = defineStore('stayStore', () => {
       }
 
       const participantHours = participant.selectedClasses.reduce((classTotal, classItem) => {
-        // Exclude group classes from total hours calculation
+        // Helper to parse time string "HH:MM" to decimal hours
+        const parseTime = timeStr => {
+          const [hours, minutes] = timeStr.split(':').map(Number)
+          return hours + (minutes / 60)
+        }
+
+        // Handle group classes
         if (classItem.type === 'group') {
-          return classTotal
+          // 1. Try to find schedule in data.group (PickedClassesStore structure)
+          const groupData = classItem.data?.group || classItem
+          const schedule = groupData.schedule
+
+          if (schedule && typeof schedule === 'string') {
+            let dailyHours = 0
+            // Match "od HH:MM do HH:MM" pattern
+            const matches = [...schedule.matchAll(/od (\d{1,2}:\d{2}) do (\d{1,2}:\d{2})/gi)]
+
+            if (matches.length > 0) {
+              for (const match of matches) {
+                const start = parseTime(match[1])
+                const end = parseTime(match[2])
+                dailyHours += (end - start)
+              }
+            }
+
+            // Calculate total days
+            // Try classItem.dates, classItem.classDates, or groupData.classDates
+            const dates = classItem.dates || classItem.classDates || groupData.classDates
+            const daysCount = dates?.length || 1
+
+            return classTotal + (dailyHours * daysCount)
+          }
+
+          // 2. Fallback to existing logic if dates have time property (Dummy data structure)
+          if (!classItem.dates || !classItem.dates[0]?.time) {
+            return classTotal
+          }
         }
 
         if (!classItem.dates || classItem.dates.length === 0) {
@@ -421,12 +455,6 @@ export const useStayStore = defineStore('stayStore', () => {
           }
 
           const [startTime, endTime] = timeParts
-
-          // Convert time strings to hours (e.g., "9:00" -> 9, "9:55" -> 9.916...)
-          const parseTime = timeStr => {
-            const [hours, minutes] = timeStr.split(':').map(Number)
-            return hours + (minutes / 60)
-          }
 
           const startHours = parseTime(startTime)
           const endHours = parseTime(endTime)

@@ -13,6 +13,7 @@
     dateStr: { type: String, default: '' },
     dateIso: { type: String, default: '' },
     participantType: { type: String, default: 'adult' },
+    age: { type: Number, default: null },
   })
 
   const emit = defineEmits(['update:modelValue', 'next'])
@@ -56,7 +57,7 @@
   ]
 
   const timesOfDay = ['Dowolna', 'Rano', 'Popołudnie', 'Wieczór']
-  const durations = ['1h', '2h', '3h']
+  const durations = ['0,5h', '1h', '1,5h', '2h', '2,5h', '3h', '4h', '5h']
   const genders = ['Dowolna', 'Kobieta', 'Mężczyzna']
 
   // Reset state when modal opens/closes or type changes
@@ -95,6 +96,13 @@
     selectedType.value = null
     showStepper.value = false
     pickedClassesStore.resetState()
+
+    // Set default duration based on age
+    const ageNum = Number(props.age)
+    const defaultDuration = (!Number.isNaN(ageNum) && ageNum >= 4 && ageNum <= 8) ? '1h' : '2h'
+    pickedClassesStore.individualPreferences.duration = defaultDuration
+    pickedClassesStore.sharedPreferences.duration = defaultDuration
+
     savePreferences.value = false
     sharedParticipants.value = []
 
@@ -1113,7 +1121,6 @@
 
   :deep(.v-btn) {
     height: 38px!important;
-    color: #6B7280;
   }
 }
 

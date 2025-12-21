@@ -1,5 +1,5 @@
 <script setup>
-  import { computed, ref } from 'vue'
+  import { computed, onUnmounted, ref, watch } from 'vue'
   import { useI18n } from 'vue-i18n'
   import { useDisplay } from 'vuetify'
   import arrowLeft from '@/assets/arrow_left.svg'
@@ -45,6 +45,29 @@
   })
 
   const carouselIndex = ref(0)
+  const autoSlideTimeout = ref(null)
+
+  watch(() => props.modelValue, val => {
+    if (!val && autoSlideTimeout.value) {
+      clearTimeout(autoSlideTimeout.value)
+      autoSlideTimeout.value = null
+    }
+  })
+
+  watch(() => props.participant, () => {
+    carouselIndex.value = 0
+    if (autoSlideTimeout.value) {
+      clearTimeout(autoSlideTimeout.value)
+      autoSlideTimeout.value = null
+    }
+  })
+
+  onUnmounted(() => {
+    if (autoSlideTimeout.value) {
+      clearTimeout(autoSlideTimeout.value)
+    }
+  })
+
   const days = computed(() => {
     const result = []
     let startDate, endDate
@@ -186,7 +209,8 @@
     showAddClassesModal.value = false
 
     if (mdAndDown.value) {
-      setTimeout(() => {
+      if (autoSlideTimeout.value) clearTimeout(autoSlideTimeout.value)
+      autoSlideTimeout.value = setTimeout(() => {
         nextDay()
       }, 2000)
     }
@@ -508,6 +532,7 @@
 
   <AddClassesModal
     v-model="showAddClassesModal"
+    :age="props.participant?.age"
     :date-iso="selectedDateForAddIso"
     :date-str="selectedDateForAdd"
     :participant-type="props.participantType"
@@ -521,6 +546,10 @@
   margin: 0 auto;
   padding: 0 16px;
   width: 100%;
+
+   :deep(.v-btn) {
+      font-size: 16px;
+}
 }
 
 .slider-breakout {

@@ -18,6 +18,10 @@
       type: Boolean,
       default: true,
     },
+    border: {
+      type: Boolean,
+      default: false,
+    },
   })
   const { mobile } = useDisplay()
   const configStore = useStayConfigStore()
@@ -52,7 +56,8 @@
         'rounded-lg',
         'position-relative',
         'my-4',
-        backgroundColor
+        backgroundColor,
+        { 'with-border': border }
       ]"
     >
       <div class="d-flex justify-end position-relative z-10" />
@@ -194,6 +199,15 @@
     background-color: #FEECDC;
 
   }
+
+  &.with-border {
+    border: 1px solid transparent;
+
+    &.bg-green-light {
+      border-color: $green-dark;
+    }
+  }
+
   .v-list-item__prepend {
     align-self: flex-start !important;
   }

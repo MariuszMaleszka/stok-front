@@ -7,11 +7,13 @@
   import StepTwo from '@/components/StepTwo.vue'
 
   import { useToast } from '@/composables/useToast.js'
+  import { usePickedClassesStore } from '@/stores/PickedClassesStore.js'
   import { useStayStore } from '@/stores/StayStore.js'
   import { useViewControlStore } from '@/stores/ViewControlStore.js'
 
   const viewStore = useViewControlStore()
   const stayStore = useStayStore()
+  const pickedClassesStore = usePickedClassesStore()
   const { showSimpleToast } = useToast()
   const { mobile } = useDisplay()
   const { t } = useI18n()
@@ -22,6 +24,19 @@
   const stepOneComponentRef = ref(null)
   const stepTwoComponentRef = ref(null)
   const stepThreeComponentRef = ref(null)
+
+  const isNextButtonDisabled = computed(() => {
+    if (!stayStore.dateOfStay) return true
+
+    // Step 2 validation: Every participant must have at least one class booked
+    if (viewStore.currentStep.parent === 2) {
+      return !stayStore.participants.every(p =>
+        pickedClassesStore.bookedClasses.some(c => c.participantId === p.dynamicId),
+      )
+    }
+
+    return false
+  })
 
   function handlePrev () {
     if (viewStore.currentStep.parent === 3 && viewStore.currentStep.child === 3) {
@@ -164,7 +179,7 @@
             <VBtn
               class="fs-16  px-8 ml-auto flex-2"
               color="blue"
-              :disabled="!stayStore.dateOfStay"
+              :disabled="isNextButtonDisabled"
               size="large"
               variant="flat"
               @click="handleNext"
