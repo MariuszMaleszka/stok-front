@@ -1,7 +1,8 @@
 <script setup>
-  import { onMounted, ref, watch } from 'vue'
+  import { computed, onMounted, ref, watch } from 'vue'
   import { useI18n } from 'vue-i18n'
   import ClassesModal from '@/components/modals/ClassesModal.vue'
+  import PackageInfoBox from '@/components/PackageInfoBox.vue'
   import ParticipantCard from '@/components/ParticipantCard.vue'
   import { useToast } from '@/composables/useToast'
   import { usePickedClassesStore } from '@/stores/PickedClassesStore.js'
@@ -67,6 +68,46 @@
   onMounted(() => {
     timerStore.startTimer()
   })
+
+  // Package Info Box Logic
+  const showFirstLevelActive = computed(() => stayStore.firstPackageEligible)
+  const showSecondLevelActive = computed(() => stayStore.secondPackageEligible)
+
+  // Logic for incentive box:
+  // Show if NOT first package eligible AND missing hours <= 2 AND missing hours > 0
+  // OR if first package eligible AND NOT second package eligible AND missing hours to second <= 2 AND missing hours > 0
+  const showIncentiveBox = computed(() => {
+    const totalHours = stayStore.allParticipantsTotalHours
+
+    // Case 1: Approaching 1st threshold (10h)
+    // Show if 8 <= total < 10
+    if (!stayStore.firstPackageEligible && !stayStore.secondPackageEligible) {
+      const missingToFirst = stayStore.missingHoursToFirstThreshold
+      return missingToFirst <= 2 && missingToFirst > 0
+    }
+
+    // Case 2: Approaching 2nd threshold (20h)
+    // Show if 10 <= total < 20 (always show incentive when first package is active but second is not)
+    if (stayStore.firstPackageEligible && !stayStore.secondPackageEligible) {
+      return true
+    }
+
+    return false
+  })
+
+  const incentiveMissingHours = computed(() => {
+    if (stayStore.firstPackageEligible) {
+      return stayStore.missingHoursToSecondThreshold
+    }
+    return stayStore.missingHoursToFirstThreshold
+  })
+
+  const incentiveDiscountPercent = computed(() => {
+    if (stayStore.firstPackageEligible) {
+      return stayStore.SECOND_LEVEL_DISCOUNT // Target is 11.4%
+    }
+    return stayStore.FIRST_LEVEL_DISCOUNT // Target is 5.7%
+  })
 </script>
 
 <template>
@@ -107,6 +148,59 @@
           @edit="openClassesModal(p)"
         />
       </div>
+
+      <!-- Package Info Boxes -->
+      <div class="mt-4">
+        <!-- 1. Active Package Status (Yellow) -->
+        <PackageInfoBox
+          v-if="showFirstLevelActive || showSecondLevelActive"
+          color="yellow"
+        >
+          <div class="d-flex justify-space-between align-center w-100">
+            <div>
+              <div class="mb-1">
+                <span class="font-weight-bold ">{{ stayStore.allParticipantsTotalHours }}</span> / <span>{{ showSecondLevelActive ? '20h' : '10h' }}</span> w pakiecie.
+              </div>
+              <div class="text-caption">
+                Aktywowano {{ showSecondLevelActive ? 'tańszy' : 'niższy' }} pakiet cenowy
+              </div>
+              <div class="mt-2">
+                <v-chip
+                  class="chip-active-package"
+                  label
+                  size="small"
+                  variant="flat"
+                >
+                  Oszczędzasz -{{ (showSecondLevelActive ? stayStore.SECOND_LEVEL_DISCOUNT : stayStore.FIRST_LEVEL_DISCOUNT).toString().replace('.', ',') }}%
+                </v-chip>
+              </div>
+            </div>
+            <div v-if="stayStore.totalSavings > 0" class=" font-weight-medium fs-14 discount-text">
+               - {{ stayStore.totalSavings.toFixed(2).replace('.', ',') }} {{ stayStore.currency }}
+            </div>
+          </div>
+        </PackageInfoBox>
+
+        <!-- 2. Incentive Box (Green Border) -->
+        <PackageInfoBox
+          v-if="showIncentiveBox"
+          border
+          color="green"
+        >
+          <div class="mb-2 text-deep-green">
+            Brakuje Ci <span class="font-weight-bold">{{ incentiveMissingHours }}h zajęć</span>, by aktywować
+            {{ stayStore.firstPackageEligible ? 'najtańszy' : 'tańszy' }} pakiet cenowy.
+          </div>
+          <v-chip
+            class="chip-incentive"
+            label
+            size="small"
+            variant="flat"
+          >
+            Zyskaj -{{ incentiveDiscountPercent.toString().replace('.', ',') }}%
+          </v-chip>
+        </PackageInfoBox>
+      </div>
     </div>
 
     <ClassesModal
@@ -126,6 +220,24 @@
   color: #4B5563;
 }
 
+.text-deep-green {
+  color: #046C4E !important;
+}
+
+.chip-incentive {
+  background-color: #DEF7EC !important;
+  color: #014737 !important;
+  font-weight: 500 !important;
+  font-size: 10px !important;
+}
+
+.chip-active-package {
+  background-color: #FACA15 !important;
+  color: #723B13 !important;
+  font-weight: 500 !important;
+  font-size: 10px !important;
+}
+
 .v-overlay__scrim {
   color: #4B5563;
   top: 64px;
@@ -138,4 +250,15 @@
     top: 64px;
 }
 
+.bg-yellow-light {
+  .v-list-item__append {
+    width: 20px;
+  }
+}
+
+.discount-text {
+      text-align: right;
+    width: 80px;
+    color: #6B7280;
+}
 </style>

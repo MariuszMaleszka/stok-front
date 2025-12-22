@@ -727,7 +727,7 @@
 
 .booking-remove-btn {
   position: absolute;
-  top: calc(50% - 13px);
+  // top: calc(50% - 13px);
   right: 4px;
 }
 

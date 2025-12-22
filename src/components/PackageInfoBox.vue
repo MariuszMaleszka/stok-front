@@ -189,24 +189,29 @@
 <style lang="scss">
 .package-card-info {
   &.bg-yellow-light {
-    background-color: $bg-yellow-light;
+    background-color: #FDF6B2;
+    color: #723B13;
+
+    .v-list-item__append {
+      width: 20px;
+    }
   }
 
   &.bg-green-light {
     background-color: #F3FAF7;
+    color: #046C4E;
   }
   &.bg-orange-light{
     background-color: #FEECDC;
-
   }
 
   &.with-border {
     border: 1px solid transparent;
-
     &.bg-green-light {
-      border-color: $green-dark;
+      border-color: #BCF0DA;
     }
   }
+}
 
   .v-list-item__prepend {
     align-self: flex-start !important;
@@ -218,5 +223,4 @@
   .v-list-item__append {
    margin-bottom: auto;
   }
-}
 </style>

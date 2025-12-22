@@ -12,6 +12,7 @@
 
 import { defineStore } from 'pinia'
 import { computed, reactive, ref, watch } from 'vue'
+import { usePickedClassesStore } from '@/stores/PickedClassesStore.js'
 import { generateUniqueId } from '@/utils/numbers.js'
 import { useStayConfigStore } from './StayConfigStore.js'
 
@@ -393,80 +394,42 @@ export const useStayStore = defineStore('stayStore', () => {
    */
 
   const allParticipantsTotalHours = computed(() => {
-    const totalHours = participants.value.reduce((totalHours, participant) => {
-      if (!participant?.selectedClasses || participant.selectedClasses.length === 0) {
-        return totalHours
+    const pickedClassesStore = usePickedClassesStore()
+    const bookedClasses = pickedClassesStore.bookedClasses
+
+    const totalHours = bookedClasses.reduce((total, booking) => {
+      // Exclude group classes from total hours calculation
+      if (booking.type === 'group') {
+        return total
       }
 
-      const participantHours = participant.selectedClasses.reduce((classTotal, classItem) => {
+      // Exclude Happy Hours classes from total hours calculation
+      if (booking.data?.slot?.isHappyHours) {
+        return total
+      }
+
+      // Check if it's an individual or shared class with slot data
+      if ((booking.type === 'individual' || booking.type === 'shared') && booking.data?.slot?.time) {
         // Helper to parse time string "HH:MM" to decimal hours
         const parseTime = timeStr => {
           const [hours, minutes] = timeStr.split(':').map(Number)
           return hours + (minutes / 60)
         }
 
-        // Handle group classes
-        if (classItem.type === 'group') {
-          // 1. Try to find schedule in data.group (PickedClassesStore structure)
-          const groupData = classItem.data?.group || classItem
-          const schedule = groupData.schedule
-
-          if (schedule && typeof schedule === 'string') {
-            let dailyHours = 0
-            // Match "od HH:MM do HH:MM" pattern
-            const matches = [...schedule.matchAll(/od (\d{1,2}:\d{2}) do (\d{1,2}:\d{2})/gi)]
-
-            if (matches.length > 0) {
-              for (const match of matches) {
-                const start = parseTime(match[1])
-                const end = parseTime(match[2])
-                dailyHours += (end - start)
-              }
-            }
-
-            // Calculate total days
-            // Try classItem.dates, classItem.classDates, or groupData.classDates
-            const dates = classItem.dates || classItem.classDates || groupData.classDates
-            const daysCount = dates?.length || 1
-
-            return classTotal + (dailyHours * daysCount)
-          }
-
-          // 2. Fallback to existing logic if dates have time property (Dummy data structure)
-          if (!classItem.dates || !classItem.dates[0]?.time) {
-            return classTotal
-          }
+        const timeParts = booking.data.slot.time.split(' - ')
+        if (timeParts.length !== 2) {
+          return total
         }
 
-        if (!classItem.dates || classItem.dates.length === 0) {
-          return classTotal
-        }
+        const [startTime, endTime] = timeParts
+        const startHours = parseTime(startTime)
+        const endHours = parseTime(endTime)
+        const duration = endHours - startHours
 
-        // Calculate hours for each date in this class
-        const classHours = classItem.dates.reduce((dateHours, dateObj) => {
-          if (!dateObj.time) {
-            return dateHours
-          }
+        return total + duration
+      }
 
-          // Parse time range (e.g., "9:00 - 9:55")
-          const timeParts = dateObj.time.split(' - ')
-          if (timeParts.length !== 2) {
-            return dateHours
-          }
-
-          const [startTime, endTime] = timeParts
-
-          const startHours = parseTime(startTime)
-          const endHours = parseTime(endTime)
-          const duration = endHours - startHours
-
-          return dateHours + duration
-        }, 0)
-
-        return classTotal + classHours
-      }, 0)
-
-      return totalHours + participantHours
+      return total
     }, 0)
 
     return Number.parseFloat(totalHours.toFixed(1))
@@ -526,6 +489,55 @@ export const useStayStore = defineStore('stayStore', () => {
       return missingHoursToSecondThreshold.value
     }
     return (missingHoursToFirstThreshold.value).toFixed(1)
+  })
+
+  const totalClassesPrice = computed(() => {
+    const pickedClassesStore = usePickedClassesStore()
+    const bookedClasses = pickedClassesStore.bookedClasses
+    const bookingsByParticipant = {}
+
+    for (const b of bookedClasses) {
+      if (!bookingsByParticipant[b.participantId]) {
+        bookingsByParticipant[b.participantId] = []
+      }
+      bookingsByParticipant[b.participantId].push(b)
+    }
+
+    let total = 0
+
+    for (const participantClasses of Object.values(bookingsByParticipant)) {
+      const processedGroupIds = new Set()
+      for (const booking of participantClasses) {
+        let price = 0
+        // Skip Happy Hours classes in discount calculation base
+        if (booking.data?.slot?.isHappyHours || booking.data?.group?.isHappyHours) {
+          // Do nothing (price remains 0), effectively excluding it from total
+        } else if (booking.type === 'individual' || booking.type === 'shared') {
+          if (booking.data.slot && booking.data.slot.price) {
+            price = booking.data.slot.price
+          }
+        } else if (booking.type === 'group' && booking.data.group && booking.data.group.price) {
+          if (booking.groupBookingId) {
+            if (!processedGroupIds.has(booking.groupBookingId)) {
+              price = booking.data.group.price
+              processedGroupIds.add(booking.groupBookingId)
+            }
+          } else {
+            price = booking.data.group.price
+          }
+        }
+        total += price
+      }
+    }
+
+    return total
+  })
+
+  const totalSavings = computed(() => {
+    if (finalDiscount.value === 0) {
+      return 0
+    }
+    return totalClassesPrice.value * (finalDiscount.value / 100)
   })
 
   // ==========================================================================
@@ -683,6 +695,8 @@ export const useStayStore = defineStore('stayStore', () => {
     participantClassesTotalPrice, // Single participant classes price calculator
     participantInsuranceTotalPrice, // Single participant insurance price calculator
     allParticipantsTotalPrice, // Total price for all participants
+    totalClassesPrice,
+    totalSavings,
     allParticipantsTotalHours, // Total hours of classes for all participants excluding groups
     checkingLoyaltyCardNumber, // Loyalty card validation loading state
 
