@@ -12,6 +12,7 @@
   import UsersGroupIcon from '@/assets/users-group.svg'
   import UsersIcon from '@/assets/users.svg'
   import AddClassesModal from '@/components/modals/AddClassesModal.vue'
+  import DeleteClassConfirmationModal from '@/components/modals/DeleteClassConfirmationModal.vue'
   import { useToast } from '@/composables/useToast.js'
   import { usePickedClassesStore } from '@/stores/PickedClassesStore.js'
   import { useStayStore } from '@/stores/StayStore.js'
@@ -115,9 +116,24 @@
   }
 
   const showAddClassesModal = ref(false)
+  const showDeleteConfirmationModal = ref(false)
+  const classToDelete = ref(null)
   const selectedDateForAdd = ref('')
   const selectedDateForAddIso = ref('')
   const currentDayForBooking = ref(null)
+
+  function openDeleteConfirmation (booking) {
+    classToDelete.value = booking
+    showDeleteConfirmationModal.value = true
+  }
+
+  function confirmDeleteClass () {
+    if (classToDelete.value) {
+      pickedClassesStore.removeBookedClass(classToDelete.value.id)
+      showDeleteConfirmationModal.value = false
+      classToDelete.value = null
+    }
+  }
 
   function openAddClassesModal (day) {
     currentDayForBooking.value = day
@@ -452,7 +468,7 @@
                         icon="mdi-close"
                         size="small"
                         variant="text"
-                        @click="pickedClassesStore.removeBookedClass(booking.id)"
+                        @click="openDeleteConfirmation(booking)"
                       />
 
                       <div class="d-flex justify-space-between align-center mb-1 pr-6">
@@ -560,6 +576,13 @@
     :date-str="selectedDateForAdd"
     :participant-type="props.participantType"
     @next="handleAddClassesNext"
+  />
+
+  <DeleteClassConfirmationModal
+    v-model="showDeleteConfirmationModal"
+    :activity-type="props.activityType"
+    :booking="classToDelete"
+    @confirm="confirmDeleteClass"
   />
 </template>
 

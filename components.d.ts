@@ -20,6 +20,7 @@ declare module 'vue' {
     DatePicker: typeof import('./src/components/DatePicker.vue')['default']
     DatePickerResponsive: typeof import('./src/components/DatePickerResponsive.vue')['default']
     DateRangePickerModal: typeof import('./src/components/modals/DateRangePickerModal.vue')['default']
+    DeleteClassConfirmationModal: typeof import('./src/components/modals/DeleteClassConfirmationModal.vue')['default']
     GroupDetailsModal: typeof import('./src/components/modals/GroupDetailsModal.vue')['default']
     HelloWorld: typeof import('./src/components/HelloWorld.vue')['default']
     IncompleteBookingToast: typeof import('./src/components/toasts/IncompleteBookingToast.vue')['default']
