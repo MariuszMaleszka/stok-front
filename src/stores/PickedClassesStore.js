@@ -164,6 +164,11 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
     return groupId => !!childAddOnSelections.value[groupId]
   })
 
+  // Check if there is any booked class with an instructor
+  const hasPreviouslySelectedInstructor = computed(() => {
+    return bookedClasses.value.some(booking => booking.instructor)
+  })
+
   const getFilteredSlots = type => {
     let slots = availableSlots.value
 
@@ -181,7 +186,10 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
 
     // Filter by "Previously Selected Instructor" (Switch)
     if (searchPreviouslySelected.value) {
-      slots = slots.filter(s => s.instructor)
+      const prevInstructors = bookedClasses.value.map(b => b.instructor).filter(Boolean)
+      slots = prevInstructors.length > 0
+        ? slots.filter(s => prevInstructors.includes(s.instructor))
+        : slots.filter(s => s.instructor)
     }
 
     // Filter by Selected Instructor (if checkbox is checked)
@@ -248,17 +256,17 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
   }
 
   // Actions
-  function setSelectedDate(date) {
+  function setSelectedDate (date) {
     selectedDate.value = date
   }
 
-  function loadMoreSlots(type) {
+  function loadMoreSlots (type) {
     visibleSlotsLimit.value = type === 'individual'
       ? individualFilteredSlots.value.length
       : sharedFilteredSlots.value.length
   }
 
-  function resetState() {
+  function resetState () {
     searchPreviouslySelected.value = false
     individualPreferences.value = { selectedInstructor: null, timeOfDay: 'Dowolna', duration: '2h', instructorGender: 'Dowolna', findSpecificInstructor: false, childSpecialist: false }
     sharedPreferences.value = { selectedInstructor: null, timeOfDay: 'Dowolna', duration: '2h', instructorGender: 'Dowolna', findSpecificInstructor: false, childSpecialist: false }
@@ -269,16 +277,23 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
     visibleSlotsLimit.value = 4
   }
 
-  function addBookedClass(booking) {
+  function addBookedClass (booking) {
+    // Extract instructor if present in data.slot
+    let instructor = booking.instructor
+    if (!instructor && booking.data && booking.data.slot && booking.data.slot.instructor) {
+      instructor = booking.data.slot.instructor
+    }
+
     // Add unique ID
     const newBooking = {
       ...booking,
+      instructor,
       id: Date.now() + Math.random().toString(36).slice(2, 11),
     }
     bookedClasses.value.push(newBooking)
   }
 
-  function removeBookedClass(bookingId) {
+  function removeBookedClass (bookingId) {
     const bookingToRemove = bookedClasses.value.find(c => c.id === bookingId)
     if (!bookingToRemove) {
       return
@@ -321,6 +336,7 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
     displayedSharedSlots,
     getBookedClass,
     getBookedClasses,
+    hasPreviouslySelectedInstructor,
 
     // Actions
     setSelectedDate,

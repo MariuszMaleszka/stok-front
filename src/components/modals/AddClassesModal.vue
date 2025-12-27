@@ -104,6 +104,13 @@
     }
   })
 
+  // Disable "Search only classes with previously selected instructor" if no instructor is selected
+  watch(() => pickedClassesStore.hasPreviouslySelectedInstructor, val => {
+    if (!val) {
+      pickedClassesStore.searchPreviouslySelected = false
+    }
+  })
+
   function resetState () {
     currentStep.value = 1
     selectedType.value = null
@@ -458,6 +465,7 @@
                   class="ml-2 mb-2 gap-4"
                   color="primary"
                   density="compact"
+                  :disabled="!pickedClassesStore.hasPreviouslySelectedInstructor"
                   hide-details
                   label="Szukaj tylko zajęć z wybranym wcześniej instruktorem"
                 />
@@ -678,6 +686,7 @@
                   class="ml-2 mb-2 gap-4"
                   color="primary"
                   density="compact"
+                  :disabled="!pickedClassesStore.hasPreviouslySelectedInstructor"
                   hide-details
                   label="Szukaj tylko zajęć z wybranym wcześniej instruktorem"
                 />
