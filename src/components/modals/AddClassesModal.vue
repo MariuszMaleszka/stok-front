@@ -31,6 +31,7 @@
   const showChildSpecialistModal = ref(false)
   const showGroupDetailsModal = ref(false)
   const selectedGroupForDetails = ref(null)
+  const savePreferences = ref(false)
 
   function openGroupDetails (group) {
     selectedGroupForDetails.value = group
@@ -41,8 +42,6 @@
     if (!text) return ''
     return text.replace(/(\d{1,2}:\d{2})/g, '<span class="text-primary font-weight-bold">$1</span>')
   }
-
-  const savePreferences = ref(false)
 
   // Shared Flow State
   const sharedParticipants = ref([])
@@ -117,13 +116,18 @@
     showStepper.value = false
     pickedClassesStore.resetState()
 
-    // Set default duration based on age
-    const ageNum = Number(props.age)
-    const defaultDuration = (!Number.isNaN(ageNum) && ageNum >= 4 && ageNum <= 8) ? '1h' : '2h'
-    pickedClassesStore.individualPreferences.duration = defaultDuration
-    pickedClassesStore.sharedPreferences.duration = defaultDuration
+    const saved = pickedClassesStore.loadFilterPreferences()
+    if (saved) {
+      savePreferences.value = true
+    } else {
+      savePreferences.value = false
+      // Set default duration based on age
+      const ageNum = Number(props.age)
+      const defaultDuration = (!Number.isNaN(ageNum) && ageNum >= 4 && ageNum <= 8) ? '1h' : '2h'
+      pickedClassesStore.individualPreferences.duration = defaultDuration
+      pickedClassesStore.sharedPreferences.duration = defaultDuration
+    }
 
-    savePreferences.value = false
     sharedParticipants.value = []
 
     // Always pre-select the first participant
@@ -145,6 +149,16 @@
   }
 
   function goNext () {
+    if (savePreferences.value && (
+      (selectedType.value === 'individual' && currentStep.value === 1)
+      || (selectedType.value === 'shared' && currentStep.value === 2)
+    )) {
+      const prefs = selectedType.value === 'individual'
+        ? pickedClassesStore.individualPreferences
+        : pickedClassesStore.sharedPreferences
+      pickedClassesStore.saveFilterPreferences(prefs)
+    }
+
     switch (selectedType.value) {
       case 'individual': {
         if (currentStep.value < 2) currentStep.value++
@@ -383,6 +397,29 @@
       sharedParticipants.value.splice(index, 1)
     }
   }
+
+  const selectedParticipantNames = computed(() => {
+    if (selectedType.value !== 'shared') return []
+    const parts = stayStore.participants
+    if (!parts) return []
+
+    return sharedParticipants.value.map(id => {
+      const p = parts.find(part => (part.dynamicId || 0) === id)
+      // Fallback if dynamicId logic is tricky, usually index-based in simple mocks,
+      // but here code uses dynamicId || 0.
+      // Let's try to find by dynamicId first.
+      if (p) return p.name || 'Uczestnik'
+
+      // Fallback: maybe id is index?
+      // In toggleParticipant: item.data.dynamicId || item.originalIndex
+      // So sharedParticipants stores whatever that expression returns.
+      // If dynamicId is undefined, it stores index.
+      const pByIndex = parts[id]
+      if (pByIndex) return pByIndex.name || 'Uczestnik'
+
+      return 'Uczestnik'
+    })
+  })
 </script>
 
 <template>
@@ -398,6 +435,17 @@
         <div class="d-flex justify-space-between align-center">
           <span class="text-h6 font-weight-bold text-primary-900 mb-1">{{ modalTitle }}</span>
           <VBtn class="special-close-btn" variant="text" @click="close" />
+        </div>
+
+        <div v-if="selectedParticipantNames.length > 0 && currentStep > 1" class="d-flex flex-wrap align-center mb-3 mt-1" style="gap: 8px;">
+          <div
+            v-for="(name, index) in selectedParticipantNames"
+            :key="index"
+            class="px-3 py-1 rounded-pill text-primary font-weight-bold text-caption"
+            style="background-color: #eff6ff; color: #1a56db !important;"
+          >
+            {{ name }}
+          </div>
         </div>
 
         <div class="d-flex align-center text-grey-darken-1">
@@ -1019,6 +1067,10 @@
 </template>
 
 <style scoped lang="scss">
+.bg-blue-light {
+  background-color: #eff6ff !important;
+}
+
 .text-primary-900 {
   color: #111827;
 }
@@ -1128,9 +1180,24 @@
 }
 
 .special-close-btn {
-  position: relative;
-  top: -12px;
-  right: -12px;
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  color: #9CA3AF;
+
+  &::before {
+    content: "✕";
+    font-size: 20px;
+    line-height: 1;
+  }
 }
 
 :deep(.v-checkbox .v-label) {

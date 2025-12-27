@@ -1,9 +1,11 @@
+import { useCookies } from '@vueuse/integrations/useCookies'
 import { defineStore } from 'pinia'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useStayStore } from './StayStore'
 
 export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
   const stayStore = useStayStore()
+  const cookies = useCookies(['booking_preferences'])
 
   // Helper to generate dynamic dates
   const getFutureDate = daysToAdd => {
@@ -119,6 +121,52 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
   // State
   const searchPreviouslySelected = ref(false)
   const selectedDate = ref(formatDate(new Date()))
+
+  // Save/Load preference for "Search Previously Selected"
+  function setSearchPreviouslySelected(val) {
+    searchPreviouslySelected.value = val
+    cookies.set('search_prev_instructor', val ? 'true' : 'false')
+  }
+
+  // Save/Load general filter preferences
+  function saveFilterPreferences(prefs) {
+    // Save common fields
+    const toSave = {
+      timeOfDay: prefs.timeOfDay,
+      duration: prefs.duration,
+      instructorGender: prefs.instructorGender,
+      findSpecificInstructor: prefs.findSpecificInstructor,
+      childSpecialist: prefs.childSpecialist,
+      selectedInstructor: prefs.selectedInstructor,
+    }
+    cookies.set('user_filter_preferences', JSON.stringify(toSave))
+  }
+
+  function loadFilterPreferences() {
+    const saved = cookies.get('user_filter_preferences')
+    if (saved) {
+      try {
+        const parsed = typeof saved === 'string' ? JSON.parse(saved) : saved
+        return {
+          timeOfDay: parsed.timeOfDay || 'Dowolna',
+          duration: parsed.duration || '2h',
+          instructorGender: parsed.instructorGender || 'Dowolna',
+          findSpecificInstructor: parsed.findSpecificInstructor || false,
+          childSpecialist: parsed.childSpecialist || false,
+          selectedInstructor: parsed.selectedInstructor || null,
+        }
+      } catch {
+        return null
+      }
+    }
+    return null
+  }
+
+  // Auto-enable if preference is saved and we have an instructor
+  watch(searchPreviouslySelected, val => {
+    // Also sync if changed directly (e.g. v-model, though we prefer setter)
+    cookies.set('search_prev_instructor', val ? 'true' : 'false')
+  })
 
   // Individual Preferences
   const individualPreferences = ref({
@@ -256,20 +304,30 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
   }
 
   // Actions
-  function setSelectedDate (date) {
-    selectedDate.value = date
+  function setSelectedDate(dateIso) {
+    selectedDate.value = dateIso
   }
 
-  function loadMoreSlots (type) {
-    visibleSlotsLimit.value = type === 'individual'
-      ? individualFilteredSlots.value.length
-      : sharedFilteredSlots.value.length
+  function loadMoreSlots() {
+    visibleSlotsLimit.value += 4
   }
 
-  function resetState () {
-    searchPreviouslySelected.value = false
-    individualPreferences.value = { selectedInstructor: null, timeOfDay: 'Dowolna', duration: '2h', instructorGender: 'Dowolna', findSpecificInstructor: false, childSpecialist: false }
-    sharedPreferences.value = { selectedInstructor: null, timeOfDay: 'Dowolna', duration: '2h', instructorGender: 'Dowolna', findSpecificInstructor: false, childSpecialist: false }
+  function resetState() {
+    // Reset state but respect preference if applicable
+    const pref = cookies.get('search_prev_instructor')
+    searchPreviouslySelected.value = hasPreviouslySelectedInstructor.value && (pref === 'true' || pref === true)
+
+    const savedFilters = loadFilterPreferences()
+    const defaults = { selectedInstructor: null, timeOfDay: 'Dowolna', duration: '2h', instructorGender: 'Dowolna', findSpecificInstructor: false, childSpecialist: false }
+
+    if (savedFilters) {
+      individualPreferences.value = { ...defaults, ...savedFilters }
+      sharedPreferences.value = { ...defaults, ...savedFilters }
+    } else {
+      individualPreferences.value = { ...defaults }
+      sharedPreferences.value = { ...defaults }
+    }
+
     individualSlot.value = null
     sharedSlot.value = null
     selectedGroup.value = null
@@ -277,7 +335,7 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
     visibleSlotsLimit.value = 4
   }
 
-  function addBookedClass (booking) {
+  function addBookedClass(booking) {
     // Extract instructor if present in data.slot
     let instructor = booking.instructor
     if (!instructor && booking.data && booking.data.slot && booking.data.slot.instructor) {
@@ -293,7 +351,7 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
     bookedClasses.value.push(newBooking)
   }
 
-  function removeBookedClass (bookingId) {
+  function removeBookedClass(bookingId) {
     const bookingToRemove = bookedClasses.value.find(c => c.id === bookingId)
     if (!bookingToRemove) {
       return
@@ -339,6 +397,9 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
     hasPreviouslySelectedInstructor,
 
     // Actions
+    setSearchPreviouslySelected,
+    saveFilterPreferences,
+    loadFilterPreferences,
     setSelectedDate,
     loadMoreSlots,
     resetState,
