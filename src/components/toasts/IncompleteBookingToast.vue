@@ -19,7 +19,7 @@
   <div class="incomplete-booking-toast">
     <div class="d-flex align-start mb-4">
       <div class="icon-wrapper mr-3">
-        <img class="clock-icon" :src="ClockIcon" />
+        <img class="clock-icon" :src="ClockIcon">
       </div>
       <div class="text-content fs-16 text-gray-900 font-weight-medium pt-1">
         {{ message }}

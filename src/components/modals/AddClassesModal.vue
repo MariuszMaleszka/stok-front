@@ -190,9 +190,21 @@
     }
     if (selectedType.value === 'group') {
       const groupObj = pickedClassesStore.availableGroups.find(g => g.id === pickedClassesStore.selectedGroup)
-      return { group: groupObj || pickedClassesStore.selectedGroup }
+      return {
+        group: groupObj || pickedClassesStore.selectedGroup,
+        childAddOn: props.participantType === 'child' && pickedClassesStore.childAddOnSelections[pickedClassesStore.selectedGroup],
+        childAddOnPrice: pickedClassesStore.childAddOnPrice,
+      }
     }
     return null
+  }
+
+  function calculateGroupPrice (group) {
+    let price = group.price
+    if (props.participantType === 'child' && pickedClassesStore.childAddOnSelections[group.id]) {
+      price += pickedClassesStore.childAddOnPrice
+    }
+    return price
   }
 
   // Titles
@@ -839,53 +851,99 @@
                   <div
                     v-for="group in pickedClassesStore.filteredGroups"
                     :key="group.id"
-                    class="slot-card d-flex align-center px-4 py-4 cursor-pointer flex-column"
-                    :class="{ 'selected': pickedClassesStore.selectedGroup === group.id }"
-                    @click="pickedClassesStore.selectedGroup = group.id"
+                    class="gray-bg-card"
                   >
+                    <!-- Main Card -->
+                    <div
+                      class="slot-card d-flex align-center px-4 py-4 cursor-pointer flex-column"
+                      :class="{ 'selected': pickedClassesStore.selectedGroup === group.id }"
+                      @click="pickedClassesStore.selectedGroup = group.id"
+                    >
 
-                    <div class="d-flex align-center justify-center">
-                      <!-- Checkbox/Circle -->
-                      <div class="selection-circle mr-4 mt-1 d-flex align-center justify-center flex-shrink-0" />
+                      <div class="d-flex align-center justify-center">
+                        <!-- Checkbox/Circle -->
+                        <div class="selection-circle mr-4 mt-1 d-flex align-center justify-center flex-shrink-0" />
 
-                      <!-- Content -->
-                      <div class="flex-grow-1">
-                        <!-- Title & Happy Hours Badge -->
-                        <div class="d-flex justify-space-between align-start mb-1">
-                          <span class="text-caption text-grey-darken-1">{{ group.name }}</span>
-                          <div v-if="group.isHappyHours" class="happy-hours-badge ml-2 mb-0">Happy hours</div>
+                        <!-- Content -->
+                        <div class="flex-grow-1">
+                          <!-- Title & Happy Hours Badge -->
+                          <div class="d-flex justify-space-between align-start mb-1">
+                            <span class="text-caption text-grey-darken-1">{{ group.name }}</span>
+                            <div v-if="group.isHappyHours" class="happy-hours-badge ml-2 mb-0">Happy hours</div>
+                          </div>
+
+                          <!-- Dates -->
+                          <div class="font-weight-bold text-primary-900 mb-2 fs-14">
+                            {{ group.dates }}
+                          </div>
+
+                          <!-- Description -->
+                          <div class="text-caption text-grey-darken-1 mb-1" style="line-height: 1.4;">
+                            {{ group.description }}
+                          </div>
+
+                          <!-- Schedule (Hours) -->
+                          <div class="text-caption text-grey-darken-1 mb-3" style="line-height: 1.4;" v-html="formatSchedule(group.schedule)" />
+
+                          <!-- Details Button -->
+                          <VBtn
+                            class="text-none text-caption px-3"
+                            color="primary"
+                            density="compact"
+                            height="28"
+                            variant="outlined"
+                            @click.stop="openGroupDetails(group)"
+                          >
+                            Dowiedz się więcej
+                          </VBtn>
                         </div>
+                      </div>
 
-                        <!-- Dates -->
-                        <div class="font-weight-bold text-primary-900 mb-2 fs-14">
-                          {{ group.dates }}
-                        </div>
-
-                        <!-- Description -->
-                        <div class="text-caption text-grey-darken-1 mb-1" style="line-height: 1.4;">
-                          {{ group.description }}
-                        </div>
-
-                        <!-- Schedule (Hours) -->
-                        <div class="text-caption text-grey-darken-1 mb-3" style="line-height: 1.4;" v-html="formatSchedule(group.schedule)" />
-
-                        <!-- Details Button -->
-                        <VBtn
-                          class="text-none text-caption px-3"
-                          color="primary"
-                          density="compact"
-                          height="28"
-                          variant="outlined"
-                          @click.stop="openGroupDetails(group)"
-                        >
-                          Dowiedz się więcej
-                        </VBtn>
+                      <!-- Price (Absolute Bottom Right) -->
+                      <div v-if="group.price" class="d-flex justify-end w-100 mt-1">
+                        <span class="font-weight-bold text-primary-900 fs-14">-{{ calculateGroupPrice(group) }},00zł</span>
                       </div>
                     </div>
 
-                    <!-- Price (Absolute Bottom Right) -->
-                    <div v-if="group.price" class="d-flex justify-end w-100 mt-1">
-                      <span class="font-weight-bold text-primary-900 fs-14">-{{ group.price }},00zł</span>
+                    <!-- Child Add-on (Outside Card) -->
+                    <div
+                      v-if="props.participantType === 'child'"
+                      class="add-on-card border-0 mt-1 px-2 py-2 rounded-lg d-flex align-start cursor-pointer"
+                      @click="pickedClassesStore.selectedGroup = group.id"
+                    >
+                      <VCheckbox
+                        v-model="pickedClassesStore.childAddOnSelections[group.id]"
+                        class="mt-0 pt-0 flex-grow-0 mr-3"
+                        color="blue"
+                        density="compact"
+                        hide-details
+                        style="margin-bottom: -10px !important;"
+                        @change="pickedClassesStore.selectedGroup = group.id"
+                        @click.stop
+                      />
+                      <div class="flex-grow-1" style="min-width: 0;">
+                        <VExpansionPanels flat>
+                          <VExpansionPanel class="bg-transparent">
+                            <VExpansionPanelTitle
+                              class="px-0 py-0"
+                              style="min-height: 32px; border-radius: 0;"
+                              @click.stop
+                            >
+                              <div class="d-flex flex-column text-left">
+                                <span class="text-caption font-weight-bold text-primary-900" style="line-height: 1.2;">
+                                  Dodatkowe animacje + posiłek
+                                </span>
+                                <span class="text-caption font-weight-medium text-grey-darken-1">
+                                  + {{ pickedClassesStore.childAddOnPrice }},00 zł
+                                </span>
+                              </div>
+                            </VExpansionPanelTitle>
+                            <VExpansionPanelText class="px-0 pt-2 text-caption text-grey-darken-1">
+                              Animacje, które pozwalają dzieciom korzystać z wartościowych i bezpiecznego spędzania czasu w lektoratach słowiańskich. Po zajęciach ruchomych dzieci biorą udział w innych grach integracyjnych z dostawcami kreatywnymi. Program jest dostosowany do wieku i zainteresowań, a całość uzupełnia lekki posiłek.
+                            </VExpansionPanelText>
+                          </VExpansionPanel>
+                        </VExpansionPanels>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -957,6 +1015,7 @@
 
 .selection-card, .slot-card {
   border: 1px solid #E5E7EB;
+  background: #F9FAFB;
   border-radius: 12px;
   transition: all 0.2s ease;
   min-height: 70px;
@@ -1180,6 +1239,31 @@
   :deep(.v-selection-control) {
       gap: 4px;
 }
+
+}
+
+.gray-bg-card {
+  background: #F3F4F6;
+  border-radius: 10px;
+
+  .add-on-card {
+      background: #F3F4F6;
+      .v-input {
+        min-width: 30px!important;
+      }
+
+    :deep(.v-expansion-panel-text__wrapper) {
+      padding: 4px 0;
+    }
+
+    :deep(.v-expansion-panel-title) {
+      margin-top: 12px !important;
+    }
+
+    :deep(.v-expansion-panel-title__icon) {
+      margin-top: -20px !important;
+    }
+     }
 
 }
 </style>

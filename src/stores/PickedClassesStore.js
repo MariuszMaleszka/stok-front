@@ -144,6 +144,8 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
   const individualSlot = ref(null)
   const sharedSlot = ref(null)
   const selectedGroup = ref(null)
+  const childAddOnSelections = ref({})
+  const childAddOnPrice = 340
 
   // Pagination
   const visibleSlotsLimit = ref(4)
@@ -155,6 +157,11 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
   const instructors = computed(() => {
     const names = new Set(availableSlots.value.filter(s => s.instructor).map(s => s.instructor))
     return Array.from(names)
+  })
+
+  // Computed helper to get status for current group or a specific group
+  const isChildAddOnSelected = computed(() => {
+    return groupId => !!childAddOnSelections.value[groupId]
   })
 
   const getFilteredSlots = type => {
@@ -241,27 +248,28 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
   }
 
   // Actions
-  function setSelectedDate (date) {
+  function setSelectedDate(date) {
     selectedDate.value = date
   }
 
-  function loadMoreSlots (type) {
+  function loadMoreSlots(type) {
     visibleSlotsLimit.value = type === 'individual'
       ? individualFilteredSlots.value.length
       : sharedFilteredSlots.value.length
   }
 
-  function resetState () {
+  function resetState() {
     searchPreviouslySelected.value = false
     individualPreferences.value = { selectedInstructor: null, timeOfDay: 'Dowolna', duration: '2h', instructorGender: 'Dowolna', findSpecificInstructor: false, childSpecialist: false }
     sharedPreferences.value = { selectedInstructor: null, timeOfDay: 'Dowolna', duration: '2h', instructorGender: 'Dowolna', findSpecificInstructor: false, childSpecialist: false }
     individualSlot.value = null
     sharedSlot.value = null
     selectedGroup.value = null
+    childAddOnSelections.value = {}
     visibleSlotsLimit.value = 4
   }
 
-  function addBookedClass (booking) {
+  function addBookedClass(booking) {
     // Add unique ID
     const newBooking = {
       ...booking,
@@ -270,7 +278,7 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
     bookedClasses.value.push(newBooking)
   }
 
-  function removeBookedClass (bookingId) {
+  function removeBookedClass(bookingId) {
     const bookingToRemove = bookedClasses.value.find(c => c.id === bookingId)
     if (!bookingToRemove) {
       return
@@ -298,6 +306,9 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
     individualSlot,
     sharedSlot,
     selectedGroup,
+    childAddOnSelections,
+    isChildAddOnSelected,
+    childAddOnPrice,
     visibleSlotsLimit,
     bookedClasses,
 
