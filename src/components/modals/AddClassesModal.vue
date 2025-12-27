@@ -1,5 +1,6 @@
 <script setup>
   import { computed, ref, watch } from 'vue'
+  import { useI18n } from 'vue-i18n'
   import CalendarPlusIcon from '@/assets/calendar-plus.svg'
   import ClockGrayIcon from '@/assets/clock_gray.svg'
   import InfoIcon from '@/assets/info.svg'
@@ -21,6 +22,7 @@
   })
 
   const emit = defineEmits(['update:modelValue', 'next'])
+  const { t } = useI18n()
   const stayStore = useStayStore()
   const pickedClassesStore = usePickedClassesStore()
 
@@ -50,27 +52,36 @@
   // selectedGroup is now in store
 
   // Mock Data
-  const classTypes = [
+  const classTypes = computed(() => [
     {
       id: 'individual',
-      label: 'Zajęcia indywidualne',
+      label: t('individual_classes'),
       icon: UserIcon,
     },
     {
       id: 'shared',
-      label: 'Zajęcia wspólne z innym uczestnikiem',
+      label: t('shared_classes'),
       icon: UsersIcon,
     },
     {
       id: 'group',
-      label: 'Zajęcia grupowe',
+      label: t('group_classes'),
       icon: UsersGroupIcon,
     },
-  ]
+  ])
 
-  const timesOfDay = ['Dowolna', 'Rano', 'Popołudnie', 'Wieczór']
+  const timesOfDay = computed(() => [
+    { title: t('any_time'), value: 'Dowolna' },
+    { title: t('morning'), value: 'Rano' },
+    { title: t('afternoon'), value: 'Popołudnie' },
+    { title: t('evening'), value: 'Wieczór' },
+  ])
   const durations = ['0,5h', '1h', '1,5h', '2h', '2,5h', '3h', '4h', '5h']
-  const genders = ['Dowolna', 'Kobieta', 'Mężczyzna']
+  const genders = computed(() => [
+    { title: t('any_gender'), value: 'Dowolna' },
+    { title: t('female'), value: 'Kobieta' },
+    { title: t('male'), value: 'Mężczyzna' },
+  ])
 
   // Reset state when modal opens/closes or type changes
   watch(() => props.modelValue, val => {
@@ -231,11 +242,11 @@
 
   // Titles
   const modalTitle = computed(() => {
-    if (!showStepper.value) return 'Dodawanie zajęć'
-    if (selectedType.value === 'individual') return 'Dodawanie zajęć indywidualnych'
-    if (selectedType.value === 'shared') return 'Dodawanie zajęć wspólnych'
-    if (selectedType.value === 'group') return 'Dodawanie zajęć grupowych'
-    return 'Dodawanie zajęć'
+    if (!showStepper.value) return t('adding_classes')
+    if (selectedType.value === 'individual') return t('adding_individual_classes')
+    if (selectedType.value === 'shared') return t('adding_shared_classes')
+    if (selectedType.value === 'group') return t('adding_group_classes')
+    return t('adding_classes')
   })
 
   // Navigation Logic
@@ -247,11 +258,11 @@
     return false
   })
 
-  const leftButtonText = computed(() => showStepper.value ? 'Wróć' : 'Wyjdź')
+  const leftButtonText = computed(() => showStepper.value ? t('back') : t('exit'))
 
   const rightButtonText = computed(() => {
-    if (!showStepper.value) return 'Dalej'
-    return isLastStep.value ? 'Dodaj zajęcia' : 'Dalej'
+    if (!showStepper.value) return t('next')
+    return isLastStep.value ? t('add_classes') : t('next')
   })
 
   const rightButtonIcon = computed(() => {
@@ -334,14 +345,23 @@
   function getFilters (prefs) {
     const filters = []
     if (prefs.timeOfDay && prefs.timeOfDay !== 'Dowolna') {
-      filters.push({ key: 'timeOfDay', label: prefs.timeOfDay })
+      const timeMap = {
+        Rano: t('morning'),
+        Popołudnie: t('afternoon'),
+        Wieczór: t('evening'),
+      }
+      const label = timeMap[prefs.timeOfDay] || prefs.timeOfDay
+      filters.push({ key: 'timeOfDay', label })
     }
     if (prefs.duration && prefs.duration !== '2h') {
-      filters.push({ key: 'duration', label: `Lekcje ${prefs.duration}` })
+      filters.push({ key: 'duration', label: t('lessons_duration_label', { duration: prefs.duration }) })
     }
     if (prefs.instructorGender && prefs.instructorGender !== 'Dowolna') {
-      const genderLabel = prefs.instructorGender === 'Dowolna' ? 'płeć dowolna' : prefs.instructorGender.toLowerCase()
-      filters.push({ key: 'instructorGender', label: `Instruktor ${genderLabel}` })
+      let genderLabel = ''
+      if (prefs.instructorGender === 'Kobieta') genderLabel = t('female').toLowerCase()
+      else if (prefs.instructorGender === 'Mężczyzna') genderLabel = t('male').toLowerCase()
+      else genderLabel = t('any_gender').toLowerCase()
+      filters.push({ key: 'instructorGender', label: `${t('instructor')} ${genderLabel}` })
     }
     return filters
   }
@@ -405,20 +425,28 @@
 
     return sharedParticipants.value.map(id => {
       const p = parts.find(part => (part.dynamicId || 0) === id)
-      // Fallback if dynamicId logic is tricky, usually index-based in simple mocks,
-      // but here code uses dynamicId || 0.
-      // Let's try to find by dynamicId first.
       if (p) return p.name || 'Uczestnik'
-
-      // Fallback: maybe id is index?
-      // In toggleParticipant: item.data.dynamicId || item.originalIndex
-      // So sharedParticipants stores whatever that expression returns.
-      // If dynamicId is undefined, it stores index.
       const pByIndex = parts[id]
       if (pByIndex) return pByIndex.name || 'Uczestnik'
-
       return 'Uczestnik'
     })
+  })
+
+  const stepperItems = computed(() => {
+    if (selectedType.value === 'individual') {
+      return [
+        { title: t('preferences'), value: 1, complete: currentStep.value > 1 },
+        { title: t('term'), value: 2, complete: currentStep.value > 2 },
+      ]
+    }
+    if (selectedType.value === 'shared') {
+      return [
+        { title: t('participants'), value: 1, complete: currentStep.value > 1 },
+        { title: t('preferences'), value: 2, complete: currentStep.value > 2 },
+        { title: t('term'), value: 3, complete: currentStep.value > 3 },
+      ]
+    }
+    return [t('group')]
   })
 </script>
 
@@ -459,7 +487,7 @@
         <!-- TYPE SELECTION VIEW -->
         <div v-if="!showStepper">
           <div class="text-center mb-4">
-            <span class="text-subtitle-1 font-weight-medium text-primary-900">Wybierz rodzaj zajęć:</span>
+            <span class="text-subtitle-1 font-weight-medium text-primary-900">{{ t('select_class_type') }}</span>
           </div>
 
           <div class="d-flex flex-column gap-3 mb-6">
@@ -486,7 +514,7 @@
               <template #prepend>
                 <img alt="" :src="InfoIcon" width="16">
               </template>
-              Dowiedz się więcej o rodzajach zajęć
+              {{ t('learn_more_about_class_types') }}
             </VBtn>
           </div>
         </div>
@@ -497,7 +525,7 @@
           v-model="currentStep"
           class="elevation-0"
           hide-actions
-          :items="selectedType === 'individual' ? ['Preferencje', 'Termin'] : selectedType === 'shared' ? ['Uczestnicy', 'Preferencje', 'Termin'] : ['Grupa']"
+          :items="stepperItems"
         >
           <VStepperWindow v-model="currentStep">
             <!-- INDIVIDUAL FLOW -->
@@ -505,7 +533,7 @@
               <!-- Step 1: Preferences -->
               <VStepperWindowItem :value="1">
                 <div class="text-center mb-4">
-                  <span class="text-subtitle-1 font-weight-medium text-primary-900">Dostosuj swoje zajęcia:</span>
+                  <span class="text-subtitle-1 font-weight-medium text-primary-900">{{ t('adjust_your_classes') }}</span>
                 </div>
 
                 <VSwitch
@@ -515,11 +543,11 @@
                   density="compact"
                   :disabled="!pickedClassesStore.hasPreviouslySelectedInstructor"
                   hide-details
-                  label="Szukaj tylko zajęć z wybranym wcześniej instruktorem"
+                  :label="t('search_only_with_prev_instructor')"
                 />
 
                 <div>
-                  <span class="text-subtitle-2 font-weight-bold mb-1 d-block text-primary-900">Pora dnia</span>
+                  <span class="text-subtitle-2 font-weight-bold mb-1 d-block text-primary-900">{{ t('time_of_day') }}</span>
                   <VSelect
                     v-model="pickedClassesStore.individualPreferences.timeOfDay"
                     density="compact"
@@ -529,7 +557,7 @@
                   />
                 </div>
                 <div>
-                  <span class="text-subtitle-2 font-weight-bold mb-1 d-block text-primary-900">Długość lekcji</span>
+                  <span class="text-subtitle-2 font-weight-bold mb-1 d-block text-primary-900">{{ t('lesson_duration') }}</span>
                   <VSelect
                     v-model="pickedClassesStore.individualPreferences.duration"
                     density="compact"
@@ -538,7 +566,7 @@
                   />
                 </div>
                 <div class="mb-4">
-                  <span class="text-subtitle-2 font-weight-bold mb-1 d-block text-primary-900 mb-2">Płeć instruktora</span>
+                  <span class="text-subtitle-2 font-weight-bold mb-1 d-block text-primary-900 mb-2">{{ t('instructor_gender') }}</span>
                   <VBtnToggle
                     v-model="pickedClassesStore.individualPreferences.instructorGender"
                     class="ga-2 w-100 gender-buttons"
@@ -547,13 +575,13 @@
                   >
                     <VBtn
                       v-for="gender in genders"
-                      :key="gender"
+                      :key="gender.value"
                       class="text-capitalize border rounded flex-1"
                       size="small"
-                      :value="gender"
+                      :value="gender.value"
                       variant="outlined"
                     >
-                      {{ gender }}
+                      {{ gender.title }}
                     </VBtn>
                   </VBtnToggle>
                 </div>                <div class="mb-4">
@@ -563,20 +591,20 @@
                     density="compact"
                     :disabled="pickedClassesStore.searchPreviouslySelected"
                     hide-details
-                    label="Znajdź konkretnego instruktora"
+                    :label="t('find_specific_instructor')"
                   />
                   <div v-if="pickedClassesStore.individualPreferences.findSpecificInstructor">
-                    <span class="text-subtitle-2 font-weight-bold mt-1 mb-1 d-block text-primary-900">Instruktor</span>
+                    <span class="text-subtitle-2 font-weight-bold mt-1 mb-1 d-block text-primary-900">{{ t('instructor') }}</span>
                     <VSelect
                       v-model="pickedClassesStore.individualPreferences.selectedInstructor"
                       class="instructor-select"
                       density="compact"
                       :items="pickedClassesStore.instructors"
-                      placeholder="Wybierz instruktora"
+                      :placeholder="t('select_instructor')"
                       variant="outlined"
                     />
                     <div v-if="!isInstructorAvailableForDuration" class="text-caption text-red mb-2">
-                      Wybrany instruktor nie jest dostępny w tym wymiarze czasowym w wybranym dniu.
+                      {{ t('instructor_not_available') }}
                     </div>
                   </div>
 
@@ -592,15 +620,15 @@
                       </div>
                     </div>
                     <div>
-                      <div class="font-weight-bold text-primary-900 fs-14 cursor-pointer" @click="toggleChildSpecialist('individual')">Tylko "Specjaliści dla dzieci"</div>
+                      <div class="font-weight-bold text-primary-900 fs-14 cursor-pointer" @click="toggleChildSpecialist('individual')">{{ t('child_specialists_only') }}</div>
                       <div class="text-caption text-primary-900 mb-1" style="line-height: 1.3; opacity: 0.8;">
-                        Wyszukaj tylko instruktorów specjalnie przeszkolonych do jazdy z najmłodszymi.
+                        {{ t('child_specialists_description') }}
                       </div>
                       <a
                         class="text-caption text-primary-900 text-decoration-underline font-weight-medium cursor-pointer"
                         @click="showChildSpecialistModal = true"
                       >
-                        Dowiedz się więcej
+                        {{ t('learn_more') }}
                       </a>
                     </div>
                   </div>
@@ -610,7 +638,7 @@
               <!-- Step 2: Slots -->
               <VStepperWindowItem :value="2">
                 <div class="text-center mb-4">
-                  <span class="text-subtitle-1 font-weight-medium text-primary-900">Wybierz spośród dostępnych terminów:</span>
+                  <span class="text-subtitle-1 font-weight-medium text-primary-900">{{ t('choose_available_slots') }}</span>
                 </div>
 
                 <div class="d-flex align-center justify-center flex-wrap gap-2 mb-4">
@@ -645,7 +673,7 @@
                       <div class="d-flex flex-column align-start">
                         <span class="font-weight-bold fs-14 blue-text">{{ slot.time }}</span>
                         <div v-if="slot.instructor" class="text-caption-slot mt-1 text-left">
-                          Instruktor wybrany wcześniej:<br>
+                          {{ t('instructor_selected_previously') }}<br>
                           <span class="font-weight-bold">{{ slot.instructor }}</span>
                         </div>
                       </div>
@@ -665,14 +693,14 @@
                       variant="outlined"
                       @click="pickedClassesStore.loadMoreSlots('individual')"
                     >
-                      Załaduj więcej
+                      {{ t('load_more') }}
                     </VBtn>
                   </div>
                 </div>
 
                 <div v-else class="text-center py-4">
                   <div class="text-h6 font-weight-bold text-primary-900 mb-6">
-                    Brak zajęć z podanymi<br>parametrami
+                    <span v-html="t('no_classes_found').replace('\n', '<br>')"></span>
                   </div>
 
                   <VBtn
@@ -682,14 +710,14 @@
                     variant="outlined"
                     width="100%"
                   >
-                    Znajdź zajęcia<br>najbliższe preferencjom
+                    <span v-html="t('find_closest_classes').replace('\n', '<br>')"></span>
                   </VBtn>
 
                   <div class="border rounded-lg px-4 py-3 d-flex align-start text-left bg-white border-gray">
                     <VIcon class="mr-3 mt-1 flex-shrink-0" color="grey-darken-1" icon="mdi-message-text-outline" />
                     <div class="text-caption text-grey-darken-1" style="line-height: 1.4;">
-                      Jeśli nie znalazłeś/aś dopasowanej oferty, skontaktuj się z naszym
-                      <a class="text-decoration-underline text-grey-darken-1 font-weight-medium cursor-pointer" href="https://szkolastok.pl/kontakt" rel="noopener noreferrer" target="_blank">biurem obsługi klienta</a>.
+                      {{ t('contact_customer_service_info') }}
+                      <a class="text-decoration-underline text-grey-darken-1 font-weight-medium cursor-pointer" href="https://szkolastok.pl/kontakt" rel="noopener noreferrer" target="_blank">{{ t('customer_service_office') }}</a>.
                     </div>
                   </div>
                 </div>
@@ -727,7 +755,7 @@
               <!-- Step 2: Preferences (Same as Individual Step 1) -->
               <VStepperWindowItem :value="2">
                 <div class="text-center mb-4">
-                  <span class="text-subtitle-1 font-weight-medium text-primary-900">Dostosuj swoje zajęcia:</span>
+                  <span class="text-subtitle-1 font-weight-medium text-primary-900">{{ t('adjust_your_classes') }}</span>
                 </div>
                 <VSwitch
                   v-model="pickedClassesStore.searchPreviouslySelected"
@@ -736,11 +764,11 @@
                   density="compact"
                   :disabled="!pickedClassesStore.hasPreviouslySelectedInstructor"
                   hide-details
-                  label="Szukaj tylko zajęć z wybranym wcześniej instruktorem"
+                  :label="t('search_only_with_prev_instructor')"
                 />
 
                 <div class="mb-4">
-                  <span class="text-subtitle-2 font-weight-bold mb-1 d-block text-primary-900">Pora dnia</span>
+                  <span class="text-subtitle-2 font-weight-bold mb-1 d-block text-primary-900">{{ t('time_of_day') }}</span>
                   <VSelect
                     v-model="pickedClassesStore.sharedPreferences.timeOfDay"
                     density="compact"
@@ -750,7 +778,7 @@
                   />
                 </div>
                 <div class="mb-4">
-                  <span class="text-subtitle-2 font-weight-bold mb-1 d-block text-primary-900">Długość lekcji</span>
+                  <span class="text-subtitle-2 font-weight-bold mb-1 d-block text-primary-900">{{ t('lesson_duration') }}</span>
                   <VSelect
                     v-model="pickedClassesStore.sharedPreferences.duration"
                     density="compact"
@@ -759,7 +787,7 @@
                   />
                 </div>
                 <div class="mb-4">
-                  <span class="text-subtitle-2 font-weight-bold mb-1 d-block text-primary-900 mb-2">Płeć instruktora</span>
+                  <span class="text-subtitle-2 font-weight-bold mb-1 d-block text-primary-900 mb-2">{{ t('instructor_gender') }}</span>
                   <VBtnToggle
                     v-model="pickedClassesStore.sharedPreferences.instructorGender"
                     class="ga-2 w-100 gender-buttons"
@@ -768,13 +796,13 @@
                   >
                     <VBtn
                       v-for="gender in genders"
-                      :key="gender"
+                      :key="gender.value"
                       class="text-capitalize border rounded flex-1"
                       size="small"
-                      :value="gender"
+                      :value="gender.value"
                       variant="outlined"
                     >
-                      {{ gender }}
+                      {{ gender.title }}
                     </VBtn>
                   </VBtnToggle>
                 </div>
@@ -786,20 +814,20 @@
                     density="compact"
                     :disabled="pickedClassesStore.searchPreviouslySelected"
                     hide-details
-                    label="Znajdź konkretnego instruktora"
+                    :label="t('find_specific_instructor')"
                   />
                   <div v-if="pickedClassesStore.sharedPreferences.findSpecificInstructor">
-                    <span class="text-subtitle-2 font-weight-bold mt-1 mb-1 d-block text-primary-900">Instruktor</span>
+                    <span class="text-subtitle-2 font-weight-bold mt-1 mb-1 d-block text-primary-900">{{ t('instructor') }}</span>
                     <VSelect
                       v-model="pickedClassesStore.sharedPreferences.selectedInstructor"
                       class="instructor-select"
                       density="compact"
                       :items="pickedClassesStore.instructors"
-                      placeholder="Wybierz instruktora"
+                      :placeholder="t('select_instructor')"
                       variant="outlined"
                     />
                     <div v-if="!isInstructorAvailableForDuration" class="text-caption text-red mb-2">
-                      Wybrany instruktor nie jest dostępny w tym wymiarze czasowym w wybranym dniu.
+                      {{ t('instructor_not_available') }}
                     </div>
                   </div>
                 </div>
@@ -808,10 +836,10 @@
               <!-- Step 3: Slots (Same as Individual Step 2) -->
               <VStepperWindowItem :value="3">
                 <div class="text-center mb-4">
-                  <span class="text-subtitle-1 font-weight-medium text-primary-900">Wybierz spośród dostępnych terminów:</span>
+                  <span class="text-subtitle-1 font-weight-medium text-primary-900">{{ t('choose_available_slots') }}</span>
                 </div>
 
-                <div class="d-flex align-center justify-centerflex-wrap gap-2 mb-4">
+                <div class="d-flex align-center justify-center flex-wrap gap-2 mb-4">
                   <VChip
                     v-for="filter in sharedFilters"
                     :key="filter.key"
@@ -842,7 +870,7 @@
                       <div class="d-flex flex-column align-start">
                         <span class="font-weight-bold fs-14 blue-text">{{ slot.time }}</span>
                         <div v-if="slot.instructor" class="text-caption-slot mt-1 text-left">
-                          Instruktor wybrany wcześniej:<br>
+                          {{ t('instructor_selected_previously') }}<br>
                           <span class="font-weight-bold">{{ slot.instructor }}</span>
                         </div>
                       </div>
@@ -862,14 +890,14 @@
                       variant="outlined"
                       @click="pickedClassesStore.loadMoreSlots('shared')"
                     >
-                      Załaduj więcej
+                      {{ t('load_more') }}
                     </VBtn>
                   </div>
                 </div>
 
                 <div v-else class="text-center py-4">
                   <div class="text-h6 font-weight-bold text-primary-900 mb-6">
-                    Brak zajęć z podanymi<br>parametrami
+                    <span v-html="t('no_classes_found').replace('\n', '<br>')"></span>
                   </div>
 
                   <VBtn
@@ -879,14 +907,14 @@
                     variant="outlined"
                     width="100%"
                   >
-                    Znajdź zajęcia<br>najbliższe preferencjom
+                    <span v-html="t('find_closest_classes').replace('\n', '<br>')"></span>
                   </VBtn>
 
                   <div class="border rounded-lg px-4 py-3 d-flex align-start text-left bg-white border-gray">
                     <VIcon class="mr-3 mt-1 flex-shrink-0" color="grey-darken-1" icon="mdi-message-text-outline" />
                     <div class="text-caption text-grey-darken-1" style="line-height: 1.4;">
-                      Jeśli nie znalazłeś/aś dopasowanej oferty, skontaktuj się z naszym
-                      <a class="text-decoration-underline text-grey-darken-1 font-weight-medium cursor-pointer" href="https://szkolastok.pl/kontakt" rel="noopener noreferrer" target="_blank">biurem obsługi klienta</a>.
+                      {{ t('contact_customer_service_info') }}
+                      <a class="text-decoration-underline text-grey-darken-1 font-weight-medium cursor-pointer" href="https://szkolastok.pl/kontakt" rel="noopener noreferrer" target="_blank">{{ t('customer_service_office') }}</a>.
                     </div>
                   </div>
                 </div>
@@ -897,11 +925,11 @@
             <template v-if="selectedType === 'group'">
               <VStepperWindowItem :value="1">
                 <div class="text-center mb-2">
-                  <span class="text-subtitle-1 font-weight-medium text-primary-900">Wybierz zajęcia grupowe:</span>
+                  <span class="text-subtitle-1 font-weight-medium text-primary-900">{{ t('choose_group_classes') }}</span>
                 </div>
                 <div class="mb-6">
                   <p class="text-caption text-grey-darken-1 text-center" style="line-height: 1.4; max-width: 90%; margin: 0 auto;">
-                    Zajęcia grupowe są złożone z serii zajęć trwającej kilka dni. Po wybraniu zajęć, do twojego kalendarza zostanie dodana każda z rozłożonych na kilka dni lekcji.
+                    {{ t('group_classes_description') }}
                   </p>
                 </div>
 
@@ -918,7 +946,7 @@
                       @click="pickedClassesStore.selectedGroup = group.id"
                     >
 
-                      <div class="d-flex align-center justify-center">
+                      <div class="d-flex align-start justify-start w-100">
                         <!-- Checkbox/Circle -->
                         <div class="selection-circle mr-4 mt-1 d-flex align-center justify-center flex-shrink-0" />
 
@@ -952,7 +980,7 @@
                             variant="outlined"
                             @click.stop="openGroupDetails(group)"
                           >
-                            Dowiedz się więcej
+                            {{ t('learn_more') }}
                           </VBtn>
                         </div>
                       </div>
@@ -989,7 +1017,7 @@
                             >
                               <div class="d-flex flex-column text-left">
                                 <span class="text-caption font-weight-bold text-primary-900" style="line-height: 1.2;">
-                                  Dodatkowe animacje + posiłek
+                                  {{ t('additional_animations_meal') }}
                                 </span>
                                 <span class="text-caption font-weight-medium text-grey-darken-1">
                                   + {{ pickedClassesStore.childAddOnPrice }},00 zł
@@ -998,16 +1026,16 @@
                             </VExpansionPanelTitle>
                             <VExpansionPanelText class="px-0 pt-2 text-caption text-grey-darken-1">
                               <div class="mb-3">
-                                Animacje, które pozwalają dzieciom korzystać z wartościowych i bezpiecznego spędzania czasu w lektoratach słowiańskich. Po zajęciach ruchomych dzieci biorą udział w innych grach integracyjnych z dostawcami kreatywnymi. Program jest dostosowany do wieku i zainteresowań, a całość uzupełnia lekki posiłek.
+                                {{ t('animations_description') }}
                               </div>
 
                               <div class="d-flex align-center text-caption text-grey-darken-1 mb-1">
                                 <img alt="" class="mr-2" :src="ClockGrayIcon" width="16">
-                                <span v-html="formatSchedule('5 x 1h dziennie - od 10:45 do 11:45')" />
+                                <span v-html="formatSchedule(t('animations_schedule'))" />
                               </div>
                               <div class="d-flex align-center text-caption text-grey-darken-1">
                                 <img alt="" class="mr-2" :src="UsersGroupIcon" width="16">
-                                <span><strong class="text-primary-900">Zostało 18 miejsc.</strong> (18/20)</span>
+                                <span><strong class="text-primary-900">{{ t('places_left', { count: 18 }) }}</strong> (18/20)</span>
                               </div>
                             </VExpansionPanelText>
                           </VExpansionPanel>
@@ -1053,7 +1081,7 @@
             color="primary"
             density="compact"
             hide-details
-            label="Zapisz moje preferencje"
+            :label="t('save_my_preferences')"
           />
         </div>
       </div>
