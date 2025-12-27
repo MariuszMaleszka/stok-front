@@ -3,7 +3,6 @@
   import PercentIcon from '@/assets/percentage.svg'
   import GreenShieldIcon from '@/assets/shield-check-green.svg'
   import OrangeShieldIcon from '@/assets/shield-check-orange.svg'
-  import YellowShieldIcon from '@/assets/shield-check-yellow.svg'
   import TagIcon from '@/assets/tag.svg'
   import PopupSmall from '@/components/modals/PopupSmall.vue'
   import { useStayConfigStore } from '@/stores/StayConfigStore.js'

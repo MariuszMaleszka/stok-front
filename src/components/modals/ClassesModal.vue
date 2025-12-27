@@ -232,10 +232,14 @@
     }
 
     if (mdAndDown.value) {
-      if (autoSlideTimeout.value) clearTimeout(autoSlideTimeout.value)
-      autoSlideTimeout.value = setTimeout(() => {
-        nextDay()
-      }, 2000)
+      const allDaysBooked = days.value.every(day => hasBookedClasses(day))
+
+      if (!allDaysBooked) {
+        if (autoSlideTimeout.value) clearTimeout(autoSlideTimeout.value)
+        autoSlideTimeout.value = setTimeout(() => {
+          nextDay()
+        }, 2000)
+      }
     }
   }
 

@@ -1,6 +1,7 @@
 <script setup>
   import { computed, ref, watch } from 'vue'
   import CalendarPlusIcon from '@/assets/calendar-plus.svg'
+  import ClockGrayIcon from '@/assets/clock_gray.svg'
   import InfoIcon from '@/assets/info.svg'
   import UserIcon from '@/assets/user.svg'
   import UsersGroupIcon from '@/assets/users-group.svg'
@@ -939,7 +940,18 @@
                               </div>
                             </VExpansionPanelTitle>
                             <VExpansionPanelText class="px-0 pt-2 text-caption text-grey-darken-1">
-                              Animacje, które pozwalają dzieciom korzystać z wartościowych i bezpiecznego spędzania czasu w lektoratach słowiańskich. Po zajęciach ruchomych dzieci biorą udział w innych grach integracyjnych z dostawcami kreatywnymi. Program jest dostosowany do wieku i zainteresowań, a całość uzupełnia lekki posiłek.
+                              <div class="mb-3">
+                                Animacje, które pozwalają dzieciom korzystać z wartościowych i bezpiecznego spędzania czasu w lektoratach słowiańskich. Po zajęciach ruchomych dzieci biorą udział w innych grach integracyjnych z dostawcami kreatywnymi. Program jest dostosowany do wieku i zainteresowań, a całość uzupełnia lekki posiłek.
+                              </div>
+
+                              <div class="d-flex align-center text-caption text-grey-darken-1 mb-1">
+                                <img alt="" class="mr-2" :src="ClockGrayIcon" width="16">
+                                <span v-html="formatSchedule('5 x 1h dziennie - od 10:45 do 11:45')" />
+                              </div>
+                              <div class="d-flex align-center text-caption text-grey-darken-1">
+                                <img alt="" class="mr-2" :src="UsersGroupIcon" width="16">
+                                <span><strong class="text-primary-900">Zostało 18 miejsc.</strong> (18/20)</span>
+                              </div>
                             </VExpansionPanelText>
                           </VExpansionPanel>
                         </VExpansionPanels>
