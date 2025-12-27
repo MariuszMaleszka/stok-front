@@ -5,6 +5,8 @@
   import UserIcon from '@/assets/user.svg'
   import UsersGroupIcon from '@/assets/users-group.svg'
   import UsersIcon from '@/assets/users.svg'
+  import ChildSpecialistInfoModal from '@/components/modals/ChildSpecialistInfoModal.vue'
+  import ClassesInfoModal from '@/components/modals/ClassesInfoModal.vue'
   import { usePickedClassesStore } from '@/stores/PickedClassesStore'
   import { useStayStore } from '@/stores/StayStore'
 
@@ -23,6 +25,8 @@
   const currentStep = ref(1)
   const selectedType = ref(null)
   const showStepper = ref(false)
+  const showClassesInfoModal = ref(false)
+  const showChildSpecialistModal = ref(false)
 
   function formatSchedule (text) {
     if (!text) return ''
@@ -261,6 +265,25 @@
     return false
   })
 
+  const isInstructorAvailableForDuration = computed(() => {
+    let prefs
+    if (selectedType.value === 'individual') {
+      prefs = pickedClassesStore.individualPreferences
+    } else if (selectedType.value === 'shared') {
+      prefs = pickedClassesStore.sharedPreferences
+    } else {
+      return true
+    }
+
+    if (!prefs.findSpecificInstructor || !prefs.selectedInstructor) return true
+
+    return pickedClassesStore.availableSlots.some(s =>
+      s.date === pickedClassesStore.selectedDate
+      && s.instructor === prefs.selectedInstructor
+      && s.duration === prefs.duration,
+    )
+  })
+
   function toggleChildSpecialist (type) {
     const prefs = type === 'individual' ? pickedClassesStore.individualPreferences : pickedClassesStore.sharedPreferences
     prefs.childSpecialist = !prefs.childSpecialist
@@ -382,6 +405,7 @@
               class="text-none text-caption"
               color="grey-darken-1 border-gray"
               variant="outlined"
+              @click="showClassesInfoModal = true"
             >
               <template #prepend>
                 <img alt="" :src="InfoIcon" width="16">
@@ -474,6 +498,9 @@
                       placeholder="Wybierz instruktora"
                       variant="outlined"
                     />
+                    <div v-if="!isInstructorAvailableForDuration" class="text-caption text-red mb-2">
+                      Wybrany instruktor nie jest dostępny w tym wymiarze czasowym w wybranym dniu.
+                    </div>
                   </div>
 
                   <div v-if="isChildParticipant" class="mb-4 pa-3 rounded-lg d-flex align-start mt-2" style="background-color: #E1EFFE;">
@@ -492,7 +519,12 @@
                       <div class="text-caption text-primary-900 mb-1" style="line-height: 1.3; opacity: 0.8;">
                         Wyszukaj tylko instruktorów specjalnie przeszkolonych do jazdy z najmłodszymi.
                       </div>
-                      <a class="text-caption text-primary-900 text-decoration-underline font-weight-medium cursor-pointer">Dowiedz się więcej</a>
+                      <a
+                        class="text-caption text-primary-900 text-decoration-underline font-weight-medium cursor-pointer"
+                        @click="showChildSpecialistModal = true"
+                      >
+                        Dowiedz się więcej
+                      </a>
                     </div>
                   </div>
                 </div>
@@ -580,7 +612,7 @@
                     <VIcon class="mr-3 mt-1 flex-shrink-0" color="grey-darken-1" icon="mdi-message-text-outline" />
                     <div class="text-caption text-grey-darken-1" style="line-height: 1.4;">
                       Jeśli nie znalazłeś/aś dopasowanej oferty, skontaktuj się z naszym
-                      <a class="text-decoration-underline text-grey-darken-1 font-weight-medium cursor-pointer" href="#">biurem obsługi klienta</a>.
+                      <a class="text-decoration-underline text-grey-darken-1 font-weight-medium cursor-pointer" href="https://szkolastok.pl/kontakt" rel="noopener noreferrer" target="_blank">biurem obsługi klienta</a>.
                     </div>
                   </div>
                 </div>
@@ -688,6 +720,9 @@
                       placeholder="Wybierz instruktora"
                       variant="outlined"
                     />
+                    <div v-if="!isInstructorAvailableForDuration" class="text-caption text-red mb-2">
+                      Wybrany instruktor nie jest dostępny w tym wymiarze czasowym w wybranym dniu.
+                    </div>
                   </div>
                 </div>
               </VStepperWindowItem>
@@ -773,7 +808,7 @@
                     <VIcon class="mr-3 mt-1 flex-shrink-0" color="grey-darken-1" icon="mdi-message-text-outline" />
                     <div class="text-caption text-grey-darken-1" style="line-height: 1.4;">
                       Jeśli nie znalazłeś/aś dopasowanej oferty, skontaktuj się z naszym
-                      <a class="text-decoration-underline text-grey-darken-1 font-weight-medium cursor-pointer" href="#">biurem obsługi klienta</a>.
+                      <a class="text-decoration-underline text-grey-darken-1 font-weight-medium cursor-pointer" href="https://szkolastok.pl/kontakt" rel="noopener noreferrer" target="_blank">biurem obsługi klienta</a>.
                     </div>
                   </div>
                 </div>
@@ -890,6 +925,9 @@
 
     </VCard>
   </VDialog>
+
+  <ClassesInfoModal v-model="showClassesInfoModal" />
+  <ChildSpecialistInfoModal v-model="showChildSpecialistModal" />
 </template>
 
 <style scoped lang="scss">

@@ -14,6 +14,8 @@ declare module 'vue' {
     AddClassesModal: typeof import('./src/components/modals/AddClassesModal.vue')['default']
     AppFooter: typeof import('./src/components/AppFooter.vue')['default']
     AppHeader: typeof import('./src/components/AppHeader.vue')['default']
+    ChildSpecialistInfoModal: typeof import('./src/components/modals/ChildSpecialistInfoModal.vue')['default']
+    ClassesInfoModal: typeof import('./src/components/modals/ClassesInfoModal.vue')['default']
     ClassesModal: typeof import('./src/components/modals/ClassesModal.vue')['default']
     DatePicker: typeof import('./src/components/DatePicker.vue')['default']
     DatePickerResponsive: typeof import('./src/components/DatePickerResponsive.vue')['default']

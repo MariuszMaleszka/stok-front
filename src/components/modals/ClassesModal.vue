@@ -588,7 +588,6 @@
   height: 94vw;
   max-width: 280px;
   max-height: 340px;
-  box-shadow: 0px 0px 5px 0px rgba(5, 44, 112, 0.2) !important;
 
   &:last-child {
     margin-right: 20px!important;
