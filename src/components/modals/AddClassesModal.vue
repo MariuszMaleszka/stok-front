@@ -7,6 +7,7 @@
   import UsersIcon from '@/assets/users.svg'
   import ChildSpecialistInfoModal from '@/components/modals/ChildSpecialistInfoModal.vue'
   import ClassesInfoModal from '@/components/modals/ClassesInfoModal.vue'
+  import GroupDetailsModal from '@/components/modals/GroupDetailsModal.vue'
   import { usePickedClassesStore } from '@/stores/PickedClassesStore'
   import { useStayStore } from '@/stores/StayStore'
 
@@ -27,6 +28,13 @@
   const showStepper = ref(false)
   const showClassesInfoModal = ref(false)
   const showChildSpecialistModal = ref(false)
+  const showGroupDetailsModal = ref(false)
+  const selectedGroupForDetails = ref(null)
+
+  function openGroupDetails (group) {
+    selectedGroupForDetails.value = group
+    showGroupDetailsModal.value = true
+  }
 
   function formatSchedule (text) {
     if (!text) return ''
@@ -928,6 +936,7 @@
 
   <ClassesInfoModal v-model="showClassesInfoModal" />
   <ChildSpecialistInfoModal v-model="showChildSpecialistModal" />
+  <GroupDetailsModal v-model="showGroupDetailsModal" :group="selectedGroupForDetails" />
 </template>
 
 <style scoped lang="scss">

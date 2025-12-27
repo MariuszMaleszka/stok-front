@@ -32,7 +32,7 @@
   const emit = defineEmits(['update:modelValue', 'save'])
   const { mobile, mdAndDown } = useDisplay()
   const { t, locale } = useI18n()
-  const { showSimpleToast } = useToast()
+  const { showSimpleToast, showIncompleteBookingToast } = useToast()
   const stayStore = useStayStore()
   const pickedClassesStore = usePickedClassesStore()
 
@@ -220,6 +220,23 @@
       autoSlideTimeout.value = setTimeout(() => {
         nextDay()
       }, 2000)
+    }
+  }
+
+  function handleSave () {
+    const allDaysBooked = days.value.every(day => hasBookedClasses(day))
+
+    if (allDaysBooked) {
+      emit('save')
+    } else {
+      showIncompleteBookingToast(
+        () => {
+          // Stay in modal
+        },
+        () => {
+          emit('save')
+        },
+      )
     }
   }
 
@@ -524,10 +541,9 @@
               'back-btn'
             ]"
             color="blue normal-text"
-            :disabled="!hasAnyBookedClasses"
             size="x-large"
             variant="flat"
-            @click="emit('save')"
+            @click="handleSave"
           >
             {{ t('save_and_next') || 'Zapisz i przejdź dalej' }}
             <VIcon class="ml-1" icon="mdi-arrow-right" />
