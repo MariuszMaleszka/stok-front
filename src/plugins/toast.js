@@ -6,6 +6,7 @@ export default {
     app.use(Vue3Toastify, {
       autoClose: 3000,
       position: toast.POSITION.BOTTOM_CENTER,
+      zIndex: 9999,
     })
   },
 }

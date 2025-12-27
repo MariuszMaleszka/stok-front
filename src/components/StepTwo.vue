@@ -176,7 +176,7 @@
               </div>
             </div>
             <div v-if="stayStore.totalSavings > 0" class=" font-weight-medium fs-14 discount-text">
-               - {{ stayStore.totalSavings.toFixed(2).replace('.', ',') }} {{ stayStore.currency }}
+              - {{ stayStore.totalSavings.toFixed(2).replace('.', ',') }} {{ stayStore.currency }}
             </div>
           </div>
         </PackageInfoBox>

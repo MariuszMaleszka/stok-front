@@ -1,5 +1,5 @@
 <script setup>
-  import { computed, onUnmounted, ref, watch } from 'vue'
+  import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
   import { useI18n } from 'vue-i18n'
   import { useDisplay } from 'vuetify'
   import arrowLeft from '@/assets/arrow_left.svg'
@@ -12,6 +12,7 @@
   import UsersGroupIcon from '@/assets/users-group.svg'
   import UsersIcon from '@/assets/users.svg'
   import AddClassesModal from '@/components/modals/AddClassesModal.vue'
+  import { useToast } from '@/composables/useToast.js'
   import { usePickedClassesStore } from '@/stores/PickedClassesStore.js'
   import { useStayStore } from '@/stores/StayStore.js'
 
@@ -31,6 +32,7 @@
   const emit = defineEmits(['update:modelValue', 'save'])
   const { mobile, mdAndDown } = useDisplay()
   const { t, locale } = useI18n()
+  const { showSimpleToast } = useToast()
   const stayStore = useStayStore()
   const pickedClassesStore = usePickedClassesStore()
 
@@ -124,7 +126,7 @@
     showAddClassesModal.value = true
   }
 
-  function handleAddClassesNext (payload) {
+  async function handleAddClassesNext (payload) {
     const { type, data } = payload
 
     if (currentDayForBooking.value) {
@@ -207,6 +209,11 @@
     }
 
     showAddClassesModal.value = false
+    await nextTick()
+
+    if (currentDayForBooking.value) {
+      showSimpleToast(t('classes_added_to_plan') || 'Zajęcia zostały dodane do planu', 'info')
+    }
 
     if (mdAndDown.value) {
       if (autoSlideTimeout.value) clearTimeout(autoSlideTimeout.value)
