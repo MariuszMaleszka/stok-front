@@ -349,24 +349,38 @@ export const useStayStore = defineStore('stayStore', () => {
    */
   const participantInsuranceTotalPrice = computed(() => {
     return participantId => {
-      const participant = participants.value.find(p => p.dynamicId === participantId)
-      if (!participant?.selectedClasses) {
-        return 0
-      }
+      const pickedClassesStore = usePickedClassesStore()
+      const participantBookings = pickedClassesStore.bookedClasses.filter(
+        booking => booking.participantId === participantId
+      )
 
-      return participant.selectedClasses.reduce((sum, classItem) => {
+      const processedGroupBookings = new Set()
+
+      return participantBookings.reduce((sum, booking) => {
+        // Skip if insurance is not enabled
+        if (!booking.insurance?.enabled || !booking.insurance?.price) {
+          return sum
+        }
+
+        const participant = participants.value.find(p => p.dynamicId === participantId)
+
         // Skip insurance for child participants in group classes
-        if (participant.participantType === 'child' && classItem.type === 'group') {
+        if (participant?.participantType === 'child' && booking.type === 'group') {
           return sum
         }
 
-        if (!classItem.insurance?.enabled) {
-          return sum
+        // For group bookings, only count once per groupBookingId
+        if (booking.type === 'group' && booking.groupBookingId) {
+          if (processedGroupBookings.has(booking.groupBookingId)) {
+            return sum // Already counted this group booking
+          }
+          processedGroupBookings.add(booking.groupBookingId)
+          // Multiply by number of days
+          return sum + (booking.insurance.price * (booking.data?.group?.classDates?.length || 1))
         }
 
-        const insurancePrice = classItem.insurance.price || 0
-        const dayMultiplier = classItem.insurance.perDay ? (classItem.dates?.length || 1) : 1
-        return sum + (insurancePrice * dayMultiplier)
+        // For individual and shared bookings, use price as-is (single day)
+        return sum + booking.insurance.price
       }, 0)
     }
   })

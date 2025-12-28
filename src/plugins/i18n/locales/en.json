@@ -211,5 +211,6 @@
   "discounts_title": "Discount information",
   "discounts_info": "Discounts (customer card, happy hours, hourly packages) cannot be combined – the most favourable one applies.",
   "discount": "Discount",
-  "insurance_included": "Accident insurance included in the package."
+  "insurance_included": "Accident insurance included in the package.",
+  "insurance": "Insurance"
 }

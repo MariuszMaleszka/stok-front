@@ -179,6 +179,25 @@
       })
     }
   })
+  function toggleAllInsurances(value) {
+    const pickedClassesStore = usePickedClassesStore()
+    const processedGroups = new Set()
+
+    pickedClassesStore.bookedClasses.forEach(booking => {
+      // For group bookings, only process once per groupBookingId
+      if (booking.groupBookingId) {
+        if (processedGroups.has(booking.groupBookingId)) return
+        processedGroups.add(booking.groupBookingId)
+
+        // Update all bookings in the same group
+        pickedClassesStore.bookedClasses
+          .filter(b => b.groupBookingId === booking.groupBookingId)
+          .forEach(b => { b.insurance.enabled = value })
+      } else {
+        booking.insurance.enabled = value
+      }
+    })
+  }
 
   /**
    * Calculate total insurance cost for all participants
@@ -191,6 +210,9 @@
    * @returns {number} Total insurance price across all participants
    */
   const sumTotalInsurancesForAll = computed(() => {
+    // Track processed group bookings to avoid counting them multiple times
+    const processedGroupBookings = new Set()
+
     return stayStore.participants.reduce((total, participant) => {
       const bookings = getParticipantBookings(participant.dynamicId)
       const participantInsuranceTotal = bookings.reduce((sum, booking) => {
@@ -200,10 +222,18 @@
         }
 
         if (booking.insurance?.price) {
-          const price = booking.insurance.perDay
-            ? booking.insurance.price * (booking.data?.group?.classDates?.length || 1)
-            : booking.insurance.price
-          return sum + price
+          // For group bookings, only count once per groupBookingId
+          if (booking.type === 'group' && booking.groupBookingId) {
+            if (processedGroupBookings.has(booking.groupBookingId)) {
+              return sum // Already counted this group booking
+            }
+            processedGroupBookings.add(booking.groupBookingId)
+            // Multiply by number of days
+            return sum + (booking.insurance.price * booking.data.group.classDates.length)
+          }
+
+          // For individual and shared bookings, use price as-is
+          return sum + booking.insurance.price
         }
         return sum
       }, 0)
@@ -222,9 +252,9 @@
    * @param {Object} participant - The participant object
    * @param {string} classId - The dynamicId of the class to remove
    */
-  function handleClassDeletion(participant, bookingId) {
-    classStore.removeBookedClass(bookingId)
-  }
+  // function handleClassDeletion(participant, bookingId) {
+  //   classStore.removeBookedClass(bookingId)
+  // }
 
   /**
    * Debounced handler for loyalty card number validation
@@ -512,8 +542,8 @@
                   class="ga-4"
                   :index="index"
                   :participant="participant"
-                  @delete-class="handleClassDeletion(participant, $event)"
                 />
+<!--                  @delete-class="handleClassDeletion(participant, $event)"-->
               </div>
             </div>
             <VSheet
@@ -562,6 +592,7 @@
                     color="info"
                     density="compact"
                     hide-details
+                    @update:model-value="toggleAllInsurances"
                   />
                   <div
                     class="fw-400 d-flex 2 align-center ml-2"

@@ -349,7 +349,7 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
       ...booking,
       instructor,
       id: Date.now() + Math.random().toString(36).slice(2, 11),
-      insurance: configStore.insuranceObject
+      insurance: JSON.parse(JSON.stringify(configStore.insuranceObject))
     }
     bookedClasses.value.push(newBooking)
   }
