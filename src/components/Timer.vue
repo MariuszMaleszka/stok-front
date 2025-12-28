@@ -1,13 +1,17 @@
 <script setup>
   import { useTimerStore } from '@/stores/TimerStore.js'
-
+import {useDisplay} from "vuetify";
   const timerStore = useTimerStore()
-
+ const { mobile } = useDisplay()
 </script>
 
 <template>
   <div class="time-counter d-flex fs-12  align-center">
-    <span class="mr-1 pa-1 text-right" style="max-width: 130px;">
+    <span
+      class="mr-1 pa-1 text-right"
+      :style="mobile ? { maxWidth: '130px' } : {}"
+
+    >
       {{ $t('timer_info') }}
     </span>
     <span class="black-badge text-center pa-1">
