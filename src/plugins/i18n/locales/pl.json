@@ -206,7 +206,14 @@
   "invalid_loyalty_card_number": "Nieprawidłowy numer karty lojalnościowej",
   "stay_manager_data": "Dane opiekuna pobytu",
   "proceed_to_payment": "Przejdź do płatności",
-  "please_fill_all_required_fields": "Proszę wypełnić wszystkie wymagane pola"
+  "please_fill_all_required_fields": "Proszę wypełnić wszystkie wymagane pola",
+  "added_5_minutes": "Dodano 5 minut do Twojej rezerwacji",
+  "another_stay_manager": "Dane innego opiekuna pobytu",
+  "discounts_title": "Rabaty",
+  "discounts_info": "Rabaty (karta klienta, happy hours, pakiety godzinowe) nie mogą być łączone – obowiązuje najkorzystniejszy z nich.",
+  "discount": "Rabat",
+  "insurance_included": "Ubezpieczenie NNW w pakiecie"
+
 
 
 

@@ -205,8 +205,11 @@
   "invalid_loyalty_card_number": "Invalid loyalty card number",
   "stay_manager_data": "Stay manager data",
   "proceed_to_payment": "Proceed to payment",
-  "please_fill_all_required_fields": "Please fill all required fields"
-
-
-
+  "please_fill_all_required_fields": "Please fill all required fields",
+  "added_5_minutes": "5 minutes added to your reservation time",
+  "another_stay_manager": "Another stay manager",
+  "discounts_title": "Discount information",
+  "discounts_info": "Discounts (customer card, happy hours, hourly packages) cannot be combined – the most favourable one applies.",
+  "discount": "Discount",
+  "insurance_included": "Accident insurance included in the package."
 }
