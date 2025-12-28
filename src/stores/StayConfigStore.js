@@ -35,11 +35,12 @@ export const useStayConfigStore = defineStore('stayConfig', () => {
   })
 
   const insuranceObject = ref({
-    title: 'NNW Turystyczno-Sportowe lorem ipsum amet dolor blabla tututut',
+    title: 'PAKIET NNW TURYSTYCZNO-SPORTOWY',
     enabled: false,
     price: 10,
     perDay: true,
-    description: 'PAKIET NNW TURYSTYCZNO-SPORTOWY - Wariant Mateusz na terenie RP.',
+    description:
+      'PAKIET NNW TURYSTYCZNO-SPORTOWY - Wariant III SWU indywidualnych podróży Kontynenty na terenie RP. (Działa na terenie Polski)',
     imgSource: '',
   })
 
