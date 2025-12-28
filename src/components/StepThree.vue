@@ -794,14 +794,18 @@
                         {{ formatPrice(stayStore.allParticipantsTotalPrice) }}&nbsp;{{ stayStore.currency }}
                       </span>
                     </div>
-                    <div v-if="allInsurancesEnabled" class="fs-11">
-                      <span>{{ $t('including') }}</span>&nbsp;<span class="text-lowercase">{{
-                        $t('aditional_options')
-                      }}: </span>
-                      <span>{{ formatPrice(sumTotalInsurancesForAll) }}&nbsp;{{ stayStore.currency }}</span>
+                    <div v-if="allInsurancesEnabled" class="fs-11 text-right">
+                      <div>
+                        {{ $t('including') }} <span class="text-lowercase">{{ $t('aditional_options') }}:</span>
+                      </div>
+
+                      <p>- {{ $t('insurance') }}: {{ formatPrice(sumTotalInsurancesForAll) }}&nbsp;{{ stayStore.currency }}</p>
+                      <p>- {{ $t('child_add_ons') }}: {{ formatPrice(classStore.childAddOnPrice) }}&nbsp;{{ stayStore.currency }}</p>
                     </div>
                   </div>
                 </div>
+                {{ classStore.childAddOnSelections }}
+                {{ classStore.childAddOnPrice }}
               </VSheet>
             </div>
           </div>

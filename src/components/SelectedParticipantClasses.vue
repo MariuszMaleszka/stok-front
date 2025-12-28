@@ -306,8 +306,6 @@ function toggleInsurance(booking) {
                     :class="mobile ? 'fs-10': 'fs-14'"
                   >
                     {{ t('add_insurance') }}
-
-
                     <VBtn
                       class="ma-2 text-capitalize px-2"
                       :class="mobile ? 'fs-10': 'fs-14'"
