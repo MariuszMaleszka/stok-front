@@ -2,9 +2,11 @@ import { useCookies } from '@vueuse/integrations/useCookies'
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
 import { useStayStore } from './StayStore'
+import {useStayConfigStore} from "@/stores/StayConfigStore.js";
 
 export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
   const stayStore = useStayStore()
+  const configStore = useStayConfigStore()
   const cookies = useCookies(['booking_preferences'])
 
   // Helper to generate dynamic dates
@@ -347,6 +349,7 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
       ...booking,
       instructor,
       id: Date.now() + Math.random().toString(36).slice(2, 11),
+      insurance: configStore.insuranceObject
     }
     bookedClasses.value.push(newBooking)
   }

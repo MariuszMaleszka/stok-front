@@ -9,6 +9,7 @@
   import PopupSmall from '@/components/modals/PopupSmall.vue'
   import { useStayStore } from '@/stores/StayStore.js'
   import { formatPrice } from '@/utils/numbers.js'
+  import {usePickedClassesStore} from "@/stores/PickedClassesStore.js";
 
   const props = defineProps({
     participant: {
@@ -26,6 +27,7 @@
   const { t } = useI18n()
   const { mobile } = useDisplay()
   const stayStore = useStayStore()
+  const classesStore = usePickedClassesStore()
   const expandedPanels = ref({})
   const panel = ref([0])// Expansion panel state (main)
 
@@ -36,13 +38,36 @@
   const classToDelete = ref(null) // Holds the class selected for deletion
   const confirmClassDeletationDialog = ref(false) // Controls the confirmation dialog visibility
 
+
+  const participantBookings = computed(() => {
+    const bookings = classesStore.bookedClasses.filter(
+      booking => booking.participantId === props.participant.dynamicId
+    )
+
+    // Group by groupBookingId to avoid duplicates
+    const grouped = new Map()
+
+    for (const booking of bookings) {
+      const key = booking.groupBookingId || booking.id
+
+      if (!grouped.has(key)) {
+        grouped.set(key, booking)
+      }
+    }
+
+    return Array.from(grouped.values())
+  })
+
   function openInsuranceDialog (insurance) {
     currentInsurance.value = insurance
     insuranceInfoDialog.value = true
   }
   // Delete class
-  function deleteClass (dynamicId) {
-    const item = props.participant.selectedClasses.find(c => c.dynamicId === dynamicId)
+  function deleteClass(id) {
+    console.log('delete class', id)
+    const item = participantBookings.value.find(c => c.participantId === id)
+    console.log('item to delete', item)
+    console.log('s', participantBookings.value)
     if (item) {
       classToDelete.value = item
       confirmClassDeletationDialog.value = true
@@ -77,24 +102,78 @@
         <VExpansionPanelText class="border-t">
           <VList class="py-0" density="compact">
             <div
-              v-for="item in props.participant.selectedClasses"
-              :key="item.dynamicId"
+              v-for="item in participantBookings"
+              :key="item.participantId + '-' + item.dynamicId"
             >
               <div
                 class="py-4 pb-0 d-flex justify-between"
                 :class="mobile ? 'px-0': 'px-4'"
               >
-                <img alt="" class="mb-auto" :src="item.classType === 'ski' ? skiLOGO : snowboardLOGO" width="28px">
 
+                <img alt="" class="mb-auto" :src="participant.activityType === 'Narty' ? skiLOGO : snowboardLOGO" width="28px">
                 <div class="d-flex flex-column ml-2 flex-1">
+                  {{ item }}
+<!--                  {{ item }}-->
                   <p
-                    v-if="item.title"
+                    v-if="item.type === 'individual'"
                     class="fs-500 text-pre-wrap lh-normal"
                     :class="mobile ? 'fs-12 ': 'fs-14'"
                   >
-                    {{ item.title }}
+                    {{ t('individual_classes') }}
                   </p>
+                  <p
+                    v-if="item.type === 'group'"
+                     class="fs-500 text-pre-wrap lh-normal"
+                    :class="mobile ? 'fs-12 ': 'fs-14'"
+                  >
+                    {{ t('group_classes') }}
+                  </p>
+                  <p
+                    v-if="item.type === 'shared'"
+                    class="fs-500 text-pre-wrap lh-normal"
+                    :class="mobile ? 'fs-12 ': 'fs-14'"
+                  >
+                    {{ t('shared_classes') }}
+                  </p>
+                  <div
+                    v-if="item.instructor"
+                    class="text-pre-wrap lh-normal"
+                    :class="mobile ? 'fs-9 ': 'fs-12'"
+                  >
+                    <p>
+                    {{ t('instructor') }}: {{ item.instructor }}
 
+                    </p>
+                  </div>
+                  <div
+                    class="text-pre-wrap lh-normal"
+                    :class="mobile ? 'fs-9 ': 'fs-12'"
+                  >
+                    {{ participant.skillLevel }}
+                  </div>
+                  <div
+                    v-if="item.type === 'individual' || item.type === 'shared'"
+                    class="text-pre-wrap lh-normal"
+                    :class="mobile ? 'fs-9 ': 'fs-12'"
+                  >
+                    <p>
+                      &#8226;{{ item.data.slot.date }} - {{ item.data.slot.time }}
+                    </p>
+                  </div>
+                  <div
+                    v-else
+                    class="text-pre-wrap lh-normal"
+                    :class="mobile ? 'fs-9 ': 'fs-12'"
+                  >
+                    <p>
+                      &#8226;{{ item.data.group.dates }}
+                    </p>
+                    <p>
+                      &#8226;{{ item.data.group.schedule }}
+                    </p>
+                  </div>
+
+<!--                  {{ item.data }}-->
                   <div
                     class="d-flex flex-column fw-500 text-pre-wrap lh-normal fc-gray mt-1"
                     :class="mobile ? 'fs-9 ': 'fs-12'"
@@ -128,9 +207,16 @@
                     class="mr-2 fw-600"
                     :class="mobile ? 'fs-12 ': 'fs-14'"
                   >
-                    {{ formatPrice(item.price) }}&nbsp;{{ stayStore.currency }}
+<!--                    {{ formatPrice(item.price) }}&nbsp;{{ stayStore.currency }}-->
+<!--                    {{ item.data.group.price }}-->
+              <span v-if="item.data?.group?.price">
+                {{ item.data.group.price }}&nbsp;{{ stayStore.currency }}
+              </span>
+              <span v-if="item.data?.slot?.price">
+                {{ item.data.slot.price }}&nbsp;{{ stayStore.currency }}
+              </span>
                   </span>
-                  <VIcon color="grey" icon="mdi-close" size="18" @click="deleteClass(item.dynamicId)" />
+                  <VIcon color="grey" icon="mdi-close" size="18" @click="deleteClass(item.participantId)" />
                 </div>
               </div>
 
@@ -209,7 +295,8 @@
                     class="fw-400 d-flex align-center ml-2"
                     :class="mobile ? 'fs-10': 'fs-14'"
                   >
-                    {{ t('insurance_included') }}
+                    {{ t('add_insurance') }}
+
 
                     <VBtn
                       class="ma-2 text-capitalize px-2"
@@ -324,42 +411,73 @@
           v-if="classToDelete"
         >
           <div class="d-flex justify-between">
-            <img alt="" class="mb-auto" :src="classToDelete.classType === 'ski' ? skiLOGO : snowboardLOGO" width="28px">
+            <img alt="" class="mb-auto" :src="participant.activityType === 'narty' ? skiLOGO : snowboardLOGO" width="28px">
+            <p
+              v-if="classToDelete.type === 'individual'"
+              class="fs-500 text-pre-wrap lh-normal"
+              :class="mobile ? 'fs-12 ': 'fs-14'"
+            >
+              {{ t('individual_classes') }}
+            </p>
+            <p
+              v-if="classToDelete.type === 'group'"
+              class="fs-500 text-pre-wrap lh-normal"
+              :class="mobile ? 'fs-12 ': 'fs-14'"
+            >
+              {{ t('group_classes') }}
+            </p>
+            <p
+              v-if="classToDelete.type === 'shared'"
+              class="fs-500 text-pre-wrap lh-normal"
+              :class="mobile ? 'fs-12 ': 'fs-14'"
+            >
+              {{ t('shared_classes') }}
+            </p>
+            <div
+              v-if="classToDelete.instructor"
+              class="text-pre-wrap lh-normal"
+              :class="mobile ? 'fs-9 ': 'fs-12'"
+            >
+              <p>
+                {{ t('instructor') }}: {{ classToDelete.instructor }}
 
+              </p>
+            </div>
+            <div
+              class="text-pre-wrap lh-normal"
+              :class="mobile ? 'fs-9 ': 'fs-12'"
+            >
+              {{ participant.skillLevel }}
+            </div>
+            <div
+              v-if="classToDelete.type === 'individual' || classToDelete.type === 'shared'"
+              class="text-pre-wrap lh-normal"
+              :class="mobile ? 'fs-9 ': 'fs-12'"
+            >
+              <p>
+                &#8226;{{ classToDelete.data.slot.date }} - {{ classToDelete.data.slot.time }}
+              </p>
+            </div>
+            <div
+              v-else
+              class="text-pre-wrap lh-normal"
+              :class="mobile ? 'fs-9 ': 'fs-12'"
+            >
+              <p>
+                &#8226;{{ classToDelete.data.group.dates }}
+              </p>
+              <p>
+                &#8226;{{ classToDelete.data.group.schedule }}
+              </p>
+            </div>
             <div class="d-flex flex-column ml-2 flex-1">
               <p
                 class="fs-500 text-pre-wrap lh-normal"
                 :class="mobile ? 'fs-12 ': 'fs-14'"
               >
-                {{ classToDelete.title }}
+
               </p>
 
-              <div
-                class="d-flex flex-column fw-500 text-pre-wrap lh-normal fc-gray mt-1"
-                :class="mobile ? 'fs-9 ': 'fs-12'"
-              >
-                <div class="d-flex align-center">
-                  <p v-if="classToDelete.groupName" class="fc-gray">
-                    &#8226; <span>{{ classToDelete.groupName }},</span>
-                  </p>
-                  <p v-if="classToDelete.skillLevel" class="fc-gray">
-                    &#8226;<span class="ml-1">{{ classToDelete.skillLevel }}</span>
-                  </p>
-                </div>
-                <div
-                  v-for="(day, dIdx) in classToDelete.dates"
-                  :key="dIdx"
-                  class="d-flex align-center"
-                  :class="mobile ? 'fs-9 ': 'fs-12'"
-                >
-                  <p v-if="day.date">
-                    &#8226;<span class="ml-1">{{ day.date }}</span>
-                  </p>
-                  <p v-if="day.time">
-                    &#8226;<span class="ml-1">{{ day.time }}</span>
-                  </p>
-                </div>
-              </div>
             </div>
 
             <div class="d-flex align-center">

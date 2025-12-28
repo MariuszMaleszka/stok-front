@@ -133,7 +133,7 @@ const blankParticipant = {
   availableLessonTypes: [], // Lesson types available for this participant
   showGroupLessons: true, // Whether to show group lesson options
   classLang: 'Polski', // Preferred language for classes
-  selectedClasses: [], // Classes enrolled in
+  // selectedClasses: [], // Classes enrolled in
 }
 
 // ============================================================================
@@ -315,14 +315,26 @@ export const useStayStore = defineStore('stayStore', () => {
    */
   const participantClassesTotalPrice = computed(() => {
     return participantId => {
-      const participant = participants.value.find(p => p.dynamicId === participantId)
-      if (!participant?.selectedClasses || participant.selectedClasses.length === 0) {
-        return 0
-      }
+      const pickedClassesStore = usePickedClassesStore()
+      const participantBookings = pickedClassesStore.bookedClasses.filter(
+        booking => booking.participantId === participantId
+      )
 
-      return participant.selectedClasses.reduce((sum, classItem) => {
-        const numberOfDates = classItem.dates?.length || 1
-        return sum + (classItem.price * numberOfDates)
+      const processedGroupIds = new Set()
+      return participantBookings.reduce((sum, booking) => {
+        // Skip duplicate group bookings
+        if (booking.groupBookingId && processedGroupIds.has(booking.groupBookingId)) {
+          return sum
+        }
+        if (booking.groupBookingId) {
+          processedGroupIds.add(booking.groupBookingId)
+        }
+
+        const price = booking.type === 'group'
+          ? (booking.data?.group?.price || 0)
+          : (booking.data?.slot?.price || 0)
+
+        return sum + price
       }, 0)
     }
   })
@@ -553,7 +565,61 @@ export const useStayStore = defineStore('stayStore', () => {
   // ==========================================================================
   // WATCHER - PARTICIPANT SYNCHRONIZATION
   // ==========================================================================
+  /**
+   * Get selected classes for a specific participant from bookedClasses
+   * Transforms bookedClasses data into the legacy selectedClasses format
+   */
+  const getParticipantClasses = computed(() => {
+    return (participantId) => {
+      const pickedClassesStore = usePickedClassesStore()
+      const participantBookings = pickedClassesStore.bookedClasses.filter(
+        booking => booking.participantId === participantId
+      )
 
+      // Group bookings by groupBookingId or unique slot/group ID
+      const classesMap = new Map()
+
+      for (const booking of participantBookings) {
+        const key = booking.groupBookingId || booking.id
+
+        if (!classesMap.has(key)) {
+          // Create class entry based on booking type
+          const classEntry = {
+            dynamicId: booking.groupBookingId || booking.id,
+            type: booking.type,
+            title: booking.type === 'group'
+              ? `Zajęcia grupowe - ${booking.data?.group?.name || 'narciarstwo'}`
+              : 'Zajęcia indywidualne',
+            classType: booking.classType || 'ski',
+            groupName: booking.data?.group?.name || '',
+            instructor: booking.instructor || '',
+            skillLevel: booking.skillLevel || '',
+            dates: [],
+            price: booking.type === 'group'
+              ? (booking.data?.group?.price || 0)
+              : (booking.data?.slot?.price || 0),
+            insurance: booking.insurance || {
+              title: '',
+              enabled: false,
+              price: 0,
+              perDay: true,
+              description: '',
+            }
+          }
+          classesMap.set(key, classEntry)
+        }
+
+        // Add date entry
+        const classEntry = classesMap.get(key)
+        classEntry.dates.push({
+          date: booking.dateStr,
+          time: booking.data?.slot?.time || booking.data?.group?.schedule || ''
+        })
+      }
+
+      return Array.from(classesMap.values())
+    }
+  })
   /**
    * CRUCIAL: Automatically sync the participants array with adults/children counts
    *
@@ -580,7 +646,7 @@ export const useStayStore = defineStore('stayStore', () => {
           dynamicId: generateUniqueId(),
           participantType: isAdult ? 'adult' : 'child',
           age: isAdult ? null : null, // Age will be set by user input
-          selectedClasses: structuredClone(blankParticipant.selectedClasses), // Deep clone to avoid shared reference
+          // selectedClasses: structuredClone(blankParticipant.selectedClasses), // Deep clone to avoid shared reference
         })
       })
       participants.value.push(...newParticipants)
@@ -699,6 +765,7 @@ export const useStayStore = defineStore('stayStore', () => {
     totalSavings,
     allParticipantsTotalHours, // Total hours of classes for all participants excluding groups
     checkingLoyaltyCardNumber, // Loyalty card validation loading state
+    getParticipantClasses, // Get selected classes for a participant
 
     // ==========================================================================
     // ACTIONS/METHODS

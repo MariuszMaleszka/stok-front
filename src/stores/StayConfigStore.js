@@ -34,6 +34,15 @@ export const useStayConfigStore = defineStore('stayConfig', () => {
     additionalParticipant: 28, // Price for each participant beyond the second
   })
 
+  const insuranceObject = ref({
+    title: 'NNW Turystyczno-Sportowe lorem ipsum amet dolor blabla tututut',
+    enabled: false,
+    price: 10,
+    perDay: true,
+    description: 'PAKIET NNW TURYSTYCZNO-SPORTOWY - Wariant Mateusz na terenie RP.',
+    imgSource: '',
+  })
+
   const CUSTOMER_SERVICE_LINK = 'https://szkolastok.pl/kontakt'
   const REGULATIONS_LINK = 'https://szkolastok.pl/kontakt'
   const PAYMENT_REGULATIONS_LINK = 'https://szkolastok.pl/kontakt'
@@ -151,5 +160,6 @@ export const useStayConfigStore = defineStore('stayConfig', () => {
     combinedClassesPrices_10h,
     combinedClassesPrices_20h,
     combinedClassesPrices_HH,
+    insuranceObject,
   }
 })

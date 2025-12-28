@@ -49,6 +49,7 @@
 
   import { useViewControlStore } from '@/stores/ViewControlStore.js'
   import { formatPrice } from '@/utils/numbers.js'
+  import {usePickedClassesStore} from "@/stores/PickedClassesStore.js";
 
   // ============================================================================
   // COMPOSABLES & STORE INITIALIZATION
@@ -56,9 +57,16 @@
   const { showSimpleToast } = useToast()
   const stayStore = useStayStore()
   const configStore = useStayConfigStore()
+  const classStore = usePickedClassesStore()
   const viewStore = useViewControlStore()
   const { mobile, lgAndUp } = useDisplay()
   const { t } = useI18n()
+
+  const getParticipantBookings = (participantId) => {
+    return classStore.bookedClasses.filter(
+      booking => booking.participantId === participantId
+    )
+  }
 
   // ============================================================================
   // TEMPLATE REFS - Form References
@@ -121,8 +129,6 @@
   // STATE - UI Controls
   // ============================================================================
 
-  /** Checkbox state for selecting all insurances (currently unused) */
-  const selectInsurancesForAllCheckbox = ref(false)
 
   /** Toggle to show/hide insurance information details */
   const revealInsurancesForAllInfo = ref(false)
@@ -143,21 +149,6 @@
     viewStore.currentStep.child = newStep
   })
 
-  /**
-   * Watcher for bulk insurance selection checkbox (currently unused)
-   * When checked, applies insurance selection to all classes for all participants
-   * @deprecated This feature may be replaced by allInsurancesEnabled computed property
-   */
-  watch(selectInsurancesForAllCheckbox, newValue => {
-    stayStore.selectedInsurancesForAll = newValue
-
-    for (const participant of stayStore.participants) {
-      if (participant.selectedClasses) for (const classItem of participant.selectedClasses) {
-        stayStore.insuranceSelected[classItem.dynamicId] = newValue
-      }
-    }
-  })
-
   // ============================================================================
   // COMPUTED - Insurance Management
   // ============================================================================
@@ -171,20 +162,22 @@
    * Used by the "Insurance for all" checkbox in the cart
    */
   const allInsurancesEnabled = computed({
-    get () {
-      return stayStore.participants.every(participant =>
-        participant.selectedClasses?.every(classItem => classItem.insurance?.enabled) ?? false,
-      )
+    get() {
+      return stayStore.participants.every(participant => {
+        const bookings = getParticipantBookings(participant.dynamicId)
+        return bookings.every(booking => booking.insurance?.enabled) && bookings.length > 0
+      })
     },
-    set (value) {
-      for (const participant of stayStore.participants) {
-        if (participant.selectedClasses) for (const classItem of participant.selectedClasses) {
-          if (classItem.insurance) {
-            classItem.insurance.enabled = value
+    set(value) {
+      stayStore.participants.forEach(participant => {
+        const bookings = getParticipantBookings(participant.dynamicId)
+        bookings.forEach(booking => {
+          if (booking.insurance) {
+            booking.insurance.enabled = value
           }
-        }
-      }
-    },
+        })
+      })
+    }
   })
 
   /**
@@ -199,16 +192,17 @@
    */
   const sumTotalInsurancesForAll = computed(() => {
     return stayStore.participants.reduce((total, participant) => {
-      const participantInsuranceTotal = participant.selectedClasses.reduce((sum, item) => {
+      const bookings = getParticipantBookings(participant.dynamicId)
+      const participantInsuranceTotal = bookings.reduce((sum, booking) => {
         // Skip insurance for child participants in group classes
-        if (participant.participantType === 'child' && item.type === 'group') {
+        if (participant.participantType === 'child' && booking.type === 'group') {
           return sum
         }
 
-        if (item.insurance?.price) {
-          const price = item.insurance.perDay
-            ? item.insurance.price * (item.dates?.length || 1)
-            : item.insurance.price
+        if (booking.insurance?.price) {
+          const price = booking.insurance.perDay
+            ? booking.insurance.price * (booking.data?.group?.classDates?.length || 1)
+            : booking.insurance.price
           return sum + price
         }
         return sum
@@ -228,12 +222,8 @@
    * @param {Object} participant - The participant object
    * @param {string} classId - The dynamicId of the class to remove
    */
-  function handleClassDeletion (participant, classId) {
-    if (!participant.selectedClasses) return
-    const index = participant.selectedClasses.findIndex(c => c.dynamicId === classId)
-    if (index !== -1) {
-      participant.selectedClasses.splice(index, 1)
-    }
+  function handleClassDeletion(participant, bookingId) {
+    classStore.removeBookedClass(bookingId)
   }
 
   /**
@@ -507,7 +497,7 @@
                 {{ $t('cart_subtitle') }}
               </p>
             </div>
-            <div v-if="stayStore.participants.some(p => p.selectedClasses?.length > 0)">
+            <div v-if="stayStore.participants.some(p => getParticipantBookings(p.dynamicId).length > 0)">
               <p
                 class="fw-600 my-4"
                 :class="mobile ? 'fs-18 mb-4 mt-8' : 'fs-20'"
