@@ -114,13 +114,13 @@
   <div class="d-flex flex-column justify-space-between h-100 flex-1">
     <!-- tabs navigation remains the same -->
     <div>
-      <div class="time-counter fs-12 text-center mt-2">
-        {{ $t('timer_info') }}
-        <span class="black-badge ">
+<!--      <div class="time-counter fs-12 text-center mt-2">-->
+<!--        {{ $t('timer_info') }}-->
+<!--        <span class="black-badge ">-->
 
-          {{ timerStore.formattedTime }}
-        </span>
-      </div>
+<!--          {{ timerStore.formattedTime }}-->
+<!--        </span>-->
+<!--      </div>-->
       <div />
 
       <p class="fs-24 font-weight-medium mb-2 mt-4 text-black">

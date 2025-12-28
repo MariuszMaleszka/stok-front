@@ -2,9 +2,7 @@
   import { useTimerStore } from '@/stores/TimerStore.js'
 
   const timerStore = useTimerStore()
-  onMounted(() => {
-    timerStore.startTimer()
-  })
+
 </script>
 
 <template>

@@ -97,3 +97,4 @@ export const useTimerStore = defineStore('timerStore', () => {
     addFiveMinutes,
   }
 })
+

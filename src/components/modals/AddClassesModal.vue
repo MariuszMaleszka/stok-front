@@ -710,7 +710,7 @@
                     variant="outlined"
                     width="100%"
                   >
-                    <span v-html="t('find_closest_classes').replace('\n', '<br>')"></span>
+                    <span v-html="t('find_closest_classes').replace('\n', '<br>')" class="text-break"></span>
                   </VBtn>
 
                   <div class="border rounded-lg px-4 py-3 d-flex align-start text-left bg-white border-gray">
