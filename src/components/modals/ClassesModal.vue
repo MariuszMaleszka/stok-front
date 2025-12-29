@@ -581,6 +581,7 @@
 
   <AddClassesModal
     v-model="showAddClassesModal"
+    :activity-type="props.activityType"
     :age="props.participant?.age"
     :date-iso="selectedDateForAddIso"
     :date-str="selectedDateForAdd"

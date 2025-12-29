@@ -204,6 +204,7 @@
     </div>
 
     <ClassesModal
+      v-if="classesModalOpen"
       v-model="classesModalOpen"
       :activity-type="selectedParticipant?.activityType === t('snowboard') ? 'snowboard' : 'ski'"
       :age="selectedParticipant?.age"

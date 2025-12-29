@@ -19,6 +19,7 @@
     dateIso: { type: String, default: '' },
     participantType: { type: String, default: 'adult' },
     age: { type: Number, default: null },
+    activityType: { type: String, default: 'ski' },
   })
 
   const emit = defineEmits(['update:modelValue', 'next'])
@@ -94,6 +95,13 @@
   watch(() => props.dateIso, val => {
     if (val) {
       pickedClassesStore.setSelectedDate(val)
+    }
+  }, { immediate: true })
+
+  // Update store selected activity type when prop changes
+  watch(() => props.activityType, val => {
+    if (val) {
+      pickedClassesStore.setSelectedActivityType(val)
     }
   }, { immediate: true })
 
@@ -286,6 +294,51 @@
 
     return false
   })
+
+  function formatGroupDates (dates) {
+    if (!dates || dates.length === 0) return ''
+
+    const months = ['sty', 'lut', 'mar', 'kwi', 'maj', 'cze', 'lip', 'sie', 'wrz', 'paź', 'lis', 'gru']
+
+    const parseDate = str => {
+      if (!str) return new Date()
+      // Handle DD.MM.YYYY
+      if (str.includes('.')) {
+        const parts = str.split('.')
+        return new Date(parts[2], parts[1] - 1, parts[0])
+      }
+      // Handle YYYY-MM-DD
+      return new Date(str)
+    }
+
+    const format = d => {
+      if (Number.isNaN(d.getTime())) return ''
+      return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`
+    }
+
+    const first = dates[0]
+    const last = dates.at(-1)
+
+    const firstDate = parseDate(first.date)
+    const lastDate = parseDate(last.date)
+
+    if (dates.length === 1) {
+      return format(firstDate)
+    }
+    return `${format(firstDate)} - ${format(lastDate)}`
+  }
+
+  function formatGroupTime (dates) {
+    if (!dates || dates.length === 0) return ''
+    const timeStr = dates[0].time // "09:00 - 09:55"
+    if (!timeStr) return ''
+
+    const parts = timeStr.split('-').map(s => s.trim())
+    if (parts.length === 2) {
+      return `od <span class="text-primary font-weight-bold">${parts[0]}</span> do <span class="text-primary font-weight-bold">${parts[1]}</span>`
+    }
+    return timeStr
+  }
 
   const rightButtonColor = computed(() => {
     if (!showStepper.value) return selectedType.value ? 'blue' : 'grey-lighten-2'
@@ -954,13 +1007,13 @@
                         <div class="flex-grow-1">
                           <!-- Title & Happy Hours Badge -->
                           <div class="d-flex justify-space-between align-start mb-1">
-                            <span class="text-caption text-grey-darken-1">{{ group.name }}</span>
+                            <span class="text-caption text-grey-darken-1">{{ group.groupName }}</span>
                             <div v-if="group.isHappyHours" class="happy-hours-badge ml-2 mb-0">Happy hours</div>
                           </div>
 
                           <!-- Dates -->
-                          <div class="font-weight-bold text-primary-900 mb-2 fs-14">
-                            {{ group.dates }}
+                          <div class="font-weight-bold text-primary-900 mb-2 fs-16">
+                            {{ formatGroupDates(group.dates) }}
                           </div>
 
                           <!-- Description -->
@@ -969,7 +1022,7 @@
                           </div>
 
                           <!-- Schedule (Hours) -->
-                          <div class="text-caption text-grey-darken-1 mb-3" style="line-height: 1.4;" v-html="formatSchedule(group.schedule)" />
+                          <div class="text-caption text-grey-darken-1 mb-3" style="line-height: 1.4;" v-html="formatGroupTime(group.dates)" />
 
                           <!-- Details Button -->
                           <VBtn
@@ -987,7 +1040,7 @@
 
                       <!-- Price (Absolute Bottom Right) -->
                       <div v-if="group.price" class="d-flex justify-end w-100 mt-1">
-                        <span class="font-weight-bold text-primary-900 fs-14">-{{ calculateGroupPrice(group) }},00zł</span>
+                        <span class="font-weight-bold text-primary fs-14">-{{ calculateGroupPrice(group) }},00zł</span>
                       </div>
                     </div>
 

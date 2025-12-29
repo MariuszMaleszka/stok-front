@@ -26,23 +26,18 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
   // Base slots templates
   const baseSlots = [
     {
-      title: 'Zajęcia indywidualne',
+      dynamicId: 'asdh7126xs',
       type: 'individual',
+      title: 'Zajęcia indywidualne',
       classType: 'snowboard',
       groupName: 'Grupa wieczorna',
       skillLevel: 'Nowicjusz',
       instructor: 'Marcin Kowalik',
-      price: 100,
       dates: [
-        { date: '29.12.2025', time: '9:00 - 9:55' },
-        { date: '30.12.2025', time: '9:00 - 9:55' },
-        { date: '31.12.2025', time: '9:00 - 9:55' },
+        { date: '01.01.2025', time: '9:00 - 9:55' },
+        { date: '01.01.2025', time: '9:00 - 10:00' },
       ],
-      // Compatibility fields
-      gender: 'male',
-      duration: '1h',
-      timeOfDay: 'Rano',
-      isChildSpecialist: false,
+      price: 100,
       insurance: {
         title: 'NNW Turystyczno-Sportowe lorem ipsum amet dolor blabla tututut',
         enabled: false,
@@ -51,23 +46,44 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
         description: 'PAKIET NNW TURYSTYCZNO-SPORTOWY - Wariant 111 SWIJ indywidualnych podróży Kontynenty na terenie RP.',
         imgSource: '',
       },
-    },
-    {
-      title: 'Zajęcia Specjalne - Mateusz',
-      type: 'individual',
-      classType: 'snowboard',
-      groupName: 'Grupa wieczorna - specjalna',
-      skillLevel: 'Nowicjusz',
-      instructor: 'Mateusz Zzaskakującymnazwiskiem',
-      price: 350,
-      dates: [
-        { date: '01.01.2025', time: '9:00 - 9:55' },
-      ],
       // Compatibility fields
       gender: 'male',
       duration: '1h',
       timeOfDay: 'Rano',
-      isChildSpecialist: true,
+      isChildSpecialist: false,
+    },
+    {
+      dynamicId: 'ff12126xs',
+      type: 'individual',
+      title: 'Zajęcia Specjalne - Mateusz',
+      classType: 'snowboard',
+      groupName: 'Grupa wieczorna - specjalna',
+      skillLevel: 'Nowicjusz',
+      instructor: 'Mateusz Zzaskakującymnazwiskiem',
+      dates: [
+        { date: '01.01.2025', time: '9:00 - 9:55' },
+        { date: '02.01.2025', time: '9:00 - 9:55' },
+        { date: '03.01.2025', time: '9:00 - 9:55' },
+        { date: '03.01.2025', time: '9:00 - 9:55' },
+        { date: '03.01.2025', time: '9:00 - 9:55' },
+        { date: '03.01.2025', time: '9:00 - 9:55' },
+        { date: '03.01.2025', time: '9:00 - 9:55' },
+        { date: '03.01.2025', time: '9:00 - 9:55' },
+        { date: '03.01.2025', time: '9:00 - 9:55' },
+        { date: '03.01.2025', time: '9:00 - 9:55' },
+        { date: '03.01.2025', time: '9:00 - 9:55' },
+        { date: '03.01.2025', time: '9:00 - 9:55' },
+        { date: '03.01.2025', time: '9:00 - 9:55' },
+        { date: '03.01.2025', time: '9:00 - 9:55' },
+        { date: '03.01.2025', time: '9:00 - 9:55' },
+        { date: '03.01.2025', time: '9:00 - 9:55' },
+        { date: '03.01.2025', time: '9:00 - 9:55' },
+        { date: '03.01.2025', time: '9:00 - 9:55' },
+        { date: '03.01.2025', time: '9:00 - 9:55' },
+        { date: '03.01.2025', time: '9:00 - 9:55' },
+        { date: '03.01.2025', time: '9:00 - 9:55' },
+      ],
+      price: 350,
       insurance: {
         title: 'NNW Turystyczno-Sportowe lorem ipsum amet dolor blabla tututut',
         enabled: false,
@@ -76,6 +92,11 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
         description: 'PAKIET NNW TURYSTYCZNO-SPORTOWY - Wariant Mateusz na terenie RP.',
         imgSource: '',
       },
+      // Compatibility fields
+      gender: 'male',
+      duration: '1h',
+      timeOfDay: 'Rano',
+      isChildSpecialist: true,
     },
   ]
 
@@ -113,7 +134,26 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
       skillLevel: 'Średni',
       dates: generateClassDates(5).map(d => ({ date: d, time: '09:00 - 09:55' })),
       description: '5 dni zajęć, zajęcia 1x dziennie',
-      price: 1000,
+      price: 1200,
+      insurance: {
+        title: 'NNW Turystyczno-Sportowe lorem ipsum amet dolor blabla tututut',
+        enabled: false,
+        price: 10,
+        perDay: true,
+        description: 'PAKIET NNW TURYSTYCZNO-SPORTOWY - Wariant 111 SWIJ indywidualnych\n',
+      },
+    },
+    {
+      id: 2,
+      type: 'group',
+      title: 'Zajęcia grupowe - snowboard',
+      classType: 'snowboard',
+      groupName: 'Grupa popołudniowa',
+      instructor: 'Nowak Anna',
+      skillLevel: 'Początkujący',
+      dates: generateClassDates(5).map(d => ({ date: d, time: '14:00 - 14:55' })),
+      description: '5 dni zajęć, zajęcia 1x dziennie',
+      price: 690,
       insurance: {
         title: 'NNW Turystyczno-Sportowe lorem ipsum amet dolor blabla tututut',
         enabled: false,
@@ -127,15 +167,20 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
   // State
   const searchPreviouslySelected = ref(false)
   const selectedDate = ref(formatDate(new Date()))
+  const selectedActivityType = ref('ski')
+
+  function setSelectedActivityType (type) {
+    selectedActivityType.value = type
+  }
 
   // Save/Load preference for "Search Previously Selected"
-  function setSearchPreviouslySelected(val) {
+  function setSearchPreviouslySelected (val) {
     searchPreviouslySelected.value = val
     cookies.set('search_prev_instructor', val ? 'true' : 'false')
   }
 
   // Save/Load general filter preferences
-  function saveFilterPreferences(prefs) {
+  function saveFilterPreferences (prefs) {
     // Save common fields
     const toSave = {
       timeOfDay: prefs.timeOfDay,
@@ -148,7 +193,7 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
     cookies.set('user_filter_preferences', JSON.stringify(toSave))
   }
 
-  function loadFilterPreferences() {
+  function loadFilterPreferences () {
     const saved = cookies.get('user_filter_preferences')
     if (saved) {
       try {
@@ -287,6 +332,11 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
     }
 
     return availableGroups.value.filter(group => {
+      // Filter by Activity Type
+      if (group.classType && group.classType !== selectedActivityType.value) {
+        return false
+      }
+
       // Extract days from description e.g. "5 dni zajęć"
       const match = group.description.match(/(\d+)\s+dni/)
       if (match) {
@@ -310,15 +360,15 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
   }
 
   // Actions
-  function setSelectedDate(dateIso) {
+  function setSelectedDate (dateIso) {
     selectedDate.value = dateIso
   }
 
-  function loadMoreSlots() {
+  function loadMoreSlots () {
     visibleSlotsLimit.value += 4
   }
 
-  function resetState() {
+  function resetState () {
     // Reset state but respect preference if applicable
     const pref = cookies.get('search_prev_instructor')
     searchPreviouslySelected.value = hasPreviouslySelectedInstructor.value && (pref === 'true' || pref === true)
@@ -341,7 +391,7 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
     visibleSlotsLimit.value = 4
   }
 
-  function addBookedClass(booking) {
+  function addBookedClass (booking) {
     // Extract instructor if present in data.slot
     let instructor = booking.instructor
     if (!instructor && booking.data && booking.data.slot && booking.data.slot.instructor) {
@@ -357,7 +407,7 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
     bookedClasses.value.push(newBooking)
   }
 
-  function removeBookedClass(bookingId) {
+  function removeBookedClass (bookingId) {
     const bookingToRemove = bookedClasses.value.find(c => c.id === bookingId)
     if (!bookingToRemove) {
       return
@@ -380,6 +430,7 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
     availableGroups,
     searchPreviouslySelected,
     selectedDate,
+    selectedActivityType,
     individualPreferences,
     sharedPreferences,
     individualSlot,
@@ -403,10 +454,11 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
     hasPreviouslySelectedInstructor,
 
     // Actions
+    setSelectedDate,
+    setSelectedActivityType,
     setSearchPreviouslySelected,
     saveFilterPreferences,
     loadFilterPreferences,
-    setSelectedDate,
     loadMoreSlots,
     resetState,
     addBookedClass,
