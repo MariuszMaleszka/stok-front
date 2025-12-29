@@ -36,13 +36,6 @@
 </template>
 
 <style scoped lang="scss">
-.toast-with-action {
-
-}
-
-.toast-content {
-
-}
 
 .toast-icon {
   display: flex;

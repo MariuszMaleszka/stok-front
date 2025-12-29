@@ -213,6 +213,11 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
   const isChildAddOnSelected = computed(() => {
     return groupId => !!childAddOnSelections.value[groupId]
   })
+  const hasAnyChildAddOnsSelected = computed(() => {
+    return Object.keys(childAddOnSelections.value).some(
+      groupId => childAddOnSelections.value[groupId] === true
+    )
+  })
 
   // Check if there is any booked class with an instructor
   const hasPreviouslySelectedInstructor = computed(() => {
@@ -384,6 +389,7 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
     selectedGroup,
     childAddOnSelections,
     isChildAddOnSelected,
+    hasAnyChildAddOnsSelected,
     childAddOnPrice,
     visibleSlotsLimit,
     bookedClasses,

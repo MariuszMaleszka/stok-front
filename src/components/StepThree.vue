@@ -760,6 +760,19 @@
                     </div>
                     <VDivider class="mt-1 mb-2" />
                   </li>
+                  <li
+                    v-if="classStore.hasAnyChildAddOnsSelected"
+                    :key="`child-addons-${classStore.hasAnyChildAddOnsSelected}`"
+                    class="pb-2 mb-2"
+                  >
+                    <div class="d-flex justify-space-between">
+                      <span>{{ $t('child_add_ons') }}</span>
+                      <span class="ml-auto">
+                          {{ formatPrice(classStore.childAddOnPrice) }}&nbsp;{{ stayStore.currency }}
+                      </span>
+                    </div>
+                    <VDivider class="mt-1 mb-2" />
+                  </li>
                 </ul>
 
                 <!-- Discount display (if applicable) -->
@@ -800,12 +813,11 @@
                       </div>
 
                       <p>- {{ $t('insurance') }}: {{ formatPrice(sumTotalInsurancesForAll) }}&nbsp;{{ stayStore.currency }}</p>
-                      <p>- {{ $t('child_add_ons') }}: {{ formatPrice(classStore.childAddOnPrice) }}&nbsp;{{ stayStore.currency }}</p>
                     </div>
                   </div>
                 </div>
-                {{ classStore.childAddOnSelections }}
-                {{ classStore.childAddOnPrice }}
+<!--                {{ classStore.childAddOnSelections }}-->
+<!--                {{ classStore.childAddOnPrice }}-->
               </VSheet>
             </div>
           </div>
@@ -1198,6 +1210,19 @@
                   </div>
                   <VDivider class="mt-1 mb-2" />
                 </li>
+                <li
+                  v-if="classStore.hasAnyChildAddOnsSelected"
+                  :key="`child-addons-${classStore.hasAnyChildAddOnsSelected}`"
+                  class="pb-2 mb-2"
+                >
+                  <div class="d-flex justify-space-between">
+                    <span>{{ $t('child_add_ons') }}</span>
+                    <span class="ml-auto">
+                          {{ formatPrice(classStore.childAddOnPrice) }}&nbsp;{{ stayStore.currency }}
+                      </span>
+                  </div>
+                  <VDivider class="mt-1 mb-2" />
+                </li>
               </ul>
 
               <!-- Discount display (if applicable) -->
@@ -1224,20 +1249,40 @@
 
               <div class="d-flex  ga-2 justify-end mt-4">
                 <div class="d-flex flex-column">
-                  <div class="ml-auto">
-                    <span class="ml-auto">
-                      {{ $t('price_total') }}:
-                    </span>
-                    <span class="fs-16 ml-auto">
-                      {{ formatPrice(stayStore.allParticipantsTotalPrice) }}&nbsp;{{ stayStore.currency }}
-                    </span>
+
+                  <div class="d-flex  ga-2 justify-end mt-4">
+                    <div class="d-flex flex-column">
+                      <div class="ml-auto">
+                      <span class="ml-auto">
+                        {{ $t('price_total') }}:
+                      </span>
+                        <span class="fs-16 ml-auto">
+                        {{ formatPrice(stayStore.allParticipantsTotalPrice) }}&nbsp;{{ stayStore.currency }}
+                      </span>
+                      </div>
+                      <div v-if="allInsurancesEnabled" class="fs-11 text-right">
+                        <div>
+                          {{ $t('including') }} <span class="text-lowercase">{{ $t('aditional_options') }}:</span>
+                        </div>
+
+                        <p>- {{ $t('insurance') }}: {{ formatPrice(sumTotalInsurancesForAll) }}&nbsp;{{ stayStore.currency }}</p>
+                      </div>
+                    </div>
                   </div>
-                  <div v-if="allInsurancesEnabled" class="fs-11">
-                    <span>{{ $t('including') }}</span>&nbsp;<span class="text-lowercase">{{
-                      $t('aditional_options')
-                    }}: </span>
-                    <span>{{ formatPrice(sumTotalInsurancesForAll) }}&nbsp;{{ stayStore.currency }}</span>
-                  </div>
+<!--                  <div class="ml-auto">-->
+<!--                    <span class="ml-auto">-->
+<!--                      {{ $t('price_total') }}:-->
+<!--                    </span>-->
+<!--                    <span class="fs-16 ml-auto">-->
+<!--                      {{ formatPrice(stayStore.allParticipantsTotalPrice) }}&nbsp;{{ stayStore.currency }}-->
+<!--                    </span>-->
+<!--                  </div>-->
+<!--                  <div v-if="allInsurancesEnabled" class="fs-11">-->
+<!--                    <span>{{ $t('including') }}</span>&nbsp;<span class="text-lowercase">{{-->
+<!--                      $t('aditional_options')-->
+<!--                    }}: </span>-->
+<!--                    <span>{{ formatPrice(sumTotalInsurancesForAll) }}&nbsp;{{ stayStore.currency }}</span>-->
+<!--                  </div>-->
                 </div>
               </div>
             </VSheet>

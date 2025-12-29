@@ -391,6 +391,8 @@ export const useStayStore = defineStore('stayStore', () => {
    * @returns {number} Final total price for the entire booking (never negative)
    */
   const allParticipantsTotalPrice = computed(() => {
+    const classStore = usePickedClassesStore()
+
     const classesTotal = participants.value.reduce((total, participant) => {
       return total + participantClassesTotalPrice.value(participant.dynamicId)
     }, 0)
@@ -399,7 +401,9 @@ export const useStayStore = defineStore('stayStore', () => {
       return total + participantInsuranceTotalPrice.value(participant.dynamicId)
     }, 0)
 
-    return Math.max(0, (classesTotal + insuranceTotal) - finalDiscount.value)
+    const childAddOnsTotal = classStore.hasAnyChildAddOnsSelected ? classStore.childAddOnPrice : 0
+
+    return Math.max(0, (classesTotal + insuranceTotal + childAddOnsTotal) - finalDiscount.value)
   })
 
   // ==========================================================================

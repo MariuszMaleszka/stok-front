@@ -213,5 +213,10 @@
   "discount": "Discount",
   "insurance_included": "Accident insurance included in the package.",
   "insurance": "Insurance",
-  "child_add_ons": "Child animations/meals add-on"
+  "child_add_ons": "Child animations/meals add-on",
+  "childminder": "Childminder",
+  "select_childminder": "Select childminder",
+  "another_childminder": "Another childminder",
+  "childminder_name": "Childminder name",
+  "childminder_phone": "Childminder phone"
 }

@@ -214,7 +214,12 @@
   "discount": "Rabat",
   "insurance_included": "Ubezpieczenie NNW w pakiecie",
   "insurance": "ubezpieczenie",
-  "child_add_ons": "Dodatkowe animacje + posiłek"
+  "child_add_ons": "Dodatkowe animacje + posiłek",
+  "childminder": "Opiekun dziecka",
+  "select_childminder": "Wybierz opiekuna dziecka",
+  "another_childminder": "Dane innego opiekuna dziecka",
+  "childminder_name": "Imię opiekuna",
+  "childminder_phone": "Telefon opiekuna"
 
 
 
