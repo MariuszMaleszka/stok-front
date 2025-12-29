@@ -18,10 +18,6 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
     return date.toISOString().split('T')[0]
   }
 
-  const formatDisplayDate = date => {
-    return date.toLocaleDateString('pl-PL', { day: 'numeric', month: 'short', year: 'numeric' })
-  }
-
   // Helper to generate classDates array
   const generateClassDates = count => {
     return Array.from({ length: count }, (_, i) => formatDate(getFutureDate(i)))
@@ -29,15 +25,58 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
 
   // Base slots templates
   const baseSlots = [
-    { time: '9:00 - 11:00', price: 50, instructor: 'Marcin Kowalik', gender: 'male', duration: '2h', timeOfDay: 'Rano', isChildSpecialist: true },
-    { time: '10:00 - 12:00', price: 50, instructor: 'Anna Nowak', gender: 'female', duration: '2h', timeOfDay: 'Rano' },
-    { time: '10:00 - 12:00', price: 50, isHappyHours: true, duration: '2h', timeOfDay: 'Rano' },
-    { time: '10:30 - 12:30', price: 50, duration: '2h', timeOfDay: 'Rano' },
-    { time: '11:00 - 13:00', price: 50, duration: '2h', timeOfDay: 'Rano' },
-    { time: '14:00 - 16:00', price: 50, instructor: 'Piotr Wiśniewski', gender: 'male', duration: '2h', timeOfDay: 'Popołudnie' },
-    { time: '15:00 - 16:00', price: 35, instructor: 'Maria Zielińska', gender: 'female', duration: '1h', timeOfDay: 'Popołudnie', isChildSpecialist: true },
-    { time: '18:00 - 20:00', price: 50, instructor: 'Tomasz Kamiński', gender: 'male', duration: '2h', timeOfDay: 'Wieczór' },
-    { time: '19:00 - 20:00', price: 35, instructor: 'Katarzyna Lewandowska', gender: 'female', duration: '1h', timeOfDay: 'Wieczór', isChildSpecialist: true },
+    {
+      title: 'Zajęcia indywidualne',
+      type: 'individual',
+      classType: 'snowboard',
+      groupName: 'Grupa wieczorna',
+      skillLevel: 'Nowicjusz',
+      instructor: 'Marcin Kowalik',
+      price: 100,
+      dates: [
+        { date: '29.12.2025', time: '9:00 - 9:55' },
+        { date: '30.12.2025', time: '9:00 - 9:55' },
+        { date: '31.12.2025', time: '9:00 - 9:55' },
+      ],
+      // Compatibility fields
+      gender: 'male',
+      duration: '1h',
+      timeOfDay: 'Rano',
+      isChildSpecialist: false,
+      insurance: {
+        title: 'NNW Turystyczno-Sportowe lorem ipsum amet dolor blabla tututut',
+        enabled: false,
+        price: 10,
+        perDay: true,
+        description: 'PAKIET NNW TURYSTYCZNO-SPORTOWY - Wariant 111 SWIJ indywidualnych podróży Kontynenty na terenie RP.',
+        imgSource: '',
+      },
+    },
+    {
+      title: 'Zajęcia Specjalne - Mateusz',
+      type: 'individual',
+      classType: 'snowboard',
+      groupName: 'Grupa wieczorna - specjalna',
+      skillLevel: 'Nowicjusz',
+      instructor: 'Mateusz Zzaskakującymnazwiskiem',
+      price: 350,
+      dates: [
+        { date: '01.01.2025', time: '9:00 - 9:55' },
+      ],
+      // Compatibility fields
+      gender: 'male',
+      duration: '1h',
+      timeOfDay: 'Rano',
+      isChildSpecialist: true,
+      insurance: {
+        title: 'NNW Turystyczno-Sportowe lorem ipsum amet dolor blabla tututut',
+        enabled: false,
+        price: 10,
+        perDay: true,
+        description: 'PAKIET NNW TURYSTYCZNO-SPORTOWY - Wariant Mateusz na terenie RP.',
+        imgSource: '',
+      },
+    },
   ]
 
   // Generate slots for next 30 days
@@ -48,10 +87,12 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
       const date = getFutureDate(i)
       const dateStr = formatDate(date)
       for (const [index, slot] of baseSlots.entries()) {
+        // Populate dates with current date
+        const dates = slot.dates.map(d => ({ ...d, date: dateStr }))
         slots.push({
           ...slot,
           id: `${dateStr}-${index}`,
-          date: dateStr,
+          dates,
         })
       }
     }
@@ -64,57 +105,22 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
   const availableGroups = ref([
     {
       id: 1,
-      name: 'Grupa 5 dni',
-      dates: `${formatDisplayDate(getFutureDate(0))} - ${formatDisplayDate(getFutureDate(4))}`,
-      classDates: generateClassDates(5),
+      type: 'group',
+      title: 'Zajęcia grupowe - narciarstwo',
+      classType: 'ski',
+      groupName: 'Grupa poranna',
+      instructor: 'Kaczyński Jan',
+      skillLevel: 'Średni',
+      dates: generateClassDates(5).map(d => ({ date: d, time: '09:00 - 09:55' })),
       description: '5 dni zajęć, zajęcia 1x dziennie',
-      schedule: 'od 9:30 do 10:30',
-      price: 1400,
-    },
-    {
-      id: 2,
-      name: 'Grupa 3 dni',
-      dates: `${formatDisplayDate(getFutureDate(0))} - ${formatDisplayDate(getFutureDate(2))}`,
-      classDates: generateClassDates(3),
-      description: '3 dni zajęć, zajęcia 2x dziennie',
-      schedule: 'od 9:30 do 10:30 oraz od 15:30 do 17:30',
-      price: 1400,
-    },
-    {
-      id: 3,
-      name: 'Grupa Happy Hours',
-      dates: `${formatDisplayDate(getFutureDate(0))} - ${formatDisplayDate(getFutureDate(4))}`,
-      classDates: generateClassDates(5),
-      description: '5 dni zajęć, zajęcia 1x dziennie',
-      schedule: 'od 9:30 do 10:30',
-      isHappyHours: true,
-    },
-    {
-      id: 4,
-      name: 'Grupa Weekendowa',
-      dates: `${formatDisplayDate(getFutureDate(0))} - ${formatDisplayDate(getFutureDate(1))}`,
-      classDates: [formatDate(getFutureDate(0)), formatDate(getFutureDate(1))],
-      description: '2 dni zajęć, zajęcia 2x dziennie',
-      schedule: 'od 9:00 do 11:00 oraz od 14:00 do 16:00',
-      price: 600,
-    },
-    {
-      id: 5,
-      name: 'Grupa Trzydniowa',
-      dates: `${formatDisplayDate(getFutureDate(0))} - ${formatDisplayDate(getFutureDate(2))}`,
-      classDates: generateClassDates(3),
-      description: '3 dni zajęć, zajęcia 1x dziennie',
-      schedule: 'od 10:00 do 12:00',
-      price: 500,
-    },
-    {
-      id: 6,
-      name: 'Grupa Czterodniowa',
-      dates: `${formatDisplayDate(getFutureDate(0))} - ${formatDisplayDate(getFutureDate(3))}`,
-      classDates: generateClassDates(4),
-      description: '4 dni zajęć, zajęcia 1x dziennie',
-      schedule: 'od 12:00 do 14:00',
-      price: 800,
+      price: 1000,
+      insurance: {
+        title: 'NNW Turystyczno-Sportowe lorem ipsum amet dolor blabla tututut',
+        enabled: false,
+        price: 10,
+        perDay: true,
+        description: 'PAKIET NNW TURYSTYCZNO-SPORTOWY - Wariant 111 SWIJ indywidualnych\n',
+      },
     },
   ])
 
@@ -222,7 +228,7 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
 
     // Filter by Date
     if (selectedDate.value) {
-      slots = slots.filter(s => s.date === selectedDate.value)
+      slots = slots.filter(s => s.dates && s.dates[0] && s.dates[0].date === selectedDate.value)
     }
 
     const prefs = type === 'individual' ? individualPreferences.value : sharedPreferences.value

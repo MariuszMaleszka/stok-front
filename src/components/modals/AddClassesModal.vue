@@ -331,7 +331,7 @@
     if (!prefs.findSpecificInstructor || !prefs.selectedInstructor) return true
 
     return pickedClassesStore.availableSlots.some(s =>
-      s.date === pickedClassesStore.selectedDate
+      s.dates.some(d => d.date === pickedClassesStore.selectedDate)
       && s.instructor === prefs.selectedInstructor
       && s.duration === prefs.duration,
     )
@@ -671,7 +671,7 @@
 
                     <div class="flex-grow-1 d-flex justify-space-between align-center">
                       <div class="d-flex flex-column align-start">
-                        <span class="font-weight-bold fs-14 blue-text">{{ slot.time }}</span>
+                        <span class="font-weight-bold fs-14 blue-text">{{ slot.dates && slot.dates[0] ? slot.dates[0].time : '' }}</span>
                         <div v-if="slot.instructor" class="text-caption-slot mt-1 text-left">
                           {{ t('instructor_selected_previously') }}<br>
                           <span class="font-weight-bold">{{ slot.instructor }}</span>
@@ -700,7 +700,7 @@
 
                 <div v-else class="text-center py-4">
                   <div class="text-h6 font-weight-bold text-primary-900 mb-6">
-                    <span v-html="t('no_classes_found').replace('\n', '<br>')"></span>
+                    <span v-html="t('no_classes_found').replace('\n', '<br>')" />
                   </div>
 
                   <VBtn
@@ -710,7 +710,7 @@
                     variant="outlined"
                     width="100%"
                   >
-                    <span v-html="t('find_closest_classes').replace('\n', '<br>')"></span>
+                    <span v-html="t('find_closest_classes').replace('\n', '<br>')" />
                   </VBtn>
 
                   <div class="border rounded-lg px-4 py-3 d-flex align-start text-left bg-white border-gray">
@@ -868,7 +868,7 @@
                     <div class="selection-circle mr-4 d-flex align-center justify-center flex-shrink-0" />
                     <div class="flex-grow-1 d-flex justify-space-between align-center">
                       <div class="d-flex flex-column align-start">
-                        <span class="font-weight-bold fs-14 blue-text">{{ slot.time }}</span>
+                        <span class="font-weight-bold fs-14 blue-text">{{ slot.dates && slot.dates[0] ? slot.dates[0].time : '' }}</span>
                         <div v-if="slot.instructor" class="text-caption-slot mt-1 text-left">
                           {{ t('instructor_selected_previously') }}<br>
                           <span class="font-weight-bold">{{ slot.instructor }}</span>
@@ -897,7 +897,7 @@
 
                 <div v-else class="text-center py-4">
                   <div class="text-h6 font-weight-bold text-primary-900 mb-6">
-                    <span v-html="t('no_classes_found').replace('\n', '<br>')"></span>
+                    <span v-html="t('no_classes_found').replace('\n', '<br>')" />
                   </div>
 
                   <VBtn
@@ -907,7 +907,7 @@
                     variant="outlined"
                     width="100%"
                   >
-                    <span v-html="t('find_closest_classes').replace('\n', '<br>')"></span>
+                    <span v-html="t('find_closest_classes').replace('\n', '<br>')" />
                   </VBtn>
 
                   <div class="border rounded-lg px-4 py-3 d-flex align-start text-left bg-white border-gray">

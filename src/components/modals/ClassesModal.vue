@@ -161,10 +161,11 @@
         // Handle group classes - add for multiple days
         const groupBookingId = `group-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
 
-        if (data.group.classDates && Array.isArray(data.group.classDates)) {
-          const totalDays = data.group.classDates.length
+        if (data.group.dates && Array.isArray(data.group.dates)) {
+          const totalDays = data.group.dates.length
 
-          for (const [index, dateStr] of data.group.classDates.entries()) {
+          for (const [index, dateObj] of data.group.dates.entries()) {
+            const dateStr = dateObj.date
             // dateStr should be 'YYYY-MM-DD'
             // We need to format it to display format if needed, but the store uses dateStr as key usually?
             // Actually getBookedClass uses dateStr matching 'day.dateStr' which is 'DD month YYYY' in Polish/English
@@ -291,20 +292,25 @@
 
     // If slot object is available in data
     if (booking.type === 'individual' || booking.type === 'shared') {
-      if (booking.data.slot && booking.data.slot.time) {
-        return booking.data.slot.time
+      if (booking.data.slot && booking.data.slot.dates && booking.data.slot.dates[0]) {
+        return booking.data.slot.dates[0].time
       }
       // Fallback (if slot is just ID)
       const slotId = booking.data.slot
       const allSlots = pickedClassesStore.availableSlots
       const found = allSlots.find(s => s.id === slotId)
-      if (found) return found.time
-    } else if (booking.type === 'group' && booking.data.group && booking.data.group.schedule) {
-      // remove "od " and "do " for cleaner look
-      return booking.data.group.schedule
-        .replace(/\s* od\s+/gi, ' ')
-        .replace(/\s+ do\s+/gi, ' - ')
-        .replace(/\s+ oraz \s+/gi, ', ')
+      if (found && found.dates && found.dates[0]) return found.dates[0].time
+    } else if (booking.type === 'group') {
+      if (booking.data.group && booking.data.group.schedule) {
+        // remove "od " and "do " for cleaner look
+        return booking.data.group.schedule
+          .replace(/\s* od\s+/gi, ' ')
+          .replace(/\s+ do\s+/gi, ' - ')
+          .replace(/\s+ oraz \s+/gi, ', ')
+      } else if (booking.data.group && booking.data.group.dates) {
+        const times = [...new Set(booking.data.group.dates.map(d => d.time))].join(', ')
+        return times
+      }
     }
     return ''
   }

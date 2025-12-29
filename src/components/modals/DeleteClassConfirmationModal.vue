@@ -72,13 +72,17 @@
     // Time
     let time = ''
     if (booking.type === 'individual' || booking.type === 'shared') {
-      if (booking.data.slot && booking.data.slot.time) {
-        time = booking.data.slot.time
+      if (booking.data.slot && booking.data.slot.dates && booking.data.slot.dates[0]) {
+        time = booking.data.slot.dates[0].time
       }
-    } else if (booking.type === 'group' && booking.data.group && booking.data.group.schedule) {
-      time = booking.data.group.schedule
-        .replace(/\s* od\s+/gi, ' ')
-        .replace(/\s+ do\s+/gi, ' - ')
+    } else if (booking.type === 'group') {
+      if (booking.data.group && booking.data.group.schedule) {
+        time = booking.data.group.schedule
+          .replace(/\s* od\s+/gi, ' ')
+          .replace(/\s+ do\s+/gi, ' - ')
+      } else if (booking.data.group && booking.data.group.dates) {
+        time = [...new Set(booking.data.group.dates.map(d => d.time))].join(', ')
+      }
     }
 
     return `${booking.dateStr}, ${time}`

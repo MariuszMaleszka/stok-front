@@ -51,7 +51,7 @@ export const useStayConfigStore = defineStore('stayConfig', () => {
     //   selected: false
     // },
     {
-      name: t('begginer'),
+      name: t('novice'),
       description: t('novice_desc'),
       additionalInfo: t('novice_info'),
       selected: false,
