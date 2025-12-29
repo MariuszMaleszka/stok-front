@@ -91,3 +91,6 @@
 .text-transform-none {
     text-transform: none !important;
 }
+[class*="Toastify__toast-container--bottom"] {
+  bottom: 60px !important;
+}
