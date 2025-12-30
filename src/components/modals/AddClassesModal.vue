@@ -700,7 +700,7 @@
 
                 <div v-else class="text-center py-4">
                   <div class="text-h6 font-weight-bold text-primary-900 mb-6">
-                    <span v-html="t('no_classes_found').replace('\n', '<br>')"></span>
+                    <span v-html="t('no_classes_found').replace('\n', '<br>')" />
                   </div>
 
                   <VBtn
@@ -897,7 +897,7 @@
 
                 <div v-else class="text-center py-4">
                   <div class="text-h6 font-weight-bold text-primary-900 mb-6">
-                    <span v-html="t('no_classes_found').replace('\n', '<br>')"></span>
+                    <span v-html="t('no_classes_found').replace('\n', '<br>')" />
                   </div>
 
                   <VBtn

@@ -63,7 +63,7 @@
   defineExpose({
     stepOneNestedRef,
     validateCurrentStep,
-    validateDataForm
+    validateDataForm,
   })
 
 </script>
@@ -134,9 +134,9 @@
                 :max="stayStore.maxAdults"
                 max-width="165px"
                 :min="0"
+                :rules="[rules.minAdults]"
                 :step="1"
                 variant="outlined"
-                :rules="[rules.minAdults]"
               />
               <p class="fs-12 fc-gray">
                 {{ $t('enter_number_of_participants_adult') }}

@@ -41,15 +41,15 @@
   import SelectedParticipantClasses from '@/components/SelectedParticipantClasses.vue'
 
   import { useToast } from '@/composables/useToast'
+  import { usePickedClassesStore } from '@/stores/PickedClassesStore.js'
   import { useStayConfigStore } from '@/stores/StayConfigStore.js'
+
   // ============================================================================
   // IMPORTS - Stores & Composables
   // ============================================================================
   import { useStayStore } from '@/stores/StayStore.js'
-
   import { useViewControlStore } from '@/stores/ViewControlStore.js'
   import { formatPrice } from '@/utils/numbers.js'
-  import {usePickedClassesStore} from "@/stores/PickedClassesStore.js";
 
   // ============================================================================
   // COMPOSABLES & STORE INITIALIZATION
@@ -62,9 +62,9 @@
   const { mobile, lgAndUp } = useDisplay()
   const { t } = useI18n()
 
-  const getParticipantBookings = (participantId) => {
+  function getParticipantBookings (participantId) {
     return classStore.bookedClasses.filter(
-      booking => booking.participantId === participantId
+      booking => booking.participantId === participantId,
     )
   }
 
@@ -129,7 +129,6 @@
   // STATE - UI Controls
   // ============================================================================
 
-
   /** Toggle to show/hide insurance information details */
   const revealInsurancesForAllInfo = ref(false)
 
@@ -162,41 +161,42 @@
    * Used by the "Insurance for all" checkbox in the cart
    */
   const allInsurancesEnabled = computed({
-    get() {
+    get () {
       return stayStore.participants.every(participant => {
         const bookings = getParticipantBookings(participant.dynamicId)
         return bookings.every(booking => booking.insurance?.enabled) && bookings.length > 0
       })
     },
-    set(value) {
-      stayStore.participants.forEach(participant => {
+    set (value) {
+      for (const participant of stayStore.participants) {
         const bookings = getParticipantBookings(participant.dynamicId)
-        bookings.forEach(booking => {
+        for (const booking of bookings) {
           if (booking.insurance) {
             booking.insurance.enabled = value
           }
-        })
-      })
-    }
+        }
+      }
+    },
   })
-  function toggleAllInsurances(value) {
+  function toggleAllInsurances (value) {
     const pickedClassesStore = usePickedClassesStore()
     const processedGroups = new Set()
 
-    pickedClassesStore.bookedClasses.forEach(booking => {
+    for (const booking of pickedClassesStore.bookedClasses) {
       // For group bookings, only process once per groupBookingId
       if (booking.groupBookingId) {
-        if (processedGroups.has(booking.groupBookingId)) return
+        if (processedGroups.has(booking.groupBookingId)) continue
         processedGroups.add(booking.groupBookingId)
 
         // Update all bookings in the same group
-        pickedClassesStore.bookedClasses
-          .filter(b => b.groupBookingId === booking.groupBookingId)
-          .forEach(b => { b.insurance.enabled = value })
+        for (const b of pickedClassesStore.bookedClasses
+        .filter(b => b.groupBookingId === booking.groupBookingId)) {
+          b.insurance.enabled = value
+        }
       } else {
         booking.insurance.enabled = value
       }
-    })
+    }
   }
 
   /**
@@ -543,7 +543,7 @@
                   :index="index"
                   :participant="participant"
                 />
-<!--                  @delete-class="handleClassDeletion(participant, $event)"-->
+                <!--                  @delete-class="handleClassDeletion(participant, $event)"-->
               </div>
             </div>
             <VSheet
@@ -768,7 +768,7 @@
                     <div class="d-flex justify-space-between">
                       <span>{{ $t('child_add_ons') }}</span>
                       <span class="ml-auto">
-                          {{ formatPrice(classStore.childAddOnPrice) }}&nbsp;{{ stayStore.currency }}
+                        {{ formatPrice(classStore.childAddOnPrice) }}&nbsp;{{ stayStore.currency }}
                       </span>
                     </div>
                     <VDivider class="mt-1 mb-2" />
@@ -816,8 +816,8 @@
                     </div>
                   </div>
                 </div>
-<!--                {{ classStore.childAddOnSelections }}-->
-<!--                {{ classStore.childAddOnPrice }}-->
+                <!--                {{ classStore.childAddOnSelections }}-->
+                <!--                {{ classStore.childAddOnPrice }}-->
               </VSheet>
             </div>
           </div>
@@ -1218,8 +1218,8 @@
                   <div class="d-flex justify-space-between">
                     <span>{{ $t('child_add_ons') }}</span>
                     <span class="ml-auto">
-                          {{ formatPrice(classStore.childAddOnPrice) }}&nbsp;{{ stayStore.currency }}
-                      </span>
+                      {{ formatPrice(classStore.childAddOnPrice) }}&nbsp;{{ stayStore.currency }}
+                    </span>
                   </div>
                   <VDivider class="mt-1 mb-2" />
                 </li>
@@ -1253,12 +1253,12 @@
                   <div class="d-flex  ga-2 justify-end mt-4">
                     <div class="d-flex flex-column">
                       <div class="ml-auto">
-                      <span class="ml-auto">
-                        {{ $t('price_total') }}:
-                      </span>
+                        <span class="ml-auto">
+                          {{ $t('price_total') }}:
+                        </span>
                         <span class="fs-16 ml-auto">
-                        {{ formatPrice(stayStore.allParticipantsTotalPrice) }}&nbsp;{{ stayStore.currency }}
-                      </span>
+                          {{ formatPrice(stayStore.allParticipantsTotalPrice) }}&nbsp;{{ stayStore.currency }}
+                        </span>
                       </div>
                       <div v-if="allInsurancesEnabled" class="fs-11 text-right">
                         <div>
@@ -1269,20 +1269,20 @@
                       </div>
                     </div>
                   </div>
-<!--                  <div class="ml-auto">-->
-<!--                    <span class="ml-auto">-->
-<!--                      {{ $t('price_total') }}:-->
-<!--                    </span>-->
-<!--                    <span class="fs-16 ml-auto">-->
-<!--                      {{ formatPrice(stayStore.allParticipantsTotalPrice) }}&nbsp;{{ stayStore.currency }}-->
-<!--                    </span>-->
-<!--                  </div>-->
-<!--                  <div v-if="allInsurancesEnabled" class="fs-11">-->
-<!--                    <span>{{ $t('including') }}</span>&nbsp;<span class="text-lowercase">{{-->
-<!--                      $t('aditional_options')-->
-<!--                    }}: </span>-->
-<!--                    <span>{{ formatPrice(sumTotalInsurancesForAll) }}&nbsp;{{ stayStore.currency }}</span>-->
-<!--                  </div>-->
+                  <!--                  <div class="ml-auto">-->
+                  <!--                    <span class="ml-auto">-->
+                  <!--                      {{ $t('price_total') }}:-->
+                  <!--                    </span>-->
+                  <!--                    <span class="fs-16 ml-auto">-->
+                  <!--                      {{ formatPrice(stayStore.allParticipantsTotalPrice) }}&nbsp;{{ stayStore.currency }}-->
+                  <!--                    </span>-->
+                  <!--                  </div>-->
+                  <!--                  <div v-if="allInsurancesEnabled" class="fs-11">-->
+                  <!--                    <span>{{ $t('including') }}</span>&nbsp;<span class="text-lowercase">{{-->
+                  <!--                      $t('aditional_options')-->
+                  <!--                    }}: </span>-->
+                  <!--                    <span>{{ formatPrice(sumTotalInsurancesForAll) }}&nbsp;{{ stayStore.currency }}</span>-->
+                  <!--                  </div>-->
                 </div>
               </div>
             </VSheet>

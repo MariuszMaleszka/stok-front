@@ -317,7 +317,7 @@ export const useStayStore = defineStore('stayStore', () => {
     return participantId => {
       const pickedClassesStore = usePickedClassesStore()
       const participantBookings = pickedClassesStore.bookedClasses.filter(
-        booking => booking.participantId === participantId
+        booking => booking.participantId === participantId,
       )
 
       const processedGroupIds = new Set()
@@ -351,7 +351,7 @@ export const useStayStore = defineStore('stayStore', () => {
     return participantId => {
       const pickedClassesStore = usePickedClassesStore()
       const participantBookings = pickedClassesStore.bookedClasses.filter(
-        booking => booking.participantId === participantId
+        booking => booking.participantId === participantId,
       )
 
       const processedGroupBookings = new Set()
@@ -588,10 +588,10 @@ export const useStayStore = defineStore('stayStore', () => {
    * Transforms bookedClasses data into the legacy selectedClasses format
    */
   const getParticipantClasses = computed(() => {
-    return (participantId) => {
+    return participantId => {
       const pickedClassesStore = usePickedClassesStore()
       const participantBookings = pickedClassesStore.bookedClasses.filter(
-        booking => booking.participantId === participantId
+        booking => booking.participantId === participantId,
       )
 
       // Group bookings by groupBookingId or unique slot/group ID
@@ -622,7 +622,7 @@ export const useStayStore = defineStore('stayStore', () => {
               price: 0,
               perDay: true,
               description: '',
-            }
+            },
           }
           classesMap.set(key, classEntry)
         }
@@ -631,7 +631,7 @@ export const useStayStore = defineStore('stayStore', () => {
         const classEntry = classesMap.get(key)
         classEntry.dates.push({
           date: booking.dateStr,
-          time: booking.data?.slot?.time || booking.data?.group?.schedule || ''
+          time: booking.data?.slot?.time || booking.data?.group?.schedule || '',
         })
       }
 

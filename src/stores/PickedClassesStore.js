@@ -1,12 +1,14 @@
 import { useCookies } from '@vueuse/integrations/useCookies'
 import { defineStore } from 'pinia'
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
+import { useStayConfigStore } from '@/stores/StayConfigStore.js'
+import { useTimerStore } from '@/stores/TimerStore.js'
 import { useStayStore } from './StayStore'
-import {useStayConfigStore} from "@/stores/StayConfigStore.js";
 
 export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
   const stayStore = useStayStore()
   const configStore = useStayConfigStore()
+  const timerStore = useTimerStore()
   const cookies = useCookies(['booking_preferences'])
 
   // Helper to generate dynamic dates
@@ -125,13 +127,13 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
   const selectedDate = ref(formatDate(new Date()))
 
   // Save/Load preference for "Search Previously Selected"
-  function setSearchPreviouslySelected(val) {
+  function setSearchPreviouslySelected (val) {
     searchPreviouslySelected.value = val
     cookies.set('search_prev_instructor', val ? 'true' : 'false')
   }
 
   // Save/Load general filter preferences
-  function saveFilterPreferences(prefs) {
+  function saveFilterPreferences (prefs) {
     // Save common fields
     const toSave = {
       timeOfDay: prefs.timeOfDay,
@@ -144,7 +146,7 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
     cookies.set('user_filter_preferences', JSON.stringify(toSave))
   }
 
-  function loadFilterPreferences() {
+  function loadFilterPreferences () {
     const saved = cookies.get('user_filter_preferences')
     if (saved) {
       try {
@@ -215,7 +217,7 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
   })
   const hasAnyChildAddOnsSelected = computed(() => {
     return Object.keys(childAddOnSelections.value).some(
-      groupId => childAddOnSelections.value[groupId] === true
+      groupId => childAddOnSelections.value[groupId] === true,
     )
   })
 
@@ -311,15 +313,15 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
   }
 
   // Actions
-  function setSelectedDate(dateIso) {
+  function setSelectedDate (dateIso) {
     selectedDate.value = dateIso
   }
 
-  function loadMoreSlots() {
+  function loadMoreSlots () {
     visibleSlotsLimit.value += 4
   }
 
-  function resetState() {
+  function resetState () {
     // Reset state but respect preference if applicable
     const pref = cookies.get('search_prev_instructor')
     searchPreviouslySelected.value = hasPreviouslySelectedInstructor.value && (pref === 'true' || pref === true)
@@ -342,7 +344,7 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
     visibleSlotsLimit.value = 4
   }
 
-  function addBookedClass(booking) {
+  function addBookedClass (booking) {
     // Extract instructor if present in data.slot
     let instructor = booking.instructor
     if (!instructor && booking.data && booking.data.slot && booking.data.slot.instructor) {
@@ -354,12 +356,16 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
       ...booking,
       instructor,
       id: Date.now() + Math.random().toString(36).slice(2, 11),
-      insurance: { ...configStore.insuranceObject }
+      insurance: { ...configStore.insuranceObject },
     }
     bookedClasses.value.push(newBooking)
+    timerStore.resetTimer()
+    nextTick(() => {
+      timerStore.startTimer()
+    })
   }
 
-  function removeBookedClass(bookingId) {
+  function removeBookedClass (bookingId) {
     const bookingToRemove = bookedClasses.value.find(c => c.id === bookingId)
     if (!bookingToRemove) {
       return

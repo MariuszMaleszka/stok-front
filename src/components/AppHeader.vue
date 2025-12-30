@@ -7,7 +7,7 @@
   import plFlag from '@/assets/pl-flag.svg'
   import Logo from '@/assets/stok-logo.svg'
   import Timer from '@/components/Timer.vue'
-  import {usePickedClassesStore} from "@/stores/PickedClassesStore.js";
+  import { usePickedClassesStore } from '@/stores/PickedClassesStore.js'
   const { locale } = useI18n()
   const { mobile } = useDisplay()
   const menu = ref(false)

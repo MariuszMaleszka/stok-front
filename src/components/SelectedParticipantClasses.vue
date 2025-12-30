@@ -1,98 +1,96 @@
 <script setup>
-import {ref} from 'vue'
-import {useI18n} from 'vue-i18n'
-import {useDisplay} from 'vuetify'
-import InsuranceIMG from '@/assets/insurance_img.png'
-import GreenShield from '@/assets/shield-check-green.svg'
-import skiLOGO from '@/assets/ski-icon.svg'
-import snowboardLOGO from '@/assets/snowboard-icon.svg'
-import PopupSmall from '@/components/modals/PopupSmall.vue'
-import {useStayStore} from '@/stores/StayStore.js'
-import {formatPrice} from '@/utils/numbers.js'
-import {usePickedClassesStore} from "@/stores/PickedClassesStore.js";
+  import { ref } from 'vue'
+  import { useI18n } from 'vue-i18n'
+  import { useDisplay } from 'vuetify'
+  import InsuranceIMG from '@/assets/insurance_img.png'
+  import GreenShield from '@/assets/shield-check-green.svg'
+  import skiLOGO from '@/assets/ski-icon.svg'
+  import snowboardLOGO from '@/assets/snowboard-icon.svg'
+  import PopupSmall from '@/components/modals/PopupSmall.vue'
+  import { usePickedClassesStore } from '@/stores/PickedClassesStore.js'
+  import { useStayStore } from '@/stores/StayStore.js'
+  import { formatPrice } from '@/utils/numbers.js'
 
-const props = defineProps({
-  participant: {
-    type: Object,
-    required: true,
-  },
-  index: {
-    type: Number,
-    required: true,
-  },
-})
+  const props = defineProps({
+    participant: {
+      type: Object,
+      required: true,
+    },
+    index: {
+      type: Number,
+      required: true,
+    },
+  })
 
+  const { t } = useI18n()
+  const { mobile } = useDisplay()
+  const stayStore = useStayStore()
+  const classesStore = usePickedClassesStore()
+  const expandedPanels = ref({})
+  const panel = ref([0])// Expansion panel state (main)
 
-const {t} = useI18n()
-const {mobile} = useDisplay()
-const stayStore = useStayStore()
-const classesStore = usePickedClassesStore()
-const expandedPanels = ref({})
-const panel = ref([0])// Expansion panel state (main)
+  // const insuranceSelected = ref({}) // Holds the insurance selection state
+  const insuranceInfoDialog = ref(false) // Controls the insurance info dialog visibility
+  const currentInsurance = ref(null) // Holds the insurance info to display
 
-// const insuranceSelected = ref({}) // Holds the insurance selection state
-const insuranceInfoDialog = ref(false) // Controls the insurance info dialog visibility
-const currentInsurance = ref(null) // Holds the insurance info to display
+  const classToDelete = ref(null) // Holds the class selected for deletion
+  const confirmClassDeletationDialog = ref(false) // Controls the confirmation dialog visibility
 
-const classToDelete = ref(null) // Holds the class selected for deletion
-const confirmClassDeletationDialog = ref(false) // Controls the confirmation dialog visibility
+  const participantBookings = computed(() => {
+    const bookings = classesStore.bookedClasses.filter(
+      booking => booking.participantId === props.participant.dynamicId,
+    )
 
+    // Group by groupBookingId to avoid duplicates
+    const grouped = new Map()
 
-const participantBookings = computed(() => {
-  const bookings = classesStore.bookedClasses.filter(
-    booking => booking.participantId === props.participant.dynamicId
-  )
+    for (const booking of bookings) {
+      const key = booking.groupBookingId || booking.id
 
-  // Group by groupBookingId to avoid duplicates
-  const grouped = new Map()
+      if (!grouped.has(key)) {
+        grouped.set(key, booking)
+      }
+    }
 
-  for (const booking of bookings) {
-    const key = booking.groupBookingId || booking.id
+    return Array.from(grouped.values())
+  })
 
-    if (!grouped.has(key)) {
-      grouped.set(key, booking)
+  function openInsuranceDialog (insurance) {
+    currentInsurance.value = insurance
+    insuranceInfoDialog.value = true
+  }
+
+  // Delete class
+  function deleteClass (booking) {
+    console.log('delete class', booking)
+    const item = participantBookings.value.find(c => c.id === booking.id)
+    console.log('item to delete', item)
+    if (item) {
+      classToDelete.value = item
+      confirmClassDeletationDialog.value = true
     }
   }
 
-  return Array.from(grouped.values())
-})
-
-function openInsuranceDialog(insurance) {
-  currentInsurance.value = insurance
-  insuranceInfoDialog.value = true
-}
-
-// Delete class
-function deleteClass(booking) {
-  console.log('delete class', booking)
-  const item = participantBookings.value.find(c => c.id === booking.id)
-  console.log('item to delete', item)
-  if (item) {
-    classToDelete.value = item
-    confirmClassDeletationDialog.value = true
+  // Confirm deletion
+  function confirmDeleteClass () {
+    if (classToDelete.value) {
+      classesStore.removeBookedClass(classToDelete.value.id)
+      classToDelete.value = null
+    }
+    confirmClassDeletationDialog.value = false
   }
-}
 
-// Confirm deletion
-function confirmDeleteClass() {
-  if (classToDelete.value) {
-    classesStore.removeBookedClass(classToDelete.value.id)
+  // Cancel deletion
+  function cancelDelete () {
     classToDelete.value = null
+    confirmClassDeletationDialog.value = false
   }
-  confirmClassDeletationDialog.value = false
-}
-
-// Cancel deletion
-function cancelDelete() {
-  classToDelete.value = null
-  confirmClassDeletationDialog.value = false
-}
-function toggleInsurance(booking) {
-  const bookingIndex = classesStore.bookedClasses.findIndex(b => b.id === booking.id)
-  if (bookingIndex !== -1) {
-    classesStore.bookedClasses[bookingIndex].insurance.enabled = !classesStore.bookedClasses[bookingIndex].insurance.enabled
+  function toggleInsurance (booking) {
+    const bookingIndex = classesStore.bookedClasses.findIndex(b => b.id === booking.id)
+    if (bookingIndex !== -1) {
+      classesStore.bookedClasses[bookingIndex].insurance.enabled = !classesStore.bookedClasses[bookingIndex].insurance.enabled
+    }
   }
-}
 </script>
 
 <template>
@@ -115,12 +113,16 @@ function toggleInsurance(booking) {
                 class="py-4 pb-0 d-flex justify-between"
                 :class="mobile ? 'px-0': 'px-4'"
               >
-<!--                {{ item }}-->
+                <!--                {{ item }}-->
 
-                <img alt="" class="mb-auto" :src="participant.activityType === 'Narty' ? skiLOGO : snowboardLOGO"
-                     width="28px">
+                <img
+                  alt=""
+                  class="mb-auto"
+                  :src="participant.activityType === 'Narty' ? skiLOGO : snowboardLOGO"
+                  width="28px"
+                >
                 <div class="d-flex flex-column ml-2 flex-1">
-<!--                  {{ item }}-->
+                  <!--                  {{ item }}-->
                   <!--                  {{ item }}-->
                   <p
                     v-if="item.type === 'individual'"
@@ -215,16 +217,16 @@ function toggleInsurance(booking) {
                     class="mr-2 fw-600"
                     :class="mobile ? 'fs-12 ': 'fs-14'"
                   >
-<!--                    {{ formatPrice(item.price) }}&nbsp;{{ stayStore.currency }}-->
+                    <!--                    {{ formatPrice(item.price) }}&nbsp;{{ stayStore.currency }}-->
                     <!--                    {{ item.data.group.price }}-->
-                  <span v-if="item.data?.group?.price">
-                    {{ item.data.group.price }}&nbsp;{{ stayStore.currency }}
-                  </span>
-                  <span v-if="item.data?.slot?.price">
-                    {{ item.data.slot.price }}&nbsp;{{ stayStore.currency }}
-                  </span>
+                    <span v-if="item.data?.group?.price">
+                      {{ item.data.group.price }}&nbsp;{{ stayStore.currency }}
+                    </span>
+                    <span v-if="item.data?.slot?.price">
+                      {{ item.data.slot.price }}&nbsp;{{ stayStore.currency }}
+                    </span>
                   </p>
-                  <VIcon color="grey" icon="mdi-close" size="18" @click="deleteClass(item)"/>
+                  <VIcon color="grey" icon="mdi-close" size="18" @click="deleteClass(item)" />
                 </div>
               </div>
 
@@ -254,7 +256,7 @@ function toggleInsurance(booking) {
                       @click="expandedPanels[item.dynamicId] = !expandedPanels[item.dynamicId]"
                     >
                       {{ expandedPanels[item.dynamicId] ? t('collapse') : t('expand') }}
-                      <VIcon :icon="expandedPanels[item.dynamicId] ? 'mdi-chevron-up' : 'mdi-chevron-down'"/>
+                      <VIcon :icon="expandedPanels[item.dynamicId] ? 'mdi-chevron-up' : 'mdi-chevron-down'" />
                     </VBtn>
                   </div>
 
@@ -277,7 +279,7 @@ function toggleInsurance(booking) {
                         :class="mobile ? 'fs-10' : 'fs-12'"
                         @click="openInsuranceDialog(item.insurance)"
                       >
-                        <VIcon class="mr-1" color="grey" icon="mdi-information-slab-circle"/>
+                        <VIcon class="mr-1" color="grey" icon="mdi-information-slab-circle" />
                         {{ $t('aditional_info') }}
                       </div>
                     </VCardText>
@@ -293,7 +295,7 @@ function toggleInsurance(booking) {
                   class="pt-0 rounded d-flex align-center justify-between"
                   :class="mobile ? 'px-0': 'px-4'"
                 >
-<!--                    v-model="item.insurance.enabled"-->
+                  <!--                    v-model="item.insurance.enabled"-->
                   <VCheckbox
                     v-model="item.insurance.enabled"
                     color="info"
@@ -316,7 +318,7 @@ function toggleInsurance(booking) {
                       @click="expandedPanels[item.dynamicId] = !expandedPanels[item.dynamicId]"
                     >
                       {{ expandedPanels[item.dynamicId] ? t('collapse') : t('expand') }}
-                      <VIcon :icon="expandedPanels[item.dynamicId] ? 'mdi-chevron-up' : 'mdi-chevron-down'"/>
+                      <VIcon :icon="expandedPanels[item.dynamicId] ? 'mdi-chevron-up' : 'mdi-chevron-down'" />
                     </VBtn>
                   </div>
 
@@ -350,7 +352,7 @@ function toggleInsurance(booking) {
                         :class="mobile ? 'fs-10' : 'fs-12'"
                         @click="openInsuranceDialog(item.insurance)"
                       >
-                        <VIcon class="mr-1" color="grey" icon="mdi-information-slab-circle"/>
+                        <VIcon class="mr-1" color="grey" icon="mdi-information-slab-circle" />
                         {{ $t('aditional_info') }}
                       </div>
                     </VCardText>
@@ -423,8 +425,12 @@ function toggleInsurance(booking) {
           v-if="classToDelete"
         >
           <div class="d-flex w-100 ga-2 flex-1 justify-between">
-            <img alt="" class="mb-auto" :src="participant.activityType === 'narty' ? skiLOGO : snowboardLOGO"
-                 width="28px">
+            <img
+              alt=""
+              class="mb-auto"
+              :src="participant.activityType === 'narty' ? skiLOGO : snowboardLOGO"
+              width="28px"
+            >
             <div class="flex flex-column">
 
               <p
@@ -489,9 +495,7 @@ function toggleInsurance(booking) {
                 <p
                   class="fs-500 text-pre-wrap lh-normal"
                   :class="mobile ? 'fs-12 ': 'fs-14'"
-                >
-
-                </p>
+                />
 
               </div>
             </div>
@@ -504,13 +508,13 @@ function toggleInsurance(booking) {
                 <!--                    {{ formatPrice(item.price) }}&nbsp;{{ stayStore.currency }}-->
                 <!--                    {{ item.data.group.price }}-->
                 <span v-if="classToDelete.data?.group?.price">
-                    {{ classToDelete.data.group.price }}&nbsp;{{ stayStore.currency }}
-                  </span>
+                  {{ classToDelete.data.group.price }}&nbsp;{{ stayStore.currency }}
+                </span>
                 <span v-if="classToDelete.data?.slot?.price">
-                    {{ classToDelete.data.slot.price }}&nbsp;{{ stayStore.currency }}
-                  </span>
+                  {{ classToDelete.data.slot.price }}&nbsp;{{ stayStore.currency }}
+                </span>
               </p>
-              <VIcon color="grey" icon="mdi-close" size="18" @click="deleteClass(classToDelete.participantId)"/>
+              <VIcon color="grey" icon="mdi-close" size="18" @click="deleteClass(classToDelete.participantId)" />
             </div>
           </div>
         </div>
