@@ -107,7 +107,7 @@
 <template>
   <VContainer
     class="d-flex flex-column flex-1 mt-4 mb-12"
-    :class="mobile ? 'px-2': ''"
+    :class="mobile ? 'px-4': ''"
     max-width="990"
   >
     <VStepper

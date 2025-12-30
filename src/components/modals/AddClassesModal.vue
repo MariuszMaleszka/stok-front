@@ -595,7 +595,7 @@
                   />
                   <div v-if="pickedClassesStore.individualPreferences.findSpecificInstructor">
                     <span class="text-subtitle-2 font-weight-bold mt-1 mb-1 d-block text-primary-900">{{ t('instructor') }}</span>
-                    <VSelect
+                    <VAutocomplete
                       v-model="pickedClassesStore.individualPreferences.selectedInstructor"
                       class="instructor-select"
                       density="compact"
@@ -704,13 +704,13 @@
                   </div>
 
                   <VBtn
-                    class="text-capitalize mb-8 text-primary-900 border-primary find-other-btn"
+                    class="text-capitalize mb-8 text-primary-900 border-primary find-other-btn text-wrap py-2"
                     color="primary"
-                    height="59"
+                    style="min-height: 59px; height: auto;"
                     variant="outlined"
                     width="100%"
                   >
-                    <span v-html="t('find_closest_classes').replace('\n', '<br>')" class="text-break"></span>
+                    <span class="text-break" style="white-space: normal; line-height: 1.2;" v-html="t('find_closest_classes').replace('\n', '<br>')" />
                   </VBtn>
 
                   <div class="border rounded-lg px-4 py-3 d-flex align-start text-left bg-white border-gray">
@@ -818,7 +818,7 @@
                   />
                   <div v-if="pickedClassesStore.sharedPreferences.findSpecificInstructor">
                     <span class="text-subtitle-2 font-weight-bold mt-1 mb-1 d-block text-primary-900">{{ t('instructor') }}</span>
-                    <VSelect
+                    <VAutocomplete
                       v-model="pickedClassesStore.sharedPreferences.selectedInstructor"
                       class="instructor-select"
                       density="compact"
@@ -901,13 +901,13 @@
                   </div>
 
                   <VBtn
-                    class="text-capitalize mb-8 text-primary-900 border-primary"
+                    class="text-capitalize mb-8 text-primary-900 border-primary text-wrap py-2"
                     color="primary"
-                    height="59"
+                    style="min-height: 59px; height: auto;"
                     variant="outlined"
                     width="100%"
                   >
-                    <span v-html="t('find_closest_classes').replace('\n', '<br>')"></span>
+                    <span class="text-break" style="white-space: normal; line-height: 1.2;" v-html="t('find_closest_classes').replace('\n', '<br>')" />
                   </VBtn>
 
                   <div class="border rounded-lg px-4 py-3 d-flex align-start text-left bg-white border-gray">
@@ -1155,9 +1155,27 @@
   border-radius: 50%;
   border: 2px solid #D1D5DB;
   background: white;
+  position: relative;
 
   .selected & {
     border-color: #2563EB;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: rgb(26, 86, 219);
+    transition: transform 0.2s ease;
+  }
+
+  .selected &::after {
+    transform: translate(-50%, -50%) scale(1);
   }
 
   .disabled & {
