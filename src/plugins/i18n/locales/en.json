@@ -218,5 +218,6 @@
   "select_childminder": "Select childminder",
   "another_childminder": "Another childminder",
   "childminder_name": "Childminder name",
-  "childminder_phone": "Childminder phone"
+  "childminder_phone": "Childminder phone",
+  "at_least_one_adult_required": "Min 1 adult required."
 }

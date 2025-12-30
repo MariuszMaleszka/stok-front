@@ -26,6 +26,19 @@
   const dataForm = ref(null)
   const participantForms = ref([])
 
+  const rules = {
+    required: value => !!value || t('fill_the_field_properly'),
+    minAdults: value => value >= 1 || t('at_least_one_adult_required'),
+  }
+
+  async function validateDataForm () {
+    const result = await dataForm.value.validate()
+    if (!result.valid) {
+      showSimpleToast(t('please_fill_required_fields'), 'error')
+    }
+    return result.valid
+  }
+
   async function validateCurrentStep () {
     const results = await Promise.all(
       participantForms.value.map(form => form?.validate()),
@@ -50,6 +63,7 @@
   defineExpose({
     stepOneNestedRef,
     validateCurrentStep,
+    validateDataForm
   })
 
 </script>
@@ -64,7 +78,6 @@
     <VStepperHeader class="mt-2">
       <VStepperItem
         class="px-1 py-0"
-        :complete="viewStore.isStepOneDataCompleted"
         :title="$t('stay_datails')"
         :value="1"
       >
@@ -120,9 +133,10 @@
                 hide-details="auto"
                 :max="stayStore.maxAdults"
                 max-width="165px"
-                :min="stayStore.childrenNumber === 0 ? 1 : 0"
+                :min="0"
                 :step="1"
                 variant="outlined"
+                :rules="[rules.minAdults]"
               />
               <p class="fs-12 fc-gray">
                 {{ $t('enter_number_of_participants_adult') }}
@@ -137,7 +151,7 @@
                 hide-details="auto"
                 :max="stayStore.maxChildren"
                 max-width="165px"
-                :min="stayStore.adultsNumber === 0 ? 1 : 0"
+                :min="0"
                 :step="1"
                 variant="outlined"
               />
