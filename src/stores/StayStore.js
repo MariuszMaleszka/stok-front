@@ -152,7 +152,7 @@ export const useStayStore = defineStore('stayStore', () => {
   const dateOfStay = ref(null)
 
   /** Number of adult participants (1-12) */
-  const adultsNumber = ref(1)
+  const adultsNumber = ref(0)
 
   /** Number of child participants (0-12) */
   const childrenNumber = ref(0)

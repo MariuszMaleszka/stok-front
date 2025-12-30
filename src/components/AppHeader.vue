@@ -7,12 +7,13 @@
   import plFlag from '@/assets/pl-flag.svg'
   import Logo from '@/assets/stok-logo.svg'
   import Timer from '@/components/Timer.vue'
-
+  import {usePickedClassesStore} from "@/stores/PickedClassesStore.js";
   const { locale } = useI18n()
   const { mobile } = useDisplay()
   const menu = ref(false)
   const cookies = useCookies(['locale'])
 
+  const classStore = usePickedClassesStore()
   // Switch language
   function changeLanguage (lang) {
     locale.value = lang
@@ -32,7 +33,7 @@
       :width="mobile? 78:120 "
     />
     <VSpacer />
-    <Timer :class="mobile ? '' :'ml-auto'" />
+    <Timer v-if="classStore.bookedClasses.length > 0" :class="mobile ? '' :'ml-auto'" />
 
     <VMenu v-model="menu" class="ml-auto">
       <template #activator="{ props }">

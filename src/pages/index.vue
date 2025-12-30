@@ -60,7 +60,10 @@
   async function handleNext () {
     // Step 1/1 (stay data) - proceed to Step 1/2
     if (viewStore.currentStep.parent === 1 && viewStore.currentStep.child === 1) {
-      stepOneComponentRef.value.stepOneNestedRef.next()
+      const isValid = await stepOneComponentRef.value?.validateDataForm()
+      if (isValid) {
+        stepOneComponentRef.value.stepOneNestedRef.next()
+      }
     }
     // Step 1/2 (participants data) - validate and proceed to Step 2
     if (viewStore.currentStep.parent === 1 && viewStore.currentStep.child === 2) {
@@ -107,7 +110,7 @@
 <template>
   <VContainer
     class="d-flex flex-column flex-1 mt-4 mb-12"
-    :class="mobile ? 'px-2': ''"
+    :class="mobile ? 'px-5': ''"
     max-width="990"
   >
     <VStepper
@@ -318,7 +321,7 @@
   right: 0;
   width: 100%;
   z-index: 10;
-  padding: .5rem;
+  padding: .5rem 20px;
   background-color: $bg-gray-light;
 }
 </style>

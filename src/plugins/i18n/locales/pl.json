@@ -219,8 +219,8 @@
   "select_childminder": "Wybierz opiekuna dziecka",
   "another_childminder": "Dane innego opiekuna dziecka",
   "childminder_name": "Imię opiekuna",
-  "childminder_phone": "Telefon opiekuna"
-
+  "childminder_phone": "Telefon opiekuna",
+  "at_least_one_adult_required": "Min 1 os. dorosła"
 
 
 
