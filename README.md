@@ -111,29 +111,76 @@ This project uses [@vuepic/vue-datepicker](https://vue3datepicker.com/) for date
 
 ## 🏪 Pinia Stores
 
-This application uses three main Pinia stores for state management:
+This application uses four main Pinia stores for state management, each handling specific aspects of the ski school booking system.
 
 ### 1. StayStore (`src/stores/StayStore.js`)
 
-The **StayStore** is the main store for managing ski school stay reservations. It handles all booking-related data and business logic.
+The **StayStore** is the core store managing the entire ski school stay reservation system. It orchestrates all booking-related data and complex business logic for the booking process.
 
-#### Key Features:
-- **Participant Management**: Handles adults and children (up to 12 total participants)
-- **Date Selection**: Manages stay date ranges
-- **Class Enrollment**: Tracks selected classes for each participant (group and individual lessons)
-- **Pricing Calculations**:
-  - Per-participant class pricing with per-date calculations
-  - Insurance pricing (skipped for children in group classes)
-  - Total pricing with discount application
-  - Hour-based package discount system
-- **Discount System**:
-  - First package (10+ hours): 5.7% discount
-  - Second package (20+ hours): 11.4% discount
-  - Loyalty card: 12% discount
-  - Real-time missing hours calculation
-- **Loyalty Program**: Card validation and owner information
-- **Payment Data**: Stay manager, payer (if different), and invoice details
-- **Legal Agreements**: RODO/GDPR and regulations acceptance tracking
+#### Key Responsibilities:
+
+**Participant Management**
+- Handles up to 12 total participants (adults + children)
+- Dynamic participant array creation based on adult/children counts
+- Individual participant profiles with personal data (name, age, phone, email)
+- Age-based classification (adults vs children under 14)
+- Participant type tracking (group class vs individual lessons)
+
+**Date & Time Management**
+- Stay date range selection (`dateOfStay` array)
+- Individual date tracking for each day of the stay
+- Integration with date utilities for formatting and calculations
+
+**Class Enrollment System**
+- Selected classes tracking per participant
+- Support for both group and individual lessons
+- Detailed class information:
+  - Activity type (ski/snowboard)
+  - Skill level (beginner, intermediate, advanced, or children's groups)
+  - Language preference (Polish/English)
+  - Time slots and duration
+  - Instructor specialization for children
+- Per-date class assignment with flexible scheduling
+
+**Advanced Pricing Engine**
+- Multi-tiered pricing based on total hours:
+  - Standard rates (< 10 hours)
+  - First package discount (10-19 hours): 5.7% off
+  - Second package discount (20+ hours): 11.4% off
+- Participant-based pricing:
+  - First participant: Higher base rate
+  - Second participant: Medium rate
+  - Additional participants: Lowest rate
+- Insurance calculations (optional, configurable per participant)
+- Insurance exemption logic for children in group classes
+- Real-time price updates as selections change
+
+**Discount System**
+- Package discounts automatically applied at 10h and 20h thresholds
+- Loyalty card integration with 12% discount
+- "Missing hours" calculator showing how many more hours needed for next discount tier
+- Discount eligibility flags for UI feedback
+
+**Loyalty Card Program**
+- Card number validation via API integration
+- Card owner information retrieval
+- Discount application with card usage tracking
+
+**Payment & Billing**
+- Stay manager information (primary contact)
+- Separate payer details (if different from manager)
+- Invoice recipient data
+- Complete payment data structure for API submission
+
+**Legal Compliance**
+- RODO/GDPR consent tracking
+- Regulations acceptance flags
+- Per-participant data protection compliance
+
+**API Integration**
+- Loyalty card validation endpoint
+- Event submission to booking system
+- Error handling and loading states
 
 #### Usage Example:
 ```vue
@@ -142,83 +189,151 @@ import { useStayStore } from '@/stores/StayStore'
 
 const stayStore = useStayStore()
 
-// Access data
+// Configure stay
+stayStore.adultsNumber = 2
+stayStore.childrenNumber = 1
+stayStore.dateOfStay = [new Date('2024-01-15'), new Date('2024-01-19')]
+
+// Access pricing information
 const totalPrice = stayStore.allParticipantsTotalPrice
 const totalHours = stayStore.allParticipantsTotalHours
 const discount = stayStore.finalDiscount
-
-// Modify state
-stayStore.adultsNumber = 2
-stayStore.childrenNumber = 1
-stayStore.dateOfStay = [new Date(), new Date()]
+const hoursNeeded = stayStore.missingClassesForDiscount
 
 // Check loyalty card
 await stayStore.checkLoyaltyCardNumber('12345678')
+
+// Update participant data
+stayStore.participants[0].name = 'Jan'
+stayStore.participants[0].surname = 'Kowalski'
+stayStore.participants[0].insuranceIncluded = true
+
+// Get participant-specific pricing
+const participantPrice = stayStore.participantClassesTotalPrice('participant-id')
+const insurancePrice = stayStore.participantInsuranceTotalPrice('participant-id')
+
+// Submit booking
+const bookingData = stayStore.event
 </script>
 ```
 
 #### Key Computed Properties:
-- `event` - Complete booking object with all data
-- `allParticipantsTotalPrice` - Final total price after discounts
-- `allParticipantsTotalHours` - Total class hours (excluding group classes)
-- `firstPackageEligible` - Whether 10h threshold is reached
-- `secondPackageEligible` - Whether 20h threshold is reached
-- `missingClassesForDiscount` - Hours needed for next discount level
-- `participantClassesTotalPrice(id)` - Price calculator per participant
-- `participantInsuranceTotalPrice(id)` - Insurance calculator per participant
+- `event` - Complete booking object ready for API submission
+- `allParticipantsTotalPrice` - Final total price after all discounts
+- `allParticipantsTotalHours` - Total class hours across all participants
+- `firstPackageEligible` - Boolean: has 10+ hours threshold been reached
+- `secondPackageEligible` - Boolean: has 20+ hours threshold been reached  
+- `missingClassesForDiscount` - Hours needed to reach next discount level
+- `finalDiscount` - Calculated discount percentage (package + loyalty)
+- `participantClassesTotalPrice(id)` - Price calculation per participant
+- `participantInsuranceTotalPrice(id)` - Insurance cost per participant
+- `participantsNumberCondition` - Validation: at least one participant selected
 
-### 2. StayConfigStore (`src/stores/StayConfigStore.js`)
+### 2. PickedClassesStore (`src/stores/PickedClassesStore.js`)
 
-The **StayConfigStore** provides configuration data and constants used throughout the application.
+The **PickedClassesStore** manages the temporary state during class selection. It acts as a staging area for class assignments before they're committed to the StayStore.
 
-#### Key Features:
-- **Pricing Tiers**: Different pricing for various hour thresholds
-  - `combinedClassesPrices` - Default pricing (first: 174.99, second: 40, additional: 30)
-  - `combinedClassesPrices_10h` - 10+ hours pricing (first: 164.99, second: 38, additional: 28)
-  - `combinedClassesPrices_20h` - 20+ hours pricing (first: 154.99, second: 37, additional: 27)
-  - `combinedClassesPrices_HH` - Happy hours pricing (first: 164.99, second: 38, additional: 28)
-- **Activity Types**: Ski and Snowboard options
-- **Skill Levels**:
-  - Adults: Beginner, Intermediate, Advanced
-  - Children Ski: Orange, Bronze, Silver, Gold, Diamond groups (with age ranges)
-  - Children Snowboard: Yellow, Wide, Narrow groups
-- **Languages**: Polish and English class options
-- **External Links**: Customer service, regulations, payment terms
+#### Key Responsibilities:
+
+**Temporary Selection Management**
+- Holds currently selected classes before final confirmation
+- Maintains state during the class selection modal/flow
+- Prevents accidental data loss during selection process
+
+**Class Collection Structure**
+- Organized by participant ID
+- Per-date class assignments
+- Supports multiple classes per participant per day
+- Maintains class details:
+  - Group details (ID, name, time slots, participant limits)
+  - Activity type and skill level
+  - Language preference
+  - Duration and scheduling
+
+**Selection Workflow**
+- Initialize temporary state from StayStore
+- Allow modifications without affecting main store
+- Commit changes back to StayStore on confirmation
+- Discard changes on cancellation
+
+**Data Synchronization**
+- Bidirectional sync with StayStore
+- Preserves existing selections when opening modal
+- Updates StayStore only on explicit save action
 
 #### Usage Example:
 ```vue
 <script setup>
-import { useStayConfigStore } from '@/stores/StayConfigStore'
+import { usePickedClassesStore } from '@/stores/PickedClassesStore'
+import { useStayStore } from '@/stores/StayStore'
 
-const configStore = useStayConfigStore()
+const pickedStore = usePickedClassesStore()
+const stayStore = useStayStore()
 
-// Access pricing
-const prices = configStore.combinedClassesPrices
-// { firstParticipant: 174.99, secondParticipant: 40, additionalParticipant: 30 }
+// Open class selection modal
+const openClassModal = (participantId) => {
+  // Load current selections into temporary store
+  pickedStore.loadFromStayStore(participantId)
+  // Show modal
+}
 
-// Access skill levels
-const adultLevels = configStore.skillLevels_ADULTS
-const childSkiLevels = configStore.skillLevels_CHILDREN_SKI
+// Add class to selection
+pickedStore.addClassForDate(participantId, date, classData)
 
-// Currency
-const currency = configStore.currency // 'zł'
+// Remove class from selection
+pickedStore.removeClassForDate(participantId, date, classId)
+
+// Save selections
+const saveSelections = (participantId) => {
+  pickedStore.commitToStayStore(participantId)
+  // Close modal
+}
+
+// Cancel selections
+const cancelSelections = () => {
+  pickedStore.resetSelections()
+  // Close modal
+}
 </script>
 ```
 
+#### Store Methods:
+- `loadFromStayStore(participantId)` - Initialize from current participant data
+- `addClassForDate(participantId, date, classData)` - Add class to temporary selection
+- `removeClassForDate(participantId, date, classId)` - Remove class from selection
+- `commitToStayStore(participantId)` - Save changes to main store
+- `resetSelections()` - Clear temporary state
+
 ### 3. ViewControlStore (`src/stores/ViewControlStore.js`)
 
-The **ViewControlStore** manages the multi-step booking flow and UI state.
+The **ViewControlStore** orchestrates the multi-step booking flow and manages global UI state throughout the application.
 
-#### Key Features:
-- **Step Navigation**: Tracks current parent and child step positions
-- **Step Completion States**:
-  - Step One (Date & Participant Selection)
-  - Step Two (Class Selection)
-  - Step Three with substeps:
-    - Cart Review
-    - Participant Data Entry
-    - Payment Processing
-- **Stepper Reference**: Manages connection to parent stepper component for programmatic navigation
+#### Key Responsibilities:
+
+**Multi-Step Navigation**
+- Tracks current position in booking flow
+- Parent steps: Date/Participants → Classes → Review/Payment
+- Child steps within each parent (sub-steps)
+- Step completion status tracking
+
+**Booking Flow States**
+- **Step One**: Date selection and participant count configuration
+- **Step Two**: Class selection for all participants  
+- **Step Three**: Multi-phase completion
+  - 3.1: Cart review and summary
+  - 3.2: Participant personal data entry
+  - 3.3: Payment processing
+
+**Stepper Integration**
+- Reference to parent stepper component
+- Programmatic navigation support
+- Next/previous step controls
+- Direct step jumping
+
+**Validation Gates**
+- Step completion flags prevent premature progression
+- Each step must be marked complete before advancing
+- Ensures data integrity throughout booking process
 
 #### Usage Example:
 ```vue
@@ -227,55 +342,274 @@ import { useViewControlStore } from '@/stores/ViewControlStore'
 
 const viewStore = useViewControlStore()
 
-// Check completion status
+// Access current position
+const currentStep = viewStore.currentStep
+// { parent: 1, child: 1 }
+
+// Check if user can proceed
 if (viewStore.isStepOneCompleted) {
-  // Proceed to next step
+  viewStore.currentStep.parent = 2
 }
 
-// Set stepper reference (in parent component)
+// Mark step as completed
+viewStore.isStepOneCompleted = true
+viewStore.isStepTwoCompleted = true
+
+// Control stepper from outside
 const stepperRef = ref(null)
 viewStore.setParentStepper(stepperRef)
 
-// Navigate using stepper
+// Navigate programmatically
 viewStore.parentStepperRef?.next()
 viewStore.parentStepperRef?.prev()
+
+// Sub-step management
+viewStore.currentStep.child = 2 // Move to next sub-step
 </script>
 ```
 
-#### Current Step Structure:
-```javascript
-{
-  parent: 1, // Main step (1-3)
-  child: 1   // Sub-step within parent
+#### State Properties:
+- `currentStep` - Object with `parent` and `child` step numbers
+- `isStepOneCompleted` - Boolean flag for step one completion
+- `isStepTwoCompleted` - Boolean flag for step two completion  
+- `isStepThreeCompleted` - Boolean flag for step three completion
+- `parentStepperRef` - Reference to Vuetify stepper component
+
+#### Methods:
+- `setParentStepper(ref)` - Connect stepper component for programmatic control
+
+### 4. TimerStore (`src/stores/TimerStore.js`)
+
+The **TimerStore** manages session timeout functionality, ensuring bookings are completed within a time limit to prevent reservation conflicts and maintain data freshness.
+
+#### Key Responsibilities:
+
+**Session Timer Management**
+- 15-minute countdown timer for booking completion
+- Automatic expiration after time limit
+- Timer state persistence across component navigation
+
+**Timer Controls**
+- Start/stop timer programmatically
+- Reset timer to initial state
+- Pause and resume functionality
+- Auto-start on booking initiation
+
+**Time Display**
+- Formatted time string (MM:SS)
+- Real-time countdown updates
+- Visual feedback for time remaining
+
+**Expiration Handling**
+- Automatic booking cancellation on timeout
+- User notification system integration
+- Data cleanup on expiration
+- Redirect to start page
+
+**Toast Notifications**
+- Warning toast when timer is active
+- Critical warnings as time runs low
+- Dismissible timer display
+- Integration with toast notification system
+
+#### Usage Example:
+```vue
+<script setup>
+import { useTimerStore } from '@/stores/TimerStore'
+
+const timerStore = useTimerStore()
+
+// Start timer when booking begins
+const startBooking = () => {
+  timerStore.startTimer()
 }
+
+// Display timer
+const timeRemaining = timerStore.formattedTime // "14:35"
+
+// Check if timer is running
+if (timerStore.isTimerRunning) {
+  // Show timer toast
+}
+
+// Stop timer on successful booking
+const completeBooking = async () => {
+  await submitBooking()
+  timerStore.stopTimer()
+  timerStore.resetTimer()
+}
+
+// Handle expiration
+watch(() => timerStore.isExpired, (expired) => {
+  if (expired) {
+    // Show expiration message
+    // Redirect to start
+    router.push('/')
+  }
+})
+</script>
 ```
 
-### Store Communication
+#### State Properties:
+- `timeLeft` - Seconds remaining (default: 900 = 15 minutes)
+- `isTimerRunning` - Boolean: is timer currently active
+- `isExpired` - Boolean: has timer reached zero
+- `timerInterval` - Internal interval reference
 
-The stores work together to provide a complete booking experience:
+#### Computed Properties:
+- `formattedTime` - Time in MM:SS format (e.g., "14:35")
 
-1. **StayStore** references **StayConfigStore** for pricing and configuration data
-2. **ViewControlStore** manages the UI flow while **StayStore** handles the business logic
-3. All stores are reactive and can be used together in components
+#### Methods:
+- `startTimer()` - Begin countdown
+- `stopTimer()` - Pause countdown
+- `resetTimer()` - Reset to initial 15 minutes
+- `decrementTime()` - Internal: decrease by 1 second
+
+### Store Communication & Architecture
+
+The four stores work together in a coordinated architecture to provide a complete booking experience:
+
+#### Store Relationships:
+
+1. **StayStore** ↔ **StayConfigStore**: Core business logic uses configuration data
+   - StayStore retrieves pricing tiers based on total hours
+   - Configuration provides skill levels, activity types, and pricing matrices
+   - Centralized configuration ensures consistency across the application
+
+2. **ViewControlStore** → **StayStore**: UI flow orchestrates business logic
+   - ViewControlStore manages which step is active
+   - StayStore validates data for step completion
+   - Step progression depends on StayStore validation states
+
+3. **PickedClassesStore** ↔ **StayStore**: Temporary staging and final storage
+   - PickedClassesStore acts as a buffer during class selection
+   - Changes are committed to StayStore only on user confirmation
+   - Prevents data loss during selection process
+
+4. **TimerStore**: Independent session management
+   - Runs independently to enforce booking time limits
+   - Triggers cleanup across all stores on expiration
+   - Integrated with toast notification system
+
+#### Complete Booking Flow Example:
 
 ```vue
 <script setup>
 import { useStayStore } from '@/stores/StayStore'
 import { useStayConfigStore } from '@/stores/StayConfigStore'
 import { useViewControlStore } from '@/stores/ViewControlStore'
+import { usePickedClassesStore } from '@/stores/PickedClassesStore'
+import { useTimerStore } from '@/stores/TimerStore'
 
 const stayStore = useStayStore()
 const configStore = useStayConfigStore()
 const viewStore = useViewControlStore()
+const pickedStore = usePickedClassesStore()
+const timerStore = useTimerStore()
 
-// Example: Complete step one
+// Step 1: Initialize booking
+const startBooking = () => {
+  timerStore.startTimer() // Start 15-minute countdown
+  viewStore.currentStep = { parent: 1, child: 1 }
+}
+
+// Step 1: Configure dates and participants
 const completeStepOne = () => {
+  stayStore.adultsNumber = 2
+  stayStore.childrenNumber = 1
+  stayStore.dateOfStay = [new Date('2024-01-15'), new Date('2024-01-19')]
+  
   if (stayStore.participantsNumberCondition && stayStore.dateOfStay) {
     viewStore.isStepOneCompleted = true
     viewStore.currentStep.parent = 2
   }
 }
+
+// Step 2: Select classes (using PickedClassesStore)
+const selectClassesForParticipant = (participantId) => {
+  // Load current selections into temporary store
+  pickedStore.loadFromStayStore(participantId)
+  
+  // User makes changes via UI...
+  pickedStore.addClassForDate(participantId, '2024-01-15', classData)
+  
+  // On confirm, commit to main store
+  pickedStore.commitToStayStore(participantId)
+  
+  // Check if all participants have classes
+  if (allParticipantsHaveClasses) {
+    viewStore.isStepTwoCompleted = true
+    viewStore.currentStep.parent = 3
+  }
+}
+
+// Step 3: Review and complete booking
+const completeBooking = async () => {
+  // Check for loyalty card discount
+  if (loyaltyCardNumber) {
+    await stayStore.checkLoyaltyCardNumber(loyaltyCardNumber)
+  }
+  
+  // Get final pricing from StayStore using StayConfigStore pricing
+  const finalPrice = stayStore.allParticipantsTotalPrice
+  const discount = stayStore.finalDiscount
+  
+  // Submit booking
+  const bookingData = stayStore.event
+  await submitToAPI(bookingData)
+  
+  // Stop timer on success
+  timerStore.stopTimer()
+  timerStore.resetTimer()
+  
+  viewStore.isStepThreeCompleted = true
+}
+
+// Handle timer expiration
+watch(() => timerStore.isExpired, (expired) => {
+  if (expired) {
+    // Clear all booking data
+    stayStore.$reset()
+    pickedStore.$reset()
+    viewStore.$reset()
+    
+    // Redirect to start
+    router.push('/')
+  }
+})
 </script>
+```
+
+#### Store Hierarchy:
+
+```
+┌─────────────────────────────────────────┐
+│         ViewControlStore                │
+│   (Orchestrates booking flow)           │
+└─────────────────────────────────────────┘
+                 │
+    ┌────────────┼────────────┐
+    ▼            ▼            ▼
+┌─────────┐ ┌──────────┐ ┌──────────┐
+│ Step 1  │ │  Step 2  │ │  Step 3  │
+└─────────┘ └──────────┘ └──────────┘
+     │            │            │
+     ▼            ▼            ▼
+┌─────────────────────────────────────────┐
+│            StayStore                     │
+│   (Central business logic & data)       │
+└─────────────────────────────────────────┘
+     │                        │
+     ▼                        ▼
+┌──────────────┐    ┌──────────────────┐
+│StayConfigStore│    │PickedClassesStore│
+│  (Constants)  │    │   (Temp buffer)  │
+└──────────────┘    └──────────────────┘
+
+          ┌──────────────┐
+          │  TimerStore  │
+          │ (Independent)│
+          └──────────────┘
 ```
 
 ### Resources
