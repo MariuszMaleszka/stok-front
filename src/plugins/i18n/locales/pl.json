@@ -252,7 +252,8 @@
   "payment_in_process_info": "Twoja płatność jest w trakcie przetwarzania. Prosimy o cierpliwość.",
   "redirecting_to_payment": "Za chwilę przekierujemy Cię do Przelewy24, aby dokończyć płatność.",
   "redirect_info": "Nie zamykaj tej strony. Po opłaceniu wrócisz na stronę STOK.",
-  "with_our_customer_service": "z naszym biurem obsługi klienta"
+  "with_our_customer_service": "z naszym biurem obsługi klienta",
+  "booking_time_expired": "Czas na dokonanie rezerwacji minął."
 
 
 }

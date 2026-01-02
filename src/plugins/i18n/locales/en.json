@@ -250,5 +250,6 @@
   "payment_in_process": "Payment in process",
   "payment_in_process_info": "Your payment is being processed. Please wait a moment.",
   "redirecting_to_payment": "Redirecting to payment gateway...",
-  "redirect_info": "Do not close this window or navigate away from the page."
+  "redirect_info": "Do not close this window or navigate away from the page.",
+  "booking_time_expired": "Booking time expired"
 }

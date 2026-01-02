@@ -59,11 +59,11 @@
     return pickedClassesStore.bookedClasses.some(c => c.participantId === participantId)
   }
 
-  watch(() => timerStore.timeRemaining, remaining => {
-    if (remaining === 0) {
-      showSimpleToast(t('time_expired'), 'warning')
-    }
-  })
+  // watch(() => timerStore.timeRemaining, remaining => {
+  //   if (remaining === 0) {
+  //     showSimpleToast(t('time_expired'), 'warning')
+  //   }
+  // })
 
   onMounted(() => {
     timerStore.startTimer()
