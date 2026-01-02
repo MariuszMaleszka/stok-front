@@ -8,7 +8,7 @@ import { useToast } from '@/composables/useToast'
 export const useTimerStore = defineStore('timerStore', () => {
   const { t } = useI18n()
   const router = useRouter()
-  const timeRemaining = ref(0.1 * 60)
+  const timeRemaining = ref(20 * 60)
   const timerInterval = ref(null)
   const resetTimeout = ref(null)
   const isTimerActive = ref(false)
@@ -65,7 +65,7 @@ export const useTimerStore = defineStore('timerStore', () => {
 
   const resetTimer = () => {
     stopTimer()
-    timeRemaining.value = 0.1 * 60
+    timeRemaining.value = 20 * 60
     fiveMinuteWarningShown.value = false
   }
 
