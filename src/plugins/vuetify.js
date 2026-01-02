@@ -7,7 +7,7 @@
 import DateFnsAdapter from '@date-io/date-fns'
 import { enGB, pl } from 'date-fns/locale'
 import { useI18n } from 'vue-i18n'
-
+import { VDateInput } from 'vuetify/labs/VDateInput'
 // Composables
 import { createVuetify } from 'vuetify'
 import { createVueI18nAdapter } from 'vuetify/locale/adapters/vue-i18n'

@@ -79,6 +79,7 @@
     // Step 2 (classes data) - proceed to Step 3
     if (viewStore.currentStep.parent === 2) {
       viewStore.currentStep = { parent: 2, child: 1 } // reset child step to 1 to remain flow
+      viewStore.isStepTwoCompleted = true
       parentStepperRef.value.next()
     }
     // Step 3/1 (cart) - no validations -  proceed to Step 3/2
@@ -132,6 +133,7 @@
         <VDivider :style="mobile ? 'max-width: 10px' : ''" />
         <VStepperItem
           class="pa-1"
+          :complete="viewStore.isStepTwoCompleted"
           :title="$t('classes')"
           :value="2"
         />

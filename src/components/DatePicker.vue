@@ -1,102 +1,132 @@
 <script setup>
-  import { VueDatePicker } from '@vuepic/vue-datepicker'
-  import { pl } from 'date-fns/locale'
-  import { computed, ref } from 'vue'
-  import { useDisplay } from 'vuetify'
-  import { formatDateRange } from '@/utils/dates'
-  import '@vuepic/vue-datepicker/dist/main.css'
+import {VueDatePicker} from '@vuepic/vue-datepicker'
+import {pl} from 'date-fns/locale'
+import {computed, ref} from 'vue'
+import {useDisplay} from 'vuetify'
+import {formatDateRange, formatDateRangeSimple} from '@/utils/dates'
+import '@vuepic/vue-datepicker/dist/main.css'
 
-  const props = defineProps({
-    modelValue: { type: [Date, Array], default: null },
-    variant: {
-      type: String,
-      default: 'simple',
-      validator: value => ['simple', 'range', 'multi-calendars', 'month-picker'].includes(value),
-    },
-    inline: {
-      type: Boolean,
-      default: false,
-    },
-    locale: {
-      type: Object,
-      default: () => pl,
-    },
-    showHeader: {
-      type: Boolean,
-      default: true,
-    },
-    enableTimePicker: {
-      type: Boolean,
-      default: false,
-    },
-    isMobile: {
-      type: Boolean,
-      default: false,
-    },
-  })
+const props = defineProps({
+  modelValue: {type: [Date, Array], default: null},
+  variant: {
+    type: String,
+    default: 'simple',
+    validator: value => ['simple', 'range', 'multi-calendars', 'month-picker'].includes(value),
+  },
+  inline: {
+    type: Boolean,
+    default: false,
+  },
+  locale: {
+    type: Object,
+    default: () => pl,
+  },
+  enableTimePicker: {
+    type: Boolean,
+    default: false,
+  },
+  isMobile: {
+    type: Boolean,
+    default: false,
+  },
+  minAge: {type: Number, default: 18},
+})
 
-  const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:modelValue'])
 
-  const { mobile } = useDisplay()
-  const datePickerRef = ref(null)
+const {mobile} = useDisplay()
+const datePickerRef = ref(null)
 
-  const pickerConfig = computed(() => {
-    const baseConfig = {
-      inline: props.inline,
-    }
-
-    switch (props.variant) {
-      case 'range': {
-        return { ...baseConfig, range: true }
-      }
-      case 'multi-calendars': {
-        return { ...baseConfig, range: true, multiCalendars: 2 }
-      }
-      case 'month-picker': {
-        return { ...baseConfig, monthPicker: true }
-      }
-      default: {
-        return baseConfig
-      }
-    }
-  })
-  function handleClose () {
-    datePickerRef.value?.closeMenu()
+const pickerConfig = computed(() => {
+  const baseConfig = {
+    inline: props.inline,
+    format: format
   }
 
-  const currentMonth = ref(new Date().getMonth())
-  const currentYear = ref(new Date().getFullYear())
-
-  const customDayNames = ['Pn', 'Wt', 'Śr', 'Czw', 'Pt', 'Sb', 'Nd']
-  const customDayNamesEN = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-
-  function handlePrevMonth () {
-    if (currentMonth.value === 0) {
-      currentMonth.value = 11
-      currentYear.value--
-    } else {
-      currentMonth.value--
+  switch (props.variant) {
+    case 'range': {
+      return {...baseConfig, range: true}
     }
-    datePickerRef.value?.setMonthYear({ month: currentMonth.value, year: currentYear.value })
+    case 'multi-calendars': {
+      return {...baseConfig, range: true, multiCalendars: 2}
+    }
+    case 'month-picker': {
+      return {...baseConfig, monthPicker: true}
+    }
+    default: {
+      return baseConfig
+    }
+  }
+})
+
+// Format function for DD.MM.YYYY
+const format = (date) => {
+  if (!date) return ''
+
+  if (Array.isArray(date)) {
+    return date
+      .map(d => {
+        const day = String(d.getDate()).padStart(2, '0')
+        const month = String(d.getMonth() + 1).padStart(2, '0')
+        const year = d.getFullYear()
+        return `${day}.${month}.${year}`
+      })
+      .join(' - ')
   }
 
-  function handleNextMonth () {
-    if (currentMonth.value === 11) {
-      currentMonth.value = 0
-      currentYear.value++
-    } else {
-      currentMonth.value++
-    }
-    datePickerRef.value?.setMonthYear({ month: currentMonth.value, year: currentYear.value })
+  const day = String(date.getDate()).padStart(2, '0')
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const year = date.getFullYear()
+  return `${day}.${month}.${year}`
+}
+
+// Calculate max date based on minimum age requirement (at least 18 years old)
+const maxDate = computed(() => {
+  if (!props.minAge) return null
+
+  const today = new Date()
+  const maxYear = today.getFullYear() - props.minAge
+  return new Date(maxYear, today.getMonth(), today.getDate())
+})
+function handleClose() {
+  datePickerRef.value?.closeMenu()
+}
+
+const currentMonth = ref(new Date().getMonth())
+const currentYear = ref(new Date().getFullYear())
+
+const customDayNames = ['Pn', 'Wt', 'Śr', 'Czw', 'Pt', 'Sb', 'Nd']
+const customDayNamesEN = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+
+function handlePrevMonth() {
+  if (currentMonth.value === 0) {
+    currentMonth.value = 11
+    currentYear.value--
+  } else {
+    currentMonth.value--
   }
-  function onChange (newValue) {
-    emit('update:modelValue', newValue)
+  datePickerRef.value?.setMonthYear({month: currentMonth.value, year: currentYear.value})
+}
+
+function handleNextMonth() {
+  if (currentMonth.value === 11) {
+    currentMonth.value = 0
+    currentYear.value++
+  } else {
+    currentMonth.value++
   }
+  datePickerRef.value?.setMonthYear({month: currentMonth.value, year: currentYear.value})
+}
+
+function onChange(newValue) {
+  emit('update:modelValue', newValue)
+}
 </script>
 
 <template>
   <VueDatePicker
     ref="datePickerRef"
+    class="simple-date-picker"
     v-bind="pickerConfig"
     :action-row="{
       selectBtnLabel: $t('save'),
@@ -104,134 +134,32 @@
       nowBtnLabel: $t('current')
     }"
     clearable
+    :max-date="maxDate"
     :day-names="customDayNames"
-    :format="formatDateRange"
-    :formats="{
-      month: 'LLLL',
-    }"
     :locale="props.locale"
     :model-value="modelValue"
     :time-config="{ enableTimePicker: props.enableTimePicker }"
     @update:model-value="onChange"
   >
-    <template #menu-header>
-      <div v-if="showHeader" class="fs-16 mb-3 d-flex justify-space-between">
-        {{ $t('select_your_stay_dates') }}
-        <button aria-label="Close" class="close-btn" @click="handleClose">
-          <VIcon icon="mdi-close" size="18" />
-        </button>
-      </div>
-      <div class="mb-3">
-        <VAlert
-          class="mb-2 fs-13 border alert-info"
-          density="compact"
-        >
-          <span class="fc-blue">
-            {{ $t('maximum_length_of_stay') }}
-          </span>
-        </VAlert>
-      </div>
-      <div class="d-flex justify-space-between px-4">
-        <VIcon icon="mdi-chevron-left" @click="handlePrevMonth" />
-        {{ $t('select_month') }}
-        <VIcon icon="mdi-chevron-right" @click="handleNextMonth" />
-      </div>
-    </template>
+
     <template #trigger>
       <VTextField
         clear-icon="mdi-close"
         clearable
         control-variant="hidden"
         hide-details
-        :model-value="formatDateRange(modelValue)"
+        :model-value="format(modelValue)"
         :placeholder="$t('select')"
         readonly
         variant="outlined"
       >
         <template #prepend-inner>
-          <VIcon icon="mdi-calendar-blank-outline" size="16" />
+          <VIcon icon="mdi-calendar-blank-outline" size="16"/>
         </template>
 
       </VTextField>
     </template>
-    <template #action-preview="{ value }">
-      <div v-if="modelValue" class="custom-preview mr-auto">
-        {{ $t('selected') }}:
-        <span class="fw-600">
-          {{ formatDateRange(value) }}
-        </span>
-      </div>
-    </template>
+
   </VueDatePicker>
 </template>
 
-<style lang="scss">
-.dp__menu {
-  font-family: 'Inter', sans-serif;
-  border: none;
-  margin-top: 1rem;
-  @media (min-width: 960px) {
-    margin-top: unset;
-    border-radius: 16px;
-   padding: 16px;
-    -webkit-box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, 0.2);
-    -moz-box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, 0.2);
-    box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, 0.2);
-  }
-  .dp__arrow_top {
-    display: none;
-  }
-}
-.dp__month_year_wrap {
-  font-size: 13px;
-
-  .dp--arrow-btn-nav {
-    display: none !important;
-  }
-  .dp__month_year_select {
-    width: unset !important;
-    margin-right: 5px;
-    text-transform: capitalize;
-    font-weight: 700;
-  }
-}
-.dp__menu_inner  {
-  padding-bottom: 0;
-  column-gap: 10px;
-
-  @media (min-width: 960px) {
-    padding: 16px 16px 0 16px !important;
-
-  }
-}
-.dp__calendar_header {
-  font-size: 13px;
-  font-weight: 200;
-}
-
-.dp__action_button {
-  padding-block: 8px !important;
-  padding-inline: 16px !important;
-  min-height: 35px;
-  border-radius: 8px;
-  font-size: 16px;
-  margin-left: 8px;
-}
-.dp__action_cancel {
-  background-color: $gray-light  !important;
-  color: #000;
-}
-.dp__action_select {
-  background-color: $gray !important;
-  color: #fff;
-}
-.dp__cell_inner {
-  font-size: 13px;
-}
-.dp__action_row {
-  flex-direction: column;
-  align-items: flex-start;
-  border-top: 1px solid;
-  padding-top: 12px;
-}
-</style>

@@ -16,99 +16,6 @@ import { usePickedClassesStore } from '@/stores/PickedClassesStore.js'
 import { generateUniqueId } from '@/utils/numbers.js'
 import { useStayConfigStore } from './StayConfigStore.js'
 
-// ============================================================================
-// DUMMY DATA (TO BE REMOVED IN PRODUCTION)
-// ============================================================================
-
-/**
- * Temporary dummy data for selected classes during development
- * @deprecated Will be removed and replaced with actual API data
- */
-const DUMMY_SELECTED_CLASSES = [
-  {
-    dynamicId: 'mjsjg7s6',
-    type: 'group',
-    title: 'Zajęcia grupowe - narciarstwo',
-    classType: 'ski',
-    groupName: 'Grupa poranna',
-    instructor: 'Kaczyński Jan',
-    skillLevel: 'Średni',
-    dates: [
-      { date: '01.01.2025', time: '9:00 - 9:55' },
-    ],
-    price: 1000, // is calculated per date
-    insurance: {
-      title: 'NNW Turystyczno-Sportowe lorem ipsum amet dolor blabla tututut',
-      enabled: false,
-      price: 10,
-      perDay: true,
-      description: 'PAKIET NNW TURYSTYCZNO-SPORTOWY - Wariant 111 SWIJ indywidualnych\n',
-    },
-  },
-  {
-    dynamicId: 'asdh7126xs',
-    type: 'individual',
-    title: 'Zajęcia indywidualne',
-    classType: 'snowboard',
-    groupName: 'Grupa wieczorna',
-    skillLevel: 'Nowicjusz',
-    instructor: 'Marcin Kowalik',
-    dates: [
-      { date: '01.01.2025', time: '9:00 - 9:55' },
-      { date: '01.01.2025', time: '9:00 - 10:00' },
-    ],
-    price: 100, // is calculated per date
-    insurance: {
-      title: 'NNW Turystyczno-Sportowe lorem ipsum amet dolor blabla tututut',
-      enabled: false,
-      price: 10,
-      perDay: true,
-      description: 'PAKIET NNW TURYSTYCZNO-SPORTOWY - Wariant 111 SWIJ indywidualnych podróży Kontynenty na terenie RP.',
-      imgSource: '',
-    },
-  },
-  {
-    dynamicId: 'ff12126xs',
-    type: 'individual',
-    title: 'Zajęcia Specjalne - Mateusz',
-    classType: 'snowboard',
-    groupName: 'Grupa wieczorna - specjalna',
-    skillLevel: 'Nowicjusz',
-    instructor: 'Mateusz Zzaskakującymnazwiskiem',
-    dates: [
-      { date: '01.01.2025', time: '9:00 - 9:55' },
-      { date: '02.01.2025', time: '9:00 - 9:55' },
-      { date: '03.01.2025', time: '9:00 - 9:55' },
-      { date: '03.01.2025', time: '9:00 - 9:55' },
-      { date: '03.01.2025', time: '9:00 - 9:55' },
-      { date: '03.01.2025', time: '9:00 - 9:55' },
-      { date: '03.01.2025', time: '9:00 - 9:55' },
-      { date: '03.01.2025', time: '9:00 - 9:55' },
-      { date: '03.01.2025', time: '9:00 - 9:55' },
-      { date: '03.01.2025', time: '9:00 - 9:55' },
-      { date: '03.01.2025', time: '9:00 - 9:55' },
-      { date: '03.01.2025', time: '9:00 - 9:55' },
-      { date: '03.01.2025', time: '9:00 - 9:55' },
-      { date: '03.01.2025', time: '9:00 - 9:55' },
-      { date: '03.01.2025', time: '9:00 - 9:55' },
-      { date: '03.01.2025', time: '9:00 - 9:55' },
-      { date: '03.01.2025', time: '9:00 - 9:55' },
-      { date: '03.01.2025', time: '9:00 - 9:55' },
-      { date: '03.01.2025', time: '9:00 - 9:55' },
-      { date: '03.01.2025', time: '9:00 - 9:55' },
-      { date: '03.01.2025', time: '9:00 - 9:55' },
-    ],
-    price: 350, // is calculated per date
-    insurance: {
-      title: 'NNW Turystyczno-Sportowe lorem ipsum amet dolor blabla tututut',
-      enabled: false,
-      price: 10,
-      perDay: true,
-      description: 'PAKIET NNW TURYSTYCZNO-SPORTOWY - Wariant Mateusz na terenie RP.',
-      imgSource: '',
-    },
-  },
-]
 
 // ============================================================================
 // PARTICIPANT TEMPLATE
@@ -252,6 +159,8 @@ export const useStayStore = defineStore('stayStore', () => {
 
   /** Acceptance of payment regulations checkbox */
   const stokSchoolPaymentRegulationsAccepted = ref(false)
+
+  const stokSchoolPrivacyPolicyAccepted = ref(false)
 
   /**
    * Combined check - all three agreements must be accepted to proceed
@@ -664,6 +573,7 @@ export const useStayStore = defineStore('stayStore', () => {
           dynamicId: generateUniqueId(),
           participantType: isAdult ? 'adult' : 'child',
           age: isAdult ? null : null, // Age will be set by user input
+          birthDate: null,
           // selectedClasses: structuredClone(blankParticipant.selectedClasses), // Deep clone to avoid shared reference
         })
       })
@@ -728,6 +638,7 @@ export const useStayStore = defineStore('stayStore', () => {
   const isPaymentCompleted = ref(true)
   const isPaymentInProgress = ref(true)
   const isPaymentFailed = ref(true)
+  const isRedirecting = ref(true)
 
   // ==========================================================================
   // STORE EXPORTS
@@ -756,11 +667,13 @@ export const useStayStore = defineStore('stayStore', () => {
     invoiceData, // Invoice/company details
     stokSchoolRegulationsAccepted, // School regulations acceptance
     stokSchoolRodoAccepted, // RODO/GDPR acceptance
+    stokSchoolPrivacyPolicyAccepted, // Privacy policy acceptance
     stokSchoolPaymentRegulationsAccepted, // Payment regulations acceptance
     agreementsAcceptedCombined, // All agreements check (computed)
     isPaymentCompleted, // Payment completed state
     isPaymentInProgress, // Payment in progress state
     isPaymentFailed, // Payment failed state
+    isRedirecting,
     firstPackageEligible,
     secondPackageEligible,
     missingHoursToFirstThreshold,
@@ -803,10 +716,6 @@ export const useStayStore = defineStore('stayStore', () => {
     availableLanguages: configStore.availableLanguages, // Available class languages
     currency: configStore.currency, // Currency settings
 
-    // ==========================================================================
-    // TEMPORARY/DEVELOPMENT
-    // ==========================================================================
 
-    DUMMY_SELECTED_CLASSES, // Temporary dummy data (to be removed)
   }
 })

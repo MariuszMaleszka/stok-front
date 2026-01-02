@@ -2,9 +2,10 @@
   import { ref } from 'vue'
   import { useI18n } from 'vue-i18n'
   import { useDisplay } from 'vuetify'
-  import { VDateInput } from 'vuetify/labs/VDateInput'
   import UserIcon from '@/assets/user-circle-blue.svg'
   import { useStayStore } from '@/stores/StayStore.js'
+import DatePicker from "@/components/DatePicker.vue";
+
   const props = defineProps({
     participant: {
       type: Object,
@@ -45,6 +46,30 @@
       ...adultParticipants.value,
       { name: t('another_childminder'), dynamicId: 'another' },
     ]
+  })
+
+  // Computed property to handle birthDate null/undefined conversion
+  const birthDate = computed({
+    get: () => {
+      const value = props.participant.birthDate
+
+      // Return null for any invalid values
+      if (value === null || value === undefined || value === '') {
+        return null
+      }
+
+      // If it's already a Date object, validate it
+      if (value instanceof Date) {
+        return isNaN(value.getTime()) ? null : value
+      }
+
+      // If it's a string, try to parse it
+      const parsed = new Date(value)
+      return isNaN(parsed.getTime()) ? null : parsed
+    },
+    set: (val) => {
+      props.participant.birthDate = val ?? null
+    }
   })
 
   defineExpose({
@@ -120,7 +145,8 @@
           clearable
           density="default"
           hide-details="auto"
-          max-length="11"
+          minLength="9"
+          maxLength="11"
           :rules="[rules.required, rules.phone]"
           variant="outlined"
           @keydown="(e) => !/[\d+]/.test(e.key) && e.key !== 'Backspace' && e.preventDefault()"
@@ -129,19 +155,23 @@
 
       <VCol :cols="mobile ? 12 : 6">
         <p class="custom-input-label mb-2">{{ $t('birth_date') }}</p>
-        <!--      <input v-model="participant.birthDate" type="date"/>-->
-        <VDateInput
+        <DatePicker
           v-model="participant.birthDate"
-          density="default"
-          hide-details="auto"
-          prepend-icon=""
-          :rules="[rules.required]"
-          variant="outlined"
+          :enable-time-picker="false"
+          auto-apply
+          :placeholder="$t('select_date')"
+          :dark="false"
         >
-          <template #prepend-inner>
+          <template #input-icon>
             <VIcon icon="mdi-calendar" size="18" />
           </template>
-        </VDateInput>
+        </DatePicker>
+        <small v-if="showErrors && !participant.birthDate" class="fs-12 fc-error pl-4 pt-2">
+          {{ $t('fill_the_field_properly') }}
+        </small>
+        <p class="fs-12 px-4 fc-gray mt-1">
+          {{ $t('why_birthdate') }}
+        </p>
       </VCol>
 
       <VCol
@@ -165,6 +195,9 @@
         <small v-if="showErrors && !participant.childminder" class="fs-12 fc-error pl-4 pt-2">
           {{ $t('select_childminder') }}
         </small>
+        <p class="fs-12 px-4 fc-gray mt-1">
+          {{ $t('person_reponsible_for_child') }}
+        </p>
       </VCol>
       <!-- Additional fields for "Another childminder" -->
       <template v-if="isAnotherChildminder">

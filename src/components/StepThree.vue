@@ -957,14 +957,14 @@
                     clearable
                     density="default"
                     hide-details="auto"
-                    max-length="11"
-                    min-length="9"
+                    maxLength="11"
+                    minLength="9"
                     :rules="[rules.required, rules.phone]"
                     variant="outlined"
                     @keydown="(e) => !/[\d+]/.test(e.key) && e.key !== 'Backspace' && e.preventDefault()"
                   />
-                  <p class="fs-12 px-4 fc-gray">
-                    {{ $t('enter_only_numbers') }}
+                  <p class="fs-12 px-4 fc-gray mt-1">
+                    {{ $t('enter_only_digits_min_9') }}
                   </p>
                 </VCol>
 
@@ -1136,7 +1136,7 @@
             >
               <template #label>
                 <span :class="mobile? 'fs-12':'fs-14'">
-                  {{ $t('i_declare_that_i_have_read_and_accept_the_regulations') }}
+                  {{ $t('i_accept') }}
                   <a :class="mobile? 'fs-12':'fs-14'" :href="configStore.REGULATIONS_LINK" target="_blank">
                     {{ $t('stok_rules') }}
                   </a>
@@ -1145,7 +1145,7 @@
             </VCheckbox>
 
             <VCheckbox
-              v-model="stayStore.stokSchoolRodoAccepted"
+              v-model="stayStore.stokSchoolPrivacyPolicyAccepted"
               class="mb-2"
               color="info"
               density="compact"
@@ -1153,7 +1153,10 @@
             >
               <template #label>
                 <span :class="mobile? 'fs-12':'fs-14'">
-                  {{ $t('rodo_declaration') }}
+                  {{ $t('i_have_read_terms_and_conditions') }}
+                     <a :class="mobile? 'fs-12':'fs-14'" :href="configStore.PRIVACY_LINK" target="_blank">
+                    {{ $t('with_privacy_policy') }}
+                  </a>
                 </span>
               </template>
             </VCheckbox>
@@ -1168,7 +1171,7 @@
             >
               <template #label>
                 <span :class="mobile? 'fs-12':'fs-14'">
-                  {{ $t('i_declare_that_i_accept') }}&nbsp;
+                  {{ $t('i_accept') }}&nbsp;
                 </span>
                 <a :class="mobile? 'fs-12':'fs-14'" :href="configStore.PAYMENT_REGULATIONS_LINK" target="_blank">
                   {{ $t('payment_regulations') }}

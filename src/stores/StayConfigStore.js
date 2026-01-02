@@ -46,6 +46,7 @@ export const useStayConfigStore = defineStore('stayConfig', () => {
 
   const CUSTOMER_SERVICE_LINK = 'https://szkolastok.pl/kontakt'
   const REGULATIONS_LINK = 'https://szkolastok.pl/kontakt'
+  const PRIVACY_LINK = 'https://szkolastok.pl/kontakt'
   const PAYMENT_REGULATIONS_LINK = 'https://szkolastok.pl/kontakt'
 
   const activityTypes = reactive([
@@ -157,6 +158,7 @@ export const useStayConfigStore = defineStore('stayConfig', () => {
     CUSTOMER_SERVICE_LINK,
     REGULATIONS_LINK,
     PAYMENT_REGULATIONS_LINK,
+    PRIVACY_LINK,
     combinedClassesPrices,
     combinedClassesPrices_10h,
     combinedClassesPrices_20h,
