@@ -25,6 +25,10 @@ export const useViewControlStore = defineStore('viewStore', () => {
 
   const isStepThreeCompleted = ref(false)
 
+  const isAddClassesStepOneCompleted = ref(false)
+  const isAddClassesStepTwoCompleted = ref(false)
+  const isAddClassesStepThreeCompleted = ref(false)
+
   const isStepThreeCartCompleted = ref(false) // step three - cart
   const isStepThreeParticipantsCompleted = ref(false) // step three - participants
   const isStepThreePaymentCompleted = ref(false) // step three - payment
@@ -42,6 +46,9 @@ export const useViewControlStore = defineStore('viewStore', () => {
     isStepThreeParticipantsCompleted, // step three - participants
     isStepThreePaymentCompleted, // step three - payment
     isStepThreeCompleted, // step three - overall
+    isAddClassesStepOneCompleted,
+    isAddClassesStepTwoCompleted,
+    isAddClassesStepThreeCompleted,
     parentStepperRef,
     setParentStepper,
 

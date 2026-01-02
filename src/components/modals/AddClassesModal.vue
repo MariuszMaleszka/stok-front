@@ -12,6 +12,7 @@
   import GroupDetailsModal from '@/components/modals/GroupDetailsModal.vue'
   import { usePickedClassesStore } from '@/stores/PickedClassesStore'
   import { useStayStore } from '@/stores/StayStore'
+  import { useViewControlStore } from '@/stores/ViewControlStore'
 
   const props = defineProps({
     modelValue: { type: Boolean, default: false },
@@ -25,6 +26,7 @@
   const { t } = useI18n()
   const stayStore = useStayStore()
   const pickedClassesStore = usePickedClassesStore()
+  const viewStore = useViewControlStore()
 
   const currentStep = ref(1)
   const selectedType = ref(null)
@@ -125,6 +127,9 @@
     currentStep.value = 1
     selectedType.value = null
     showStepper.value = false
+    viewStore.isAddClassesStepOneCompleted = false
+    viewStore.isAddClassesStepTwoCompleted = false
+    viewStore.isAddClassesStepThreeCompleted = false
     pickedClassesStore.resetState()
 
     const saved = pickedClassesStore.loadFilterPreferences()
@@ -172,13 +177,24 @@
 
     switch (selectedType.value) {
       case 'individual': {
-        if (currentStep.value < 2) currentStep.value++
-        else handleFinish()
+        if (currentStep.value < 2) {
+          if (currentStep.value === 1) viewStore.isAddClassesStepOneCompleted = true
+          currentStep.value++
+        } else {
+          viewStore.isAddClassesStepTwoCompleted = true
+          handleFinish()
+        }
         break
       }
       case 'shared': {
-        if (currentStep.value < 3) currentStep.value++
-        else handleFinish()
+        if (currentStep.value < 3) {
+          if (currentStep.value === 1) viewStore.isAddClassesStepOneCompleted = true
+          if (currentStep.value === 2) viewStore.isAddClassesStepTwoCompleted = true
+          currentStep.value++
+        } else {
+          viewStore.isAddClassesStepThreeCompleted = true
+          handleFinish()
+        }
         break
       }
       case 'group': {
@@ -431,23 +447,6 @@
       return 'Uczestnik'
     })
   })
-
-  const stepperItems = computed(() => {
-    if (selectedType.value === 'individual') {
-      return [
-        { title: t('preferences'), value: 1, complete: currentStep.value > 1 },
-        { title: t('term'), value: 2, complete: currentStep.value > 2 },
-      ]
-    }
-    if (selectedType.value === 'shared') {
-      return [
-        { title: t('participants'), value: 1, complete: currentStep.value > 1 },
-        { title: t('preferences'), value: 2, complete: currentStep.value > 2 },
-        { title: t('term'), value: 3, complete: currentStep.value > 3 },
-      ]
-    }
-    return [t('group')]
-  })
 </script>
 
 <template>
@@ -461,7 +460,7 @@
       <!-- Header Area (Fixed) -->
       <div class="modal-header pa-4">
         <div class="d-flex justify-space-between align-center">
-          <span class="text-h6 font-weight-bold text-primary-900 mb-1">{{ modalTitle }}</span>
+          <span class="text-h6 font-weight-bold text-primary-900 mb-1 pr-6">{{ modalTitle }}</span>
           <VBtn class="special-close-btn" variant="text" @click="close" />
         </div>
 
@@ -525,8 +524,54 @@
           v-model="currentStep"
           class="elevation-0"
           hide-actions
-          :items="stepperItems"
         >
+          <VStepperHeader class="box-shadow-none">
+            <template v-if="selectedType === 'individual'">
+              <VStepperItem
+                class="pa-2"
+                :complete="viewStore.isAddClassesStepOneCompleted"
+                :title="t('preferences')"
+                :value="1"
+              />
+              <VDivider />
+              <VStepperItem
+                class="pa-2"
+                :complete="viewStore.isAddClassesStepTwoCompleted"
+                :title="t('term')"
+                :value="2"
+              />
+            </template>
+            <template v-if="selectedType === 'shared'">
+              <VStepperItem
+                class="pa-2"
+                :complete="viewStore.isAddClassesStepOneCompleted"
+                :title="t('participants')"
+                :value="1"
+              />
+              <VDivider />
+              <VStepperItem
+                class="pa-2"
+                :complete="viewStore.isAddClassesStepTwoCompleted"
+                :title="t('preferences')"
+                :value="2"
+              />
+              <VDivider />
+              <VStepperItem
+                class="pa-2"
+                :complete="viewStore.isAddClassesStepThreeCompleted"
+                :title="t('term')"
+                :value="3"
+              />
+            </template>
+            <template v-if="selectedType === 'group'">
+              <VStepperItem
+                class="pa-2"
+                :title="t('group')"
+                :value="1"
+              />
+            </template>
+          </VStepperHeader>
+
           <VStepperWindow v-model="currentStep">
             <!-- INDIVIDUAL FLOW -->
             <template v-if="selectedType === 'individual'">
@@ -681,7 +726,7 @@
                         <div v-if="slot.isHappyHours" class="happy-hours-badge">
                           Happy hours
                         </div>
-                        <span v-if="slot.price" class="font-weight-semibold blue-text fs-14 max-content-width">- {{ slot.price }},00zł</span>
+                        <span v-if="slot.price" class="font-weight-semibold blue-text fs-14 max-content-width pl-1">{{ slot.price }},00zł</span>
                       </div>
                     </div>
                   </div>
@@ -878,7 +923,7 @@
                         <div v-if="slot.isHappyHours" class="happy-hours-badge">
                           Happy hours
                         </div>
-                        <span v-if="slot.price" class="font-weight-semibold blue-text fs-14 max-content-width">- {{ slot.price }},00zł</span>
+                        <span v-if="slot.price" class="font-weight-semibold blue-text fs-14 max-content-width">{{ slot.price }},00zł</span>
                       </div>
                     </div>
                   </div>
@@ -987,7 +1032,7 @@
 
                       <!-- Price (Absolute Bottom Right) -->
                       <div v-if="group.price" class="d-flex justify-end w-100 mt-1">
-                        <span class="font-weight-bold text-primary-900 fs-14">-{{ calculateGroupPrice(group) }},00zł</span>
+                        <span class="font-weight-bold text-primary-900 fs-14 pl-1">{{ calculateGroupPrice(group) }},00zł</span>
                       </div>
                     </div>
 
