@@ -56,10 +56,14 @@
       <div class="pa-5">
         <div class="mb-6">
           <div class="font-weight-bold text-primary-900 mb-2 fs-14">
+            <p class="font-bold fc-gray mb-1">
+              Dopłata +30,00 zł / godz. szkoleniową - Liczba miejsc ograniczona
+            </p>
             Dlaczego warto?
           </div>
           <p class="text-caption text-gray-600 mb-0" style="line-height: 1.5;">
-            instruktorzy z odznaką “specjalista dla dzieci” posiadają specjalny certyfikat potwierdzający zakończenie specjalnego kursu dot. pracy z dziećmi. Charakteryzuje ich dobre i profesjonalne podejście do dzieci, oraz szczególna dbałość o bezpieczeństwo.
+            instruktorzy z odznaką “specjalista dla dzieci” posiadają specjalny certyfikat potwierdzający zakończenie specjalnego kursu dot. pracy z dziećmi.
+            Charakteryzuje ich dobre i profesjonalne podejście do dzieci, oraz szczególna dbałość o bezpieczeństwo.
           </p>
         </div>
 

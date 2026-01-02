@@ -182,7 +182,7 @@
           </p>
           <div class="my-4">
             <p class="fs-18 fc-blue font-weight-medium">
-              {{ $t('participants_preferences') }}:
+              {{ $t('specify_participants_preferences') }}:
             </p>
             <small class="fs-11">
               {{ $t('enter_preferences_details') }}

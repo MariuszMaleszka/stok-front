@@ -4,7 +4,7 @@
   defineProps({
     message: {
       type: String,
-      default: 'Nie dodano jeszcze zajęć we wszystkie dni.',
+      default: 'Nie masz jeszcze zaplanowanych zajęć w każdym dniu pobytu.',
     },
     closeToast: {
       type: Function,
@@ -21,17 +21,23 @@
       <div class="icon-wrapper mr-3">
         <img class="clock-icon" :src="ClockIcon">
       </div>
-      <div class="text-content fs-16 text-gray-900 font-weight-medium pt-1">
+      <div class="text-content fs-14 text-gray-900 font-weight-medium pt-1">
+        <p>
         {{ message }}
+        </p>
+        <p class="fs-11 fc-gray">Możesz zostawić część dni bez zajęć, lub wrócić do nich później.
+
+        </p>
       </div>
     </div>
+
 
     <div class="d-flex ga-3">
       <button class="action-btn btn-outline" @click="$emit('add')">
         Dodaj zajęcia
       </button>
       <button class="action-btn btn-primary" @click="$emit('proceed')">
-        Mimo to przejdź dalej
+        Przejdź dalej
       </button>
     </div>
   </div>

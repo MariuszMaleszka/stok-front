@@ -565,7 +565,7 @@
             variant="flat"
             @click="handleSave"
           >
-            {{ t('save_and_next') || 'Zapisz i przejdź dalej' }}
+            {{ t('save_and_back') || 'Zapisz i przejdź dalej' }}
             <VIcon class="ml-1" icon="mdi-arrow-right" />
           </VBtn>
         </div>

@@ -55,17 +55,17 @@
   const classTypes = computed(() => [
     {
       id: 'individual',
-      label: t('individual_classes'),
+      label: t('private_lesson_1p'),
       icon: UserIcon,
     },
     {
       id: 'shared',
-      label: t('shared_classes'),
+      label: t('private_lesson_2_3p'),
       icon: UsersIcon,
     },
     {
       id: 'group',
-      label: t('group_classes'),
+      label: t('group_course_few_days'),
       icon: UsersGroupIcon,
     },
   ])
@@ -243,9 +243,9 @@
   // Titles
   const modalTitle = computed(() => {
     if (!showStepper.value) return t('adding_classes')
-    if (selectedType.value === 'individual') return t('adding_individual_classes')
-    if (selectedType.value === 'shared') return t('adding_shared_classes')
-    if (selectedType.value === 'group') return t('adding_group_classes')
+    if (selectedType.value === 'individual') return t('adding_private_lesson')
+    if (selectedType.value === 'shared') return t('adding_private_lesson_2_3')
+    if (selectedType.value === 'group') return t('adding_group_course')
     return t('adding_classes')
   })
 

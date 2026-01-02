@@ -126,7 +126,7 @@
               hide-details="auto"
               :max="16"
               max-width="165px"
-              :min="4"
+              :min="3"
               :rules="[rules.required]"
               :step="1"
               variant="outlined"
@@ -165,7 +165,7 @@
             </VTextField>
           </div>
           <div class="mb-4">
-            <p class="custom-input-label mb-2">{{ $t('classes_lang') }}</p>
+            <p class="custom-input-label mb-2">{{ $t('select_classes_lang') }}</p>
 
             <VSelect
               v-model="participant.classLang"
@@ -182,7 +182,7 @@
           </div>
 
           <div class="mb-4">
-            <p class="custom-input-label mb-2">{{ $t('classes_type') }}</p>
+            <p class="custom-input-label mb-2">{{ $t('select_discipline') }}</p>
             <VBtnToggle
               v-model="selectedClassType"
               class="ga-2 w-100"
@@ -215,13 +215,16 @@
                 {{ $t('snowboard') }}
               </VBtn>
             </VBtnToggle>
+              <p class="fs-12 mt-2 fc-gray">
+                {{ $t('snowboard_available_ages') }}
+              </p>
             <small v-if="showErrors && selectedClassType === null" class="fs-12 fc-error pl-4 pt-2">
               {{ $t('select_class_type') }}
             </small>
           </div>
 
           <div v-if="selectedClassType === 0 || selectedClassType === 1" class="mb-4">
-            <p class="custom-input-label mb-2">{{ $t('difficulty_level') }}</p>
+            <p class="custom-input-label mb-2">{{ $t('select_difficulty_level') }}</p>
             <VList
               v-model:selected="selectedSkillLevel"
               select-strategy="single-leaf"
@@ -291,8 +294,8 @@
           </p>
         </VCardText>
         <VCardActions class="border-t d-flex justify-between text-capitalize">
-          <VBtn class="px-4 text-capitalize" variant="flat" @click="infoDialog = false">
-            Ok
+          <VBtn class="px-4 text-capitalize" variant="outlined" @click="infoDialog = false">
+            {{ $t('close') }}
           </VBtn>
         </VCardActions>
       </VCard>
