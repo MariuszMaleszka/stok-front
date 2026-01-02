@@ -129,7 +129,7 @@
 </script>
 
 <template>
-  <div>
+  <div class="range-date-picker">
 
     <!-- Desktop Picker -->
     <VueDatePicker
@@ -333,116 +333,124 @@
 </template>
 
 <style lang="scss">
-.dp__outer_menu_wrap {
-  @media (max-width: 600px) {
-  width: 100%;
-  }
+.range-date-picker {
 
-}
-.dp__menu {
-  font-family: 'Inter', sans-serif;
-  border: none;
-  @media (min-width: 600px) {
-    margin-top: unset;
-    border-radius: 16px;
-    padding: 16px;
-    -webkit-box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, 0.2);
-    -moz-box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, 0.2);
-    box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, 0.2);
-  }
-
-  .dp__arrow_top {
-    display: none;
-  }
-  //#save-dates-btn {
-  //  background-color: #ebe6e7;
-  //}
-}
-
-.dp__month_year_wrap {
-  font-size: 13px;
-
-  .dp--arrow-btn-nav {
-    display: none !important;
-  }
-
-  .dp__month_year_select {
-    width: unset !important;
-    margin-right: 5px;
-    text-transform: capitalize;
-    font-weight: 700;
-  }
-}
-
-.dp__menu_inner {
-  padding-bottom: 0;
-  column-gap: 10px;
-
-  @media (min-width: 600px) {
-    padding: 16px 16px 0 16px !important;
+  .dp__outer_menu_wrap {
+    @media (max-width: 600px) {
+      width: 100%;
+    }
 
   }
-}
 
-.dp__calendar_header {
-  font-size: 11px;
-  font-weight: 200;
-  @media (min-width: 600px) {
+  .dp__menu {
+    font-family: 'Inter', sans-serif;
+    border: none;
+    @media (min-width: 600px) {
+      margin-top: unset;
+      border-radius: 16px;
+      padding: 16px;
+      -webkit-box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, 0.2);
+      -moz-box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, 0.2);
+      box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, 0.2);
+    }
+
+    .dp__arrow_top {
+      display: none;
+    }
+
+    //#save-dates-btn {
+    //  background-color: #ebe6e7;
+    //}
+  }
+
+  .dp__month_year_wrap {
     font-size: 13px;
+
+    .dp--arrow-btn-nav {
+      display: none !important;
+    }
+
+    .dp__month_year_select {
+      width: unset !important;
+      margin-right: 5px;
+      text-transform: capitalize;
+      font-weight: 700;
+    }
   }
-}
 
-.dp__action_button {
-  padding-block: 8px !important;
-  padding-inline: 16px !important;
-  min-height: 35px;
-  border-radius: 8px;
-  font-size: 16px;
-  margin-left: 8px;
-}
+  .dp__menu_inner {
+    padding-bottom: 0;
+    column-gap: 10px;
 
-.dp__action_cancel {
-  background-color: $gray-light !important;
-  color: #000;
-}
+    @media (min-width: 600px) {
+      padding: 16px 16px 0 16px !important;
 
-.dp__action_select {
-  background-color: $gray !important;
-  color: #fff;
-}
-
-.dp__action_row {
-  flex-direction: column;
-  align-items: flex-start;
-  border-top: 1px solid $gray-border;
-  padding-top: 12px;
-  margin-top: 12px;
-}
-.dp__cell_inner {
-  padding: 0 6px !important;
-  margin: 0 !important;
-  border-radius: $border-radius;
-  height: 24px !important;
-  font-size: 11px;
-  @media (min-width: 600px) {
-    font-size: 13px;
-    height: 28px !important;
-    padding: 1px 8px !important;
-    margin: 1px !important;
+    }
   }
-}
 
-.dp--future.dp__range_start,
-.dp--future.dp__range_end{
-  background: #1a56db;
+  .dp__calendar_header {
+    font-size: 11px;
+    font-weight: 200;
+    @media (min-width: 600px) {
+      font-size: 13px;
+    }
+  }
 
-}
-.dp__range_between{
-  background: #dbeafe;
-  color: $blue;
-}
-.dp__menu:has(.dp__range_start) .dp__action_select,
-.dp__menu:has(.dp__range_end) .dp__action_select {
-  background-color: $blue !important;
+  .dp__action_button {
+    padding-block: 8px !important;
+    padding-inline: 16px !important;
+    min-height: 35px;
+    border-radius: 8px;
+    font-size: 16px;
+    margin-left: 8px;
+  }
+
+  .dp__action_cancel {
+    background-color: $gray-light !important;
+    color: #000;
+  }
+
+  .dp__action_select {
+    background-color: $gray !important;
+    color: #fff;
+  }
+
+  .dp__action_row {
+    flex-direction: column;
+    align-items: flex-start;
+    border-top: 1px solid $gray-border;
+    padding-top: 12px;
+    margin-top: 12px;
+  }
+
+  .dp__cell_inner {
+    padding: 0 6px !important;
+    margin: 0 !important;
+    border-radius: $border-radius;
+    height: 24px !important;
+    font-size: 11px;
+    @media (min-width: 600px) {
+      font-size: 13px;
+      height: 28px !important;
+      padding: 1px 8px !important;
+      margin: 1px !important;
+    }
+  }
+
+  .dp--future.dp__range_start,
+  .dp--future.dp__range_end {
+    background: #1a56db;
+
+  }
+
+  .dp__range_between {
+    background: #dbeafe;
+    color: $blue;
+  }
+
+  .dp__menu:has(.dp__range_start) .dp__action_select,
+  .dp__menu:has(.dp__range_end) .dp__action_select {
+    background-color: $blue !important;
+  }
 }
 </style>

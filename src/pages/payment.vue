@@ -3,8 +3,10 @@
   import CheckGreenIcon from '@/assets/check-circle.svg'
   import ExclamationIcon from '@/assets/exclamation.svg'
   import { useStayStore } from '@/stores/StayStore.js'
+  import {useStayConfigStore} from "@/stores/StayConfigStore.js";
 
   const stayStore = useStayStore()
+  const configStore = useStayConfigStore()
   const { mobile } = useDisplay()
 </script>
 
@@ -67,7 +69,13 @@
               {{ $t('payment_failed') }}
             </h2>
             <p>
-              {{ $t('booking_confirmed_info') }}
+              {{ $t('payment_failed_info') }}
+            </p>
+            <p>
+                {{ $t('payment_failed_info_2') }}
+              <a :href="configStore.CUSTOMER_SERVICE_LINK">
+                {{ $t('with_our_customer_service') }}
+              </a>
             </p>
           </div>
           <VBtn
@@ -78,7 +86,7 @@
 
             @click="$router.push({ name: '/' })"
           >
-            {{ $t('back_to_homepage') }}
+            {{ $t('back_to_payment') }}
           </VBtn>
         </div>
 
@@ -100,6 +108,7 @@
             <p>
               {{ $t('payment_in_process_info') }}
             </p>
+
           </div>
           <VBtn
             class="mx-auto text-transform-none"
@@ -109,6 +118,36 @@
             @click="$router.push({ name: '/payment' })"
           >
             {{ $t('back_to_payment') }}
+          </VBtn>
+        </div>
+
+      </VCardText>
+    </VCard>
+
+    <VCard
+      v-if="stayStore.isRedirecting"
+      class="my-8 bg-transparent"
+      flat
+    >
+      <VCardText>
+        <div class="d-flex flex-column justify-center items-center ga-4 text-center">
+          <VIcon class="mx-auto" icon="mdi-progress-clock" size="32" />
+          <div>
+            <h2>
+              {{ $t('redirecting_to_payment') }}
+            </h2>
+            <p>
+              {{ $t('redirect_info') }}
+            </p>
+          </div>
+          <VBtn
+            class="mx-auto text-transform-none"
+            color="primary"
+            size="large"
+            variant="flat"
+            @click="$router.push({ name: '/payment' })"
+          >
+            {{ $t('proceed_to_payment') }}
           </VBtn>
         </div>
 

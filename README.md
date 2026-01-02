@@ -615,3 +615,198 @@ watch(() => timerStore.isExpired, (expired) => {
 ### Resources
 - [Pinia Documentation](https://pinia.vuejs.org/)
 - [Vue 3 Composition API](https://vuejs.org/guide/extras/composition-api-faq.html)
+
+## 📄 Pages
+
+### `/payment` - Payment Confirmation & Status Page
+
+The **Payment Page** (`src/pages/payment.vue`) is the final destination page that displays the payment process status and outcome. This page handles multiple payment states and provides appropriate user feedback for each scenario.
+
+#### Purpose
+- Display payment confirmation after successful booking completion
+- Show payment failure messages with recovery options
+- Handle payment processing states
+- Redirect users to payment gateway when needed
+- Provide clear next steps for users in each payment state
+
+#### Payment States
+
+The page responds to four different payment states managed by the **StayStore**:
+
+**1. Payment Completed (`isPaymentCompleted`)**
+- **Visual**: Green check circle icon
+- **Message**: Booking confirmation
+- **Action**: Return to homepage button
+- **Use Case**: After successful payment processing, confirms the booking is complete
+- **User Flow**: Users can return to the homepage to start a new booking
+
+**2. Payment Failed (`isPaymentFailed`)**
+- **Visual**: Orange exclamation icon
+- **Message**: Payment failed notification
+- **Action**: Return to homepage button
+- **Use Case**: When payment processing encounters an error or is rejected
+- **User Flow**: Allows users to restart the booking process
+
+**3. Payment In Process**
+- **Visual**: Clock/progress icon (mdi-progress-clock)
+- **Message**: Payment processing notification
+- **Action**: Return to payment page button
+- **Use Case**: Intermediate state while payment is being verified
+- **User Flow**: Users can check payment status again
+- **Note**: Currently shows when `isPaymentFailed` is true (may need correction)
+
+**4. Redirecting to Payment (`isRedirecting`)**
+- **Visual**: Clock/progress icon (mdi-progress-clock)
+- **Message**: Redirecting to payment gateway
+- **Action**: Proceed to payment button
+- **Use Case**: When user is being directed to external payment processor
+- **User Flow**: Manual redirect option if automatic redirect fails
+
+#### Component Structure
+
+```vue
+<template>
+  <VContainer max-width="990">
+    <!-- Payment Completed State -->
+    <VCard v-if="stayStore.isPaymentCompleted">
+      <CheckGreenIcon />
+      <h2>{{ $t('booking_confirmed') }}</h2>
+      <VBtn @click="$router.push('/')">
+        {{ $t('back_to_homepage') }}
+      </VBtn>
+    </VCard>
+
+    <!-- Payment Failed State -->
+    <VCard v-if="stayStore.isPaymentFailed">
+      <ExclamationIcon />
+      <h2>{{ $t('payment_failed') }}</h2>
+      <VBtn @click="$router.push('/')">
+        {{ $t('back_to_homepage') }}
+      </VBtn>
+    </VCard>
+
+    <!-- Redirecting State -->
+    <VCard v-if="stayStore.isRedirecting">
+      <VIcon icon="mdi-progress-clock" />
+      <h2>{{ $t('redirecting_to_payment') }}</h2>
+      <VBtn @click="$router.push('/payment')">
+        {{ $t('proceed_to_payment') }}
+      </VBtn>
+    </VCard>
+  </VContainer>
+</template>
+```
+
+#### Integration with StayStore
+
+The payment page relies on the following StayStore state properties:
+
+```javascript
+// In StayStore.js
+const isPaymentCompleted = ref(false) // Set to true after successful payment
+const isPaymentFailed = ref(false)    // Set to true if payment fails
+const isRedirecting = ref(false)      // Set to true when redirecting to gateway
+```
+
+#### Usage Example
+
+```vue
+<script setup>
+import { useStayStore } from '@/stores/StayStore'
+import { useRouter } from 'vue-router'
+
+const stayStore = useStayStore()
+const router = useRouter()
+
+// After booking submission
+const submitBooking = async () => {
+  try {
+    // Submit booking data
+    const response = await api.submitBooking(stayStore.event)
+    
+    if (response.requiresPayment) {
+      // Redirect to payment gateway
+      stayStore.isRedirecting = true
+      router.push('/payment')
+      // Actual redirect to external payment
+      window.location.href = response.paymentUrl
+    } else {
+      // Payment completed (e.g., free booking or prepaid)
+      stayStore.isPaymentCompleted = true
+      router.push('/payment')
+    }
+  } catch (error) {
+    // Handle payment failure
+    stayStore.isPaymentFailed = true
+    router.push('/payment')
+  }
+}
+
+// Payment callback from gateway
+const handlePaymentCallback = (status) => {
+  if (status === 'success') {
+    stayStore.isPaymentCompleted = true
+  } else if (status === 'failed') {
+    stayStore.isPaymentFailed = true
+  }
+  router.push('/payment')
+}
+</script>
+```
+
+#### Internationalization
+
+The payment page uses the following translation keys from `src/plugins/i18n/locales/`:
+
+- `booking_confirmed` - Success message title
+- `booking_confirmed_info` - Success message description
+- `payment_failed` - Failure message title
+- `payment_in_process` - Processing message title
+- `payment_in_process_info` - Processing message description
+- `redirecting_to_payment` - Redirect message title
+- `redirect_info` - Redirect message description
+- `back_to_homepage` - Homepage button text
+- `back_to_payment` - Return to payment button text
+- `proceed_to_payment` - Manual redirect button text
+
+#### Responsive Design
+
+- **Desktop**: Max width of 990px, centered container
+- **Mobile**: Reduced padding (px-2) for better mobile experience
+- **Flex Layout**: Vertical centering and spacing for all states
+- **Icons**: Consistent 32px size for visual feedback
+
+#### User Experience Flow
+
+```
+Booking Completion (Step 3)
+         ↓
+[Submit to API]
+         ↓
+    ┌────┴────┐
+    │         │
+Redirect    Success/Fail
+    │         │
+    ▼         ▼
+[/payment page]
+    │
+    ├─→ Payment Completed → Return to homepage
+    ├─→ Payment Failed → Return to homepage (retry booking)
+    ├─→ Payment Processing → Check status again
+    └─→ Redirecting → External payment gateway
+```
+
+#### Best Practices
+
+1. **State Management**: Always set only one payment state at a time in StayStore
+2. **Error Handling**: Provide clear error messages and recovery options
+3. **Navigation**: Always provide a way back to homepage or retry mechanism
+4. **Loading States**: Use redirecting state for seamless gateway transitions
+5. **Cleanup**: Reset payment states when starting a new booking
+
+#### Related Components
+
+- **StayStore** (`src/stores/StayStore.js`) - Manages payment state flags
+- **App Header** (`src/components/AppHeader.vue`) - Navigation context
+- **Step Three** (`src/components/StepThree.vue`) - Initiates payment process
+
