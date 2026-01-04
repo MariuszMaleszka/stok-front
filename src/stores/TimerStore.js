@@ -4,8 +4,12 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import TimerToastContent from '@/components/toasts/TimerToast.vue'
 import { useToast } from '@/composables/useToast'
+import { usePickedClassesStore} from "@/stores/PickedClassesStore.js";
+import { useViewControlStore } from "@/stores/ViewControlStore.js";
 
 export const useTimerStore = defineStore('timerStore', () => {
+  const viewStore = useViewControlStore()
+  const classesStore = usePickedClassesStore()
   const { t } = useI18n()
   const router = useRouter()
   const timeRemaining = ref(20 * 60)
@@ -70,11 +74,26 @@ export const useTimerStore = defineStore('timerStore', () => {
   }
 
   const resetBooking = () => {
-    showSimpleToast(t('booking_time_expired'), 'warning')
+    // viewStore.currentStep = { parent: 2, child: 1 }
 
-    resetTimeout.value = setTimeout(() => {
-      router.push('/')
-    }, 2000)
+    classesStore.bookedClasses = [] // C
+    showActionToast(
+      h(TimerToastContent, {
+        timeExpireWarning: t('booking_time_expired'),
+        showTimerBadge: false,
+        // timeLeftLabel: t('time_left'),
+      }),
+      t('add_new_classes'),
+      () => selectNewClasses(),
+      'margin-left: 40px; width:calc(100% - 40px); background: #1a56db; margin-top: 8px;',
+    )
+
+    // resetTimeout.value = setTimeout(() => {
+    //   router.push('/')
+    // }, 2000)
+  }
+  const selectNewClasses = () => {
+    viewStore.currentStep = { ...viewStore.currentStep, parent: 2, child: 1 }
   }
 
   const addFiveMinutes = () => {
@@ -95,5 +114,6 @@ export const useTimerStore = defineStore('timerStore', () => {
     stopTimer,
     resetTimer,
     addFiveMinutes,
+    selectNewClasses,
   }
 })

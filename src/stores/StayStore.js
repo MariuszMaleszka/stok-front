@@ -59,7 +59,7 @@ export const useStayStore = defineStore('stayStore', () => {
   const dateOfStay = ref(null)
 
   /** Number of adult participants (1-12) */
-  const adultsNumber = ref(0)
+  const adultsNumber = ref(1)
 
   /** Number of child participants (0-12) */
   const childrenNumber = ref(0)
@@ -110,7 +110,8 @@ export const useStayStore = defineStore('stayStore', () => {
     receiveInvoice: receiveInvoice.value, // Whether customer wants an invoice
     invoiceData: receiveInvoice.value ? invoiceData.value : null, // Invoice details (if requested)
     stokSchoolRegulationsAccepted: null, // School regulations agreement
-    stokSchoolRodoAccepted: null, // RODO/GDPR agreement
+    stokSchoolPrivacyPolicyAccepted: null, // School regulations agreement
+    // stokSchoolRodoAccepted: null, // RODO/GDPR agreement
     stokSchoolPaymentRegulationsAccepted: null, // Payment terms agreement
   }))
 
@@ -155,7 +156,7 @@ export const useStayStore = defineStore('stayStore', () => {
   const stokSchoolRegulationsAccepted = ref(false)
 
   /** Acceptance of RODO/GDPR privacy policy checkbox */
-  const stokSchoolRodoAccepted = ref(false)
+  // const stokSchoolRodoAccepted = ref(false)
 
   /** Acceptance of payment regulations checkbox */
   const stokSchoolPaymentRegulationsAccepted = ref(false)
@@ -168,7 +169,7 @@ export const useStayStore = defineStore('stayStore', () => {
    */
   const agreementsAcceptedCombined = computed(() => {
     return stokSchoolRegulationsAccepted.value
-      && stokSchoolRodoAccepted.value
+      && stokSchoolPrivacyPolicyAccepted.value
       && stokSchoolPaymentRegulationsAccepted.value
   })
 
@@ -666,7 +667,7 @@ export const useStayStore = defineStore('stayStore', () => {
     receiveInvoice, // Invoice request checkbox
     invoiceData, // Invoice/company details
     stokSchoolRegulationsAccepted, // School regulations acceptance
-    stokSchoolRodoAccepted, // RODO/GDPR acceptance
+    // stokSchoolRodoAccepted, // RODO/GDPR acceptance
     stokSchoolPrivacyPolicyAccepted, // Privacy policy acceptance
     stokSchoolPaymentRegulationsAccepted, // Payment regulations acceptance
     agreementsAcceptedCombined, // All agreements check (computed)

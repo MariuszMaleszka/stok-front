@@ -35,12 +35,13 @@ export const useStayConfigStore = defineStore('stayConfig', () => {
   })
 
   const insuranceObject = ref({
-    title: 'PAKIET NNW TURYSTYCZNO-SPORTOWY',
+    title: 'PAKIET NNW TURYSTYCZNO-SPORTOWY - Wariant 111 SWIJ indywidualnych\n' +
+      'podróży Kontynenty na terenie RP. ',
     enabled: false,
     price: 10,
     perDay: true,
     description:
-      'PAKIET NNW TURYSTYCZNO-SPORTOWY - Wariant III SWU indywidualnych podróży Kontynenty na terenie RP. (Działa na terenie Polski)',
+      'Dodaj ochronę na czas zajęć. Szczegóły i zakres w warunkach ubezpieczenia.',
     imgSource: '',
   })
 

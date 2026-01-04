@@ -99,10 +99,13 @@
     }
   }
 
+ // two-way sync
   watch(parentActiveStep, newStep => {
     viewStore.currentStep.parent = newStep
   })
-
+  watch(() => viewStore.currentStep.parent, newStep => {
+    parentActiveStep.value = newStep
+  })
   onMounted(() => {
     viewStore.setParentStepper(parentStepperRef.value)
   })

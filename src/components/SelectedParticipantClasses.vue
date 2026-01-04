@@ -402,7 +402,7 @@
       </template>
       <template #actions>
         <VBtn variant="outlined" @click="insuranceInfoDialog = false">
-          Ok
+          {{ $t('close') }}
         </VBtn>
         <VBtn
           class="text-capitalize px-4"

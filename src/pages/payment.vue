@@ -124,35 +124,35 @@
       </VCardText>
     </VCard>
 
-    <VCard
-      v-if="stayStore.isRedirecting"
-      class="my-8 bg-transparent"
-      flat
-    >
-      <VCardText>
-        <div class="d-flex flex-column justify-center items-center ga-4 text-center">
-          <VIcon class="mx-auto" icon="mdi-progress-clock" size="32" />
-          <div>
-            <h2>
-              {{ $t('redirecting_to_payment') }}
-            </h2>
-            <p>
-              {{ $t('redirect_info') }}
-            </p>
-          </div>
-          <VBtn
-            class="mx-auto text-transform-none"
-            color="primary"
-            size="large"
-            variant="flat"
-            @click="$router.push({ name: '/payment' })"
-          >
-            {{ $t('proceed_to_payment') }}
-          </VBtn>
-        </div>
+<!--    <VCard-->
+<!--      v-if="stayStore.isRedirecting"-->
+<!--      class="my-8 bg-transparent"-->
+<!--      flat-->
+<!--    >-->
+<!--      <VCardText>-->
+<!--        <div class="d-flex flex-column justify-center items-center ga-4 text-center">-->
+<!--          <VIcon class="mx-auto" icon="mdi-progress-clock" size="32" />-->
+<!--          <div>-->
+<!--            <h2>-->
+<!--              {{ $t('redirecting_to_payment') }}-->
+<!--            </h2>-->
+<!--            <p>-->
+<!--              {{ $t('redirect_info') }}-->
+<!--            </p>-->
+<!--          </div>-->
+<!--          <VBtn-->
+<!--            class="mx-auto text-transform-none"-->
+<!--            color="primary"-->
+<!--            size="large"-->
+<!--            variant="flat"-->
+<!--            @click="$router.push({ name: '/payment' })"-->
+<!--          >-->
+<!--            {{ $t('proceed_to_payment') }}-->
+<!--          </VBtn>-->
+<!--        </div>-->
 
-      </VCardText>
-    </VCard>
+<!--      </VCardText>-->
+<!--    </VCard>-->
 
   </VContainer>
 
