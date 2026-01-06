@@ -215,9 +215,9 @@
                 {{ $t('snowboard') }}
               </VBtn>
             </VBtnToggle>
-              <p class="fs-12 mt-2 fc-gray">
-                {{ $t('snowboard_available_ages') }}
-              </p>
+            <p class="fs-12 mt-2 fc-gray">
+              {{ $t('snowboard_available_ages') }}
+            </p>
             <small v-if="showErrors && selectedClassType === null" class="fs-12 fc-error pl-4 pt-2">
               {{ $t('select_class_type') }}
             </small>

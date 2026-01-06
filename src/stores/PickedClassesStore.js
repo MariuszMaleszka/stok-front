@@ -33,9 +33,9 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
 
   // Base slots templates
   const baseSlots = [
-    { time: '9:00 - 11:00', price: 50, instructor: 'Marcin Kowalik', gender: 'male', duration: '2h', timeOfDay: 'Rano', isChildSpecialist: true },
-    { time: '10:00 - 12:00', price: 50, instructor: 'Anna Nowak', gender: 'female', duration: '2h', timeOfDay: 'Rano' },
-    { time: '10:00 - 12:00', price: 50, isHappyHours: true, duration: '2h', timeOfDay: 'Rano' },
+    { time: '9:00 - 11:00', price: 50, isHappyHours: true, discount: 0.1, instructor: 'Marcin Kowalik', gender: 'male', duration: '2h', timeOfDay: 'Rano', isChildSpecialist: true },
+    { time: '10:00 - 12:00', price: 50, isHappyHours: true, discount: 0.1, instructor: 'Anna Nowak', gender: 'female', duration: '2h', timeOfDay: 'Rano' },
+    { time: '10:00 - 12:00', price: 50, isHappyHours: true, discount: 0.1, duration: '2h', timeOfDay: 'Rano' },
     { time: '10:30 - 12:30', price: 50, duration: '2h', timeOfDay: 'Rano' },
     { time: '11:00 - 13:00', price: 50, duration: '2h', timeOfDay: 'Rano' },
     { time: '14:00 - 16:00', price: 50, instructor: 'Piotr Wiśniewski', gender: 'male', duration: '2h', timeOfDay: 'Popołudnie' },
@@ -92,6 +92,8 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
       description: '5 dni zajęć, zajęcia 1x dziennie',
       schedule: 'od 9:30 do 10:30',
       isHappyHours: true,
+      discount: 0.1,
+      price: 1200,
     },
     {
       id: 4,

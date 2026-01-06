@@ -16,7 +16,6 @@ import { usePickedClassesStore } from '@/stores/PickedClassesStore.js'
 import { generateUniqueId } from '@/utils/numbers.js'
 import { useStayConfigStore } from './StayConfigStore.js'
 
-
 // ============================================================================
 // PARTICIPANT TEMPLATE
 // ============================================================================
@@ -715,7 +714,6 @@ export const useStayStore = defineStore('stayStore', () => {
     skillLevels_CHILDREN_SNOWBOARD: configStore.skillLevels_CHILDREN_SNOWBOARD, // Children snowboard skill levels
     availableLanguages: configStore.availableLanguages, // Available class languages
     currency: configStore.currency, // Currency settings
-
 
   }
 })

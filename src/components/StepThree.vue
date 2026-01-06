@@ -957,8 +957,8 @@
                     clearable
                     density="default"
                     hide-details="auto"
-                    maxLength="11"
-                    minLength="9"
+                    max-length="11"
+                    min-length="9"
                     :rules="[rules.required, rules.phone]"
                     variant="outlined"
                     @keydown="(e) => !/[\d+]/.test(e.key) && e.key !== 'Backspace' && e.preventDefault()"
@@ -1154,7 +1154,7 @@
               <template #label>
                 <span :class="mobile? 'fs-12':'fs-14'">
                   {{ $t('i_have_read_terms_and_conditions') }}
-                     <a :class="mobile? 'fs-12':'fs-14'" :href="configStore.PRIVACY_LINK" target="_blank">
+                  <a :class="mobile? 'fs-12':'fs-14'" :href="configStore.PRIVACY_LINK" target="_blank">
                     {{ $t('with_privacy_policy') }}
                   </a>
                 </span>

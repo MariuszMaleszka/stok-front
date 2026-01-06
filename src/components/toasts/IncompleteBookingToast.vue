@@ -23,14 +23,13 @@
       </div>
       <div class="text-content fs-14 text-gray-900 font-weight-medium pt-1">
         <p>
-        {{ message }}
+          {{ message }}
         </p>
         <p class="fs-11 fc-gray">Możesz zostawić część dni bez zajęć, lub wrócić do nich później.
 
         </p>
       </div>
     </div>
-
 
     <div class="d-flex ga-3">
       <button class="action-btn btn-outline" @click="$emit('add')">

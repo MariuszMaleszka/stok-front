@@ -3,8 +3,8 @@
   import { useI18n } from 'vue-i18n'
   import { useDisplay } from 'vuetify'
   import UserIcon from '@/assets/user-circle-blue.svg'
+  import DatePicker from '@/components/DatePicker.vue'
   import { useStayStore } from '@/stores/StayStore.js'
-import DatePicker from "@/components/DatePicker.vue";
 
   const props = defineProps({
     participant: {
@@ -67,9 +67,9 @@ import DatePicker from "@/components/DatePicker.vue";
       const parsed = new Date(value)
       return isNaN(parsed.getTime()) ? null : parsed
     },
-    set: (val) => {
+    set: val => {
       props.participant.birthDate = val ?? null
-    }
+    },
   })
 
   defineExpose({
@@ -145,8 +145,8 @@ import DatePicker from "@/components/DatePicker.vue";
           clearable
           density="default"
           hide-details="auto"
-          minLength="9"
-          maxLength="11"
+          max-length="11"
+          min-length="9"
           :rules="[rules.required, rules.phone]"
           variant="outlined"
           @keydown="(e) => !/[\d+]/.test(e.key) && e.key !== 'Backspace' && e.preventDefault()"
@@ -157,10 +157,10 @@ import DatePicker from "@/components/DatePicker.vue";
         <p class="custom-input-label mb-2">{{ $t('birth_date') }}</p>
         <DatePicker
           v-model="participant.birthDate"
-          :enable-time-picker="false"
           auto-apply
-          :placeholder="$t('select_date')"
           :dark="false"
+          :enable-time-picker="false"
+          :placeholder="$t('select_date')"
         >
           <template #input-icon>
             <VIcon icon="mdi-calendar" size="18" />

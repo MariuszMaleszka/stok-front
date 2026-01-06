@@ -228,19 +228,43 @@
       if (!slotObj) {
         slotObj = pickedClassesStore.availableSlots.find(s => s.id === Number(pickedClassesStore.individualSlot))
       }
-      return { preferences: pickedClassesStore.individualPreferences, slot: slotObj || pickedClassesStore.individualSlot }
+
+      let finalSlot = slotObj
+      if (slotObj && slotObj.discount) {
+        finalSlot = { ...slotObj }
+        finalSlot.originalPrice = finalSlot.price
+        finalSlot.price = calculateDiscountedPrice(finalSlot.price, finalSlot.discount)
+      }
+
+      return { preferences: pickedClassesStore.individualPreferences, slot: finalSlot || pickedClassesStore.individualSlot }
     }
     if (selectedType.value === 'shared') {
       let slotObj = pickedClassesStore.availableSlots.find(s => s.id === pickedClassesStore.sharedSlot)
       if (!slotObj) {
         slotObj = pickedClassesStore.availableSlots.find(s => s.id === Number(pickedClassesStore.sharedSlot))
       }
-      return { participants: sharedParticipants.value, preferences: pickedClassesStore.sharedPreferences, slot: slotObj || pickedClassesStore.sharedSlot }
+
+      let finalSlot = slotObj
+      if (slotObj && slotObj.discount) {
+        finalSlot = { ...slotObj }
+        finalSlot.originalPrice = finalSlot.price
+        finalSlot.price = calculateDiscountedPrice(finalSlot.price, finalSlot.discount)
+      }
+
+      return { participants: sharedParticipants.value, preferences: pickedClassesStore.sharedPreferences, slot: finalSlot || pickedClassesStore.sharedSlot }
     }
     if (selectedType.value === 'group') {
       const groupObj = pickedClassesStore.availableGroups.find(g => g.id === pickedClassesStore.selectedGroup)
+
+      let finalGroup = groupObj
+      if (groupObj && groupObj.discount) {
+        finalGroup = { ...groupObj }
+        finalGroup.originalPrice = finalGroup.price
+        finalGroup.price = calculateDiscountedPrice(finalGroup.price, finalGroup.discount)
+      }
+
       return {
-        group: groupObj || pickedClassesStore.selectedGroup,
+        group: finalGroup || pickedClassesStore.selectedGroup,
         childAddOn: props.participantType === 'child' && pickedClassesStore.childAddOnSelections[pickedClassesStore.selectedGroup],
         childAddOnPrice: pickedClassesStore.childAddOnPrice,
       }
@@ -248,8 +272,21 @@
     return null
   }
 
+  function calculateDiscountedPrice (price, discount) {
+    if (!discount) return price
+    return Math.round(price * (1 - discount))
+  }
+
   function calculateGroupPrice (group) {
     let price = group.price
+    if (props.participantType === 'child' && pickedClassesStore.childAddOnSelections[group.id]) {
+      price += pickedClassesStore.childAddOnPrice
+    }
+    return price
+  }
+
+  function calculateDiscountedGroupPrice (group) {
+    let price = calculateDiscountedPrice(group.price, group.discount)
     if (props.participantType === 'child' && pickedClassesStore.childAddOnSelections[group.id]) {
       price += pickedClassesStore.childAddOnPrice
     }
@@ -714,19 +751,27 @@
                   >
                     <div class="selection-circle mr-4 d-flex align-center justify-center flex-shrink-0" />
 
-                    <div class="flex-grow-1 d-flex justify-space-between align-center">
-                      <div class="d-flex flex-column align-start">
-                        <span class="font-weight-bold fs-14 blue-text">{{ slot.time }}</span>
-                        <div v-if="slot.instructor" class="text-caption-slot mt-1 text-left">
-                          {{ t('instructor_selected_previously') }}<br>
-                          <span class="font-weight-bold">{{ slot.instructor }}</span>
+                    <div class="d-flex flex-column">
+                      <div class="flex-grow-1 d-flex justify-space-between align-start">
+                        <div class="d-flex flex-column align-start">
+                          <span class="font-weight-bold fs-14 blue-text">{{ slot.time }}</span>
+                          <div v-if="slot.instructor" class="text-caption-slot mt-1 text-left">
+                            {{ t('instructor_selected_previously') }}<br>
+                            <span class="font-weight-bold">{{ slot.instructor }}</span>
+                          </div>
+                        </div>
+                        <div class="d-flex flex-column align-start justify-center h-100">
+                          <div v-if="slot.isHappyHours" class="happy-hours-badge">
+                            Happy hours
+                          </div>
                         </div>
                       </div>
-                      <div class="d-flex flex-column align-end justify-center h-100">
-                        <div v-if="slot.isHappyHours" class="happy-hours-badge">
-                          Happy hours
+                      <div v-if="slot.price" class="d-flex justify-end w-100 mt-1">
+                        <div v-if="slot.discount" class="d-flex align-center">
+                          <span class="text-decoration-line-through text-grey mr-2 fs-14">{{ slot.price }},00zł</span>
+                          <span class="font-weight-bold blue-text fs-14 pl-1">{{ calculateDiscountedPrice(slot.price, slot.discount) }},00zł</span>
                         </div>
-                        <span v-if="slot.price" class="font-weight-semibold blue-text fs-14 max-content-width pl-1">{{ slot.price }},00zł</span>
+                        <span v-else class="font-weight-bold text-primary-900 fs-14 pl-1">{{ slot.price }},00zł</span>
                       </div>
                     </div>
                   </div>
@@ -923,7 +968,11 @@
                         <div v-if="slot.isHappyHours" class="happy-hours-badge">
                           Happy hours
                         </div>
-                        <span v-if="slot.price" class="font-weight-semibold blue-text fs-14 max-content-width">{{ slot.price }},00zł</span>
+                        <div v-if="slot.discount" class="d-flex align-center">
+                          <span class="text-decoration-line-through text-grey mr-2 fs-14">{{ slot.price }},00zł</span>
+                          <span class="font-weight-semibold blue-text fs-14 max-content-width">{{ calculateDiscountedPrice(slot.price, slot.discount) }},00zł</span>
+                        </div>
+                        <span v-else-if="slot.price" class="font-weight-semibold blue-text fs-14 max-content-width">{{ slot.price }},00zł</span>
                       </div>
                     </div>
                   </div>
@@ -1032,7 +1081,11 @@
 
                       <!-- Price (Absolute Bottom Right) -->
                       <div v-if="group.price" class="d-flex justify-end w-100 mt-1">
-                        <span class="font-weight-bold text-primary-900 fs-14 pl-1">{{ calculateGroupPrice(group) }},00zł</span>
+                        <div v-if="group.discount" class="d-flex align-center">
+                          <span class="text-decoration-line-through text-grey mr-2 fs-14">{{ calculateGroupPrice(group) }},00zł</span>
+                          <span class="font-weight-bold blue-text fs-14 pl-1">{{ calculateDiscountedGroupPrice(group) }},00zł</span>
+                        </div>
+                        <span v-else class="font-weight-bold text-primary-900 fs-14 pl-1">{{ calculateGroupPrice(group) }},00zł</span>
                       </div>
                     </div>
 

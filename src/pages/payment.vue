@@ -2,8 +2,8 @@
   import { useDisplay } from 'vuetify'
   import CheckGreenIcon from '@/assets/check-circle.svg'
   import ExclamationIcon from '@/assets/exclamation.svg'
+  import { useStayConfigStore } from '@/stores/StayConfigStore.js'
   import { useStayStore } from '@/stores/StayStore.js'
-  import {useStayConfigStore} from "@/stores/StayConfigStore.js";
 
   const stayStore = useStayStore()
   const configStore = useStayConfigStore()
@@ -72,7 +72,7 @@
               {{ $t('payment_failed_info') }}
             </p>
             <p>
-                {{ $t('payment_failed_info_2') }}
+              {{ $t('payment_failed_info_2') }}
               <a :href="configStore.CUSTOMER_SERVICE_LINK">
                 {{ $t('with_our_customer_service') }}
               </a>
