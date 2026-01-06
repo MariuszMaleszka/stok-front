@@ -126,7 +126,7 @@
               hide-details="auto"
               :max="16"
               max-width="165px"
-              :min="3"
+              :min="4"
               :rules="[rules.required]"
               :step="1"
               variant="outlined"
