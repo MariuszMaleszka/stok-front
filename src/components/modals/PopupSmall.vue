@@ -1,32 +1,33 @@
 <script setup>
-  import { useDisplay } from 'vuetify'
+import {useDisplay} from 'vuetify'
+import {useI18n} from "vue-i18n";
 
-  const { mobile } = useDisplay()
+const {mobile} = useDisplay()
+const {t} = useI18n()
+defineProps({
+  modelValue: {
+    type: Boolean,
+    required: true,
+  },
+  title: {
+    type: String,
+    required: true,
+  },
+  maxWidth: {
+    type: String,
+    default: '320px',
+  },
+  showActions: {
+    type: Boolean,
+    default: true,
+  },
+})
 
-  defineProps({
-    modelValue: {
-      type: Boolean,
-      required: true,
-    },
-    title: {
-      type: String,
-      required: true,
-    },
-    maxWidth: {
-      type: String,
-      default: '320px',
-    },
-    showActions: {
-      type: Boolean,
-      default: true,
-    },
-  })
+const emit = defineEmits(['update:modelValue'])
 
-  const emit = defineEmits(['update:modelValue'])
-
-  function closeDialog () {
-    emit('update:modelValue', false)
-  }
+function closeDialog() {
+  emit('update:modelValue', false)
+}
 </script>
 
 <template>
@@ -40,8 +41,8 @@
         <div
           class="d-flex py-4 justify-space-between align-center"
         >
-          <slot name="icon" />
-          <span class="lh-normal" :class="mobile ? 'fs-14' : 'fs-16'">
+          <slot name="icon"/>
+          <span class="lh-normal mr-4" :class="mobile ? 'fs-14' : 'fs-16'">
             {{ title }}
           </span>
           <VIcon
@@ -71,7 +72,7 @@
             variant="flat"
             @click="closeDialog"
           >
-            Ok
+            {{ t('close') }}
           </VBtn>
         </slot>
       </VCardActions>

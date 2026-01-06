@@ -100,7 +100,7 @@
   "cart": "Koszyk",
   "participants_data": "Dane uczestników",
   "payment": "Płatność",
-  "cart_subtitle": "Sprawdź poprawność Twojego zamówienia i dodaj usługi dodatkowe.",
+  "cart_subtitle": "Sprawdź podsumowanie rezerwacji i dodaj opcje dodatkowe.",
   "add_more_classes": "Dodaj kolejne",
   "adjust_your_classes": "Dostosuj swoje zajęcia",
   "search_only_with_prev_instructor": "Szukaj tylko zajęć z wybranym wcześniej instruktorem",
@@ -253,7 +253,11 @@
   "redirecting_to_payment": "Za chwilę przekierujemy Cię do Przelewy24, aby dokończyć płatność.",
   "redirect_info": "Nie zamykaj tej strony. Po opłaceniu wrócisz na stronę STOK.",
   "with_our_customer_service": "z naszym biurem obsługi klienta",
-  "booking_time_expired": "Czas na dokonanie rezerwacji minął."
+  "booking_time_expired": "Czas na dokonanie rezerwacji minął.",
+  "discount_12_percent": "Rabaty 12%",
+  "discount_12_info": "dotyczy lekcji prywatnych i nie łączy się z Happy Hours ani pakietami.",
+  "add_new_classes": "Dodaj nowe zajęcia",
+  "stay": "Pobyt"
 
 
 }

@@ -251,5 +251,10 @@
   "payment_in_process_info": "Your payment is being processed. Please wait a moment.",
   "redirecting_to_payment": "Redirecting to payment gateway...",
   "redirect_info": "Do not close this window or navigate away from the page.",
-  "booking_time_expired": "Booking time expired"
+  "booking_time_expired": "Booking time expired",
+  "discount_12_percent": "12% discount",
+  "discount_12_info": "applies to private lessons and cannot be combined with Happy Hours or packages.",
+  "add_new_classes": "Add new classes",
+  "stay": "Stay"
+
 }

@@ -9,7 +9,11 @@
     },
     timeLeftLabel: {
       type: String,
-      required: true,
+      required: false,
+    },
+    showTimerBadge: {
+      type: Boolean,
+      default: true,
     },
   })
 
@@ -24,7 +28,9 @@
     </div>
     <div style="font-size: 14px; padding-left: 40px;">
       <span>{{ timeLeftLabel }}</span>
-      <span style="background: #000; color: #fff; padding: 4px 8px; border-radius: 4px; margin-left: 4px;">
+      <span
+        v-if="showTimerBadge"
+        style="background: #000; color: #fff; padding: 4px 8px; border-radius: 4px; margin-left: 4px;">
         {{ timerStore.formattedTime }}
       </span>
     </div>

@@ -406,10 +406,7 @@
     const allFormsValid = validationResults.every(result => result === true)
 
     // Validate agreements - all three must be checked
-    const agreementsValid
-      = stayStore.stokSchoolRegulationsAccepted
-        && stayStore.stokSchoolRodoAccepted
-        && stayStore.stokSchoolPaymentRegulationsAccepted
+    const agreementsValid = stayStore.agreementsAcceptedCombined
 
     // Show appropriate error message
     if (!allFormsValid) {
@@ -481,6 +478,7 @@
         <template #icon>
           3.
         </template>
+
       </VStepperItem>
     </VStepperHeader>
 
@@ -725,7 +723,12 @@
                       variant="outlined"
                     />
                   </div>
-
+                    <p class="fc-gray fc-11">
+                      <span class="fw-600">
+                        {{ t('discount_12_percent') }}
+                      </span>
+                      {{ t('discount_12_info') }}
+                    </p>
                 </VForm>
               </VExpandTransition>
             </div>
@@ -1294,17 +1297,40 @@
       </VStepperWindowItem>
 
       <VStepperWindowItem :value="3">
-        <div class="px-1">
+        <div class="px-1 container-narrow">
           <p class="fs-24 font-weight-bold my-4">
             {{ $t('payment') }}:
           </p>
           <div class="my-4">
-            <p
-              class="font-weight-medium "
-              :class="mobile ? 'fs-14' : 'fs-16'"
+            <VCard
+              v-if="stayStore.isRedirecting"
+              class="my-8 bg-transparent"
+              flat
             >
-              {{ $t('participants_preferences') }}:
-            </p>
+              <VCardText>
+                <div class="d-flex flex-column justify-center items-center ga-4 text-center">
+                  <VIcon class="mx-auto" icon="mdi-progress-clock" size="32" />
+                  <div>
+                    <h2>
+                      {{ $t('redirecting_to_payment') }}
+                    </h2>
+                    <p>
+                      {{ $t('redirect_info') }}
+                    </p>
+                  </div>
+                  <VBtn
+                    class="mx-auto text-transform-none"
+                    color="primary"
+                    size="large"
+                    variant="flat"
+                    @click="$router.push({ name: '/payment' })"
+                  >
+                    {{ $t('proceed_to_payment') }}
+                  </VBtn>
+                </div>
+
+              </VCardText>
+            </VCard>
           </div>
 
         </div>
