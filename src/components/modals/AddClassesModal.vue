@@ -1,4 +1,5 @@
 <script setup>
+  import { differenceInCalendarDays } from 'date-fns'
   import { computed, ref, watch } from 'vue'
   import { useI18n } from 'vue-i18n'
   import CalendarPlusIcon from '@/assets/calendar-plus.svg'
@@ -53,24 +54,52 @@
   // Group Flow State
   // selectedGroup is now in store
 
+  const stayDuration = computed(() => {
+    if (!stayStore.dateOfStay) return 0
+    let start, end
+    if (Array.isArray(stayStore.dateOfStay)) {
+      if (stayStore.dateOfStay.length === 0) return 0
+      start = new Date(stayStore.dateOfStay[0])
+      end = stayStore.dateOfStay[1] ? new Date(stayStore.dateOfStay[1]) : start
+    } else {
+      start = new Date(stayStore.dateOfStay)
+      end = start
+    }
+    return differenceInCalendarDays(end, start) + 1
+  })
+
   // Mock Data
-  const classTypes = computed(() => [
-    {
-      id: 'individual',
-      label: t('private_lesson_1p'),
-      icon: UserIcon,
-    },
-    {
-      id: 'shared',
-      label: t('private_lesson_2_3p'),
-      icon: UsersIcon,
-    },
-    {
-      id: 'group',
-      label: t('group_course_few_days'),
-      icon: UsersGroupIcon,
-    },
-  ])
+  const classTypes = computed(() => {
+    const types = [
+      {
+        id: 'individual',
+        label: t('private_lesson_1p'),
+        icon: UserIcon,
+      },
+      {
+        id: 'shared',
+        label: t('private_lesson_2_3p'),
+        icon: UsersIcon,
+      },
+      {
+        id: 'group',
+        label: t('group_course_few_days'),
+        icon: UsersGroupIcon,
+      },
+    ]
+
+    return types.filter(type => {
+      // 1. Hide shared if < 2 participants
+      if (type.id === 'shared' && stayStore.participants.length < 2) {
+        return false
+      }
+      // 2. Hide group if stay <= 2 days
+      if (type.id === 'group' && stayDuration.value <= 2) {
+        return false
+      }
+      return true
+    })
+  })
 
   const timesOfDay = computed(() => [
     { title: t('any_time'), value: 'Dowolna' },
@@ -751,7 +780,7 @@
                   >
                     <div class="selection-circle mr-4 d-flex align-center justify-center flex-shrink-0" />
 
-                    <div class="d-flex flex-column">
+                    <div class="d-flex flex-column w-100">
                       <div class="flex-grow-1 d-flex justify-space-between align-start">
                         <div class="d-flex flex-column align-start">
                           <span class="font-weight-bold fs-14 blue-text">{{ slot.time }}</span>

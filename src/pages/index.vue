@@ -99,7 +99,7 @@
     }
   }
 
- // two-way sync
+  // two-way sync
   watch(parentActiveStep, newStep => {
     viewStore.currentStep.parent = newStep
   })

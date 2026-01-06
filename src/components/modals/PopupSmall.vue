@@ -1,33 +1,33 @@
 <script setup>
-import {useDisplay} from 'vuetify'
-import {useI18n} from "vue-i18n";
+  import { useI18n } from 'vue-i18n'
+  import { useDisplay } from 'vuetify'
 
-const {mobile} = useDisplay()
-const {t} = useI18n()
-defineProps({
-  modelValue: {
-    type: Boolean,
-    required: true,
-  },
-  title: {
-    type: String,
-    required: true,
-  },
-  maxWidth: {
-    type: String,
-    default: '320px',
-  },
-  showActions: {
-    type: Boolean,
-    default: true,
-  },
-})
+  const { mobile } = useDisplay()
+  const { t } = useI18n()
+  defineProps({
+    modelValue: {
+      type: Boolean,
+      required: true,
+    },
+    title: {
+      type: String,
+      required: true,
+    },
+    maxWidth: {
+      type: String,
+      default: '320px',
+    },
+    showActions: {
+      type: Boolean,
+      default: true,
+    },
+  })
 
-const emit = defineEmits(['update:modelValue'])
+  const emit = defineEmits(['update:modelValue'])
 
-function closeDialog() {
-  emit('update:modelValue', false)
-}
+  function closeDialog () {
+    emit('update:modelValue', false)
+  }
 </script>
 
 <template>
@@ -41,7 +41,7 @@ function closeDialog() {
         <div
           class="d-flex py-4 justify-space-between align-center"
         >
-          <slot name="icon"/>
+          <slot name="icon" />
           <span class="lh-normal mr-4" :class="mobile ? 'fs-14' : 'fs-16'">
             {{ title }}
           </span>

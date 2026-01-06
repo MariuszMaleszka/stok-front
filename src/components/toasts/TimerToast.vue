@@ -30,7 +30,8 @@
       <span>{{ timeLeftLabel }}</span>
       <span
         v-if="showTimerBadge"
-        style="background: #000; color: #fff; padding: 4px 8px; border-radius: 4px; margin-left: 4px;">
+        style="background: #000; color: #fff; padding: 4px 8px; border-radius: 4px; margin-left: 4px;"
+      >
         {{ timerStore.formattedTime }}
       </span>
     </div>

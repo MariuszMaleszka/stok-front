@@ -4,8 +4,8 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import TimerToastContent from '@/components/toasts/TimerToast.vue'
 import { useToast } from '@/composables/useToast'
-import { usePickedClassesStore} from "@/stores/PickedClassesStore.js";
-import { useViewControlStore } from "@/stores/ViewControlStore.js";
+import { usePickedClassesStore } from '@/stores/PickedClassesStore.js'
+import { useViewControlStore } from '@/stores/ViewControlStore.js'
 
 export const useTimerStore = defineStore('timerStore', () => {
   const viewStore = useViewControlStore()

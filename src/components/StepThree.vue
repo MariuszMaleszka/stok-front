@@ -723,12 +723,12 @@
                       variant="outlined"
                     />
                   </div>
-                    <p class="fc-gray fc-11">
-                      <span class="fw-600">
-                        {{ t('discount_12_percent') }}
-                      </span>
-                      {{ t('discount_12_info') }}
-                    </p>
+                  <p class="fc-gray fc-11">
+                    <span class="fw-600">
+                      {{ t('discount_12_percent') }}
+                    </span>
+                    {{ t('discount_12_info') }}
+                  </p>
                 </VForm>
               </VExpandTransition>
             </div>
