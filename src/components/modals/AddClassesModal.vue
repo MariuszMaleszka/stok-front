@@ -978,7 +978,7 @@
                   </p>
                 </div>
 
-                <div class="d-flex flex-column gap-3">
+                <div v-if="pickedClassesStore.filteredGroups.length > 0" class="d-flex flex-column gap-3">
                   <div
                     v-for="group in pickedClassesStore.filteredGroups"
                     :key="group.id"
@@ -1086,6 +1086,16 @@
                           </VExpansionPanel>
                         </VExpansionPanels>
                       </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div v-else class="text-center py-4">
+                  <div class="border rounded-lg px-4 py-3 d-flex align-start text-left bg-white border-gray">
+                    <VIcon class="mr-3 mt-1 flex-shrink-0" color="grey-darken-1" icon="mdi-message-text-outline" />
+                    <div class="text-caption text-grey-darken-1" style="line-height: 1.4;">
+                      {{ t('contact_customer_service_info') }}
+                      <a class="text-decoration-underline text-grey-darken-1 font-weight-medium cursor-pointer" href="https://szkolastok.pl/kontakt" rel="noopener noreferrer" target="_blank">{{ t('customer_service_office') }}</a>.
                     </div>
                   </div>
                 </div>
