@@ -196,14 +196,24 @@ export const useStayStore = defineStore('stayStore', () => {
   /**
    * Maximum number of adults allowed
    * Constrained by total limit (12) minus current children number
+   * Must allow at least 1 person total
    */
-  const maxAdults = computed(() => 12 - childrenNumber.value)
+  const maxAdults = computed(() => {
+    const max = 12 - childrenNumber.value
+    // If there are no children, ensure at least 1 adult can be selected
+    return childrenNumber.value === 0 ? Math.max(1, max) : max
+  })
 
   /**
    * Maximum number of children allowed
    * Constrained by total limit (12) minus current adults number
+   * Must allow at least 1 person total
    */
-  const maxChildren = computed(() => 12 - adultsNumber.value)
+  const maxChildren = computed(() => {
+    const max = 12 - adultsNumber.value
+    // If there are no adults, ensure at least 1 child can be selected
+    return adultsNumber.value === 0 ? Math.max(1, max) : max
+  })
 
   /**
    * Validation check - at least one participant must be selected
@@ -247,14 +257,15 @@ export const useStayStore = defineStore('stayStore', () => {
       }, 0)
     }
   })
-
   /**
    * Calculate total insurance price for a single participant
+   * Insurance is calculated per day, not per class
+   * Multiple classes on the same day count as one insurance charge
+   *
    * @param {string} participantId - The unique ID of the participant
    * @returns {number} Total insurance cost for this participant
    *
    * Note: Insurance is skipped for children in group classes
-   * For other cases, price is multiplied by number of days if perDay is true
    */
   const participantInsuranceTotalPrice = computed(() => {
     return participantId => {
@@ -263,34 +274,38 @@ export const useStayStore = defineStore('stayStore', () => {
         booking => booking.participantId === participantId,
       )
 
-      const processedGroupBookings = new Set()
+      const participant = participants.value.find(p => p.dynamicId === participantId)
 
-      return participantBookings.reduce((sum, booking) => {
+      // Track unique dates with insurance enabled
+      const insuranceDates = new Set()
+      let insurancePrice = 0
+
+      for (const booking of participantBookings) {
         // Skip if insurance is not enabled
         if (!booking.insurance?.enabled || !booking.insurance?.price) {
-          return sum
+          continue
         }
-
-        const participant = participants.value.find(p => p.dynamicId === participantId)
 
         // Skip insurance for child participants in group classes
         if (participant?.participantType === 'child' && booking.type === 'group') {
-          return sum
+          continue
         }
 
-        // For group bookings, only count once per groupBookingId
-        if (booking.type === 'group' && booking.groupBookingId) {
-          if (processedGroupBookings.has(booking.groupBookingId)) {
-            return sum // Already counted this group booking
-          }
-          processedGroupBookings.add(booking.groupBookingId)
-          // Multiply by number of days
-          return sum + (booking.insurance.price * (booking.data?.group?.classDates?.length || 1))
+        // Store the price (should be same for all bookings, but we'll use the first one)
+        if (insurancePrice === 0) {
+          insurancePrice = booking.insurance.price
         }
 
-        // For individual and shared bookings, use price as-is (single day)
-        return sum + booking.insurance.price
-      }, 0)
+        // Extract date from booking
+        const dateStr = booking.dateStr || booking.data?.slot?.date || booking.data?.group?.classDates?.[0]
+
+        if (dateStr) {
+          insuranceDates.add(dateStr)
+        }
+      }
+
+      // Calculate total: insurance price × number of unique dates
+      return insurancePrice * insuranceDates.size
     }
   })
 

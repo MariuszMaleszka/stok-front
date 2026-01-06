@@ -81,13 +81,13 @@
   }
 
   // Calculate max date based on minimum age requirement (at least 18 years old)
-  const maxDate = computed(() => {
-    if (!props.minAge) return null
-
-    const today = new Date()
-    const maxYear = today.getFullYear() - props.minAge
-    return new Date(maxYear, today.getMonth(), today.getDate())
-  })
+  // const maxDate = computed(() => {
+  //   if (!props.minAge) return null
+  //
+  //   const today = new Date()
+  //   const maxYear = today.getFullYear() - props.minAge
+  //   return new Date(maxYear, today.getMonth(), today.getDate())
+  // })
   function handleClose () {
     datePickerRef.value?.closeMenu()
   }
@@ -136,11 +136,11 @@
     clearable
     :day-names="customDayNames"
     :locale="props.locale"
-    :max-date="maxDate"
     :model-value="modelValue"
     :time-config="{ enableTimePicker: props.enableTimePicker }"
     @update:model-value="onChange"
   >
+<!--    :max-date="maxDate"-->
 
     <template #trigger>
       <VTextField

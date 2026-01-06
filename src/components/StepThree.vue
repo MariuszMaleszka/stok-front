@@ -210,33 +210,35 @@
    * @returns {number} Total insurance price across all participants
    */
   const sumTotalInsurancesForAll = computed(() => {
-    // Track processed group bookings to avoid counting them multiple times
-    const processedGroupBookings = new Set()
-
     return stayStore.participants.reduce((total, participant) => {
       const bookings = getParticipantBookings(participant.dynamicId)
-      const participantInsuranceTotal = bookings.reduce((sum, booking) => {
+
+      // Track unique dates across all participant's bookings
+      const insuranceDates = new Set()
+      let insurancePrice = 0
+
+      for (const booking of bookings) {
         // Skip insurance for child participants in group classes
         if (participant.participantType === 'child' && booking.type === 'group') {
-          return sum
+          continue
         }
 
         if (booking.insurance?.price) {
-          // For group bookings, only count once per groupBookingId
-          if (booking.type === 'group' && booking.groupBookingId) {
-            if (processedGroupBookings.has(booking.groupBookingId)) {
-              return sum // Already counted this group booking
-            }
-            processedGroupBookings.add(booking.groupBookingId)
-            // Multiply by number of days
-            return sum + (booking.insurance.price * booking.data.group.classDates.length)
+          // Store the price (should be same for all bookings)
+          if (insurancePrice === 0) {
+            insurancePrice = booking.insurance.price
           }
 
-          // For individual and shared bookings, use price as-is
-          return sum + booking.insurance.price
+          // Extract date from booking
+          const dateStr = booking.dateStr || booking.data?.slot?.date || booking.data?.group?.classDates?.[0]
+
+          if (dateStr) {
+            insuranceDates.add(dateStr)
+          }
         }
-        return sum
-      }, 0)
+      }
+
+      const participantInsuranceTotal = insurancePrice * insuranceDates.size
       return total + participantInsuranceTotal
     }, 0)
   })

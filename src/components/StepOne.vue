@@ -28,7 +28,7 @@
 
   const rules = {
     required: value => !!value || t('fill_the_field_properly'),
-    minAdults: value => value >= 1 || t('at_least_one_adult_required'),
+    // minAdults: value => value >= 1 || t('at_least_one_adult_required'),
   }
 
   async function validateDataForm () {
@@ -133,11 +133,11 @@
                 hide-details="auto"
                 :max="stayStore.maxAdults"
                 max-width="165px"
-                :min="0"
-                :rules="[rules.minAdults]"
+                :min="stayStore.childrenNumber === 0 ? 1 : 0"
                 :step="1"
                 variant="outlined"
               />
+<!--                :rules="[rules.minAdults]"-->
               <p class="fs-12 fc-gray">
                 {{ $t('enter_number_of_participants_adult') }}
               </p>
@@ -151,7 +151,7 @@
                 hide-details="auto"
                 :max="stayStore.maxChildren"
                 max-width="165px"
-                :min="0"
+                :min="stayStore.adultsNumber === 0 ? 1 : 0"
                 :step="1"
                 variant="outlined"
               />
