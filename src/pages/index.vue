@@ -11,6 +11,8 @@
   import { useStayStore } from '@/stores/StayStore.js'
   import { useViewControlStore } from '@/stores/ViewControlStore.js'
 
+  import { scrollToTop} from "@/utils/totop.js";
+
   const viewStore = useViewControlStore()
   const stayStore = useStayStore()
   const pickedClassesStore = usePickedClassesStore()
@@ -85,6 +87,8 @@
     // Step 3/1 (cart) - no validations -  proceed to Step 3/2
     if (viewStore.currentStep.parent === 3 && viewStore.currentStep.child === 1) {
       stepThreeComponentRef.value.stepThreeNestedRef.next()
+      await nextTick()
+      setTimeout(() => scrollToTop(), 500)
     }
     // Step 3/2 (participants data)  - proceed to payment
     if (viewStore.currentStep.parent === 3 && viewStore.currentStep.child === 2) {
