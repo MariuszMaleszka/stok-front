@@ -133,7 +133,7 @@
                 hide-details="auto"
                 :max="stayStore.maxAdults"
                 max-width="165px"
-                :min="stayStore.childrenNumber === 0 ? 1 : 0"
+                :min="0"
                 :step="1"
                 variant="outlined"
               />
@@ -151,7 +151,7 @@
                 hide-details="auto"
                 :max="stayStore.maxChildren"
                 max-width="165px"
-                :min="stayStore.adultsNumber === 0 ? 1 : 0"
+                :min="0"
                 :step="1"
                 variant="outlined"
               />

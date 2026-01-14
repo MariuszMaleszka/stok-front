@@ -29,6 +29,8 @@
 
   const isNextButtonDisabled = computed(() => {
     if (!stayStore.dateOfStay) return true
+    // Disable if both adults and children are 0
+    if (stayStore.adultsNumber === 0 && stayStore.childrenNumber === 0) return true
 
     // Step 2 validation: Every participant must have at least one class booked
     if (viewStore.currentStep.parent === 2) {
