@@ -107,7 +107,7 @@
     { title: t('afternoon'), value: 'Popołudnie' },
     { title: t('evening'), value: 'Wieczór' },
   ])
-  const durations = ['0,5h', '1h', '1,5h', '2h', '2,5h', '3h', '4h', '5h']
+  const durations = ['1h', '1,5h', '2h', '2,5h', '3h', '4h', '5h']
   const genders = computed(() => [
     { title: t('any_gender'), value: 'Dowolna' },
     { title: t('female'), value: 'Kobieta' },
