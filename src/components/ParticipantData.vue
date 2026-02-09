@@ -49,28 +49,28 @@
   })
 
   // Computed property to handle birthDate null/undefined conversion
-  const birthDate = computed({
-    get: () => {
-      const value = props.participant.birthDate
-
-      // Return null for any invalid values
-      if (value === null || value === undefined || value === '') {
-        return null
-      }
-
-      // If it's already a Date object, validate it
-      if (value instanceof Date) {
-        return isNaN(value.getTime()) ? null : value
-      }
-
-      // If it's a string, try to parse it
-      const parsed = new Date(value)
-      return isNaN(parsed.getTime()) ? null : parsed
-    },
-    set: val => {
-      props.participant.birthDate = val ?? null
-    },
-  })
+  // const birthDate = computed({
+  //   get: () => {
+  //     const value = props.participant.birthDate
+  //
+  //     // Return null for any invalid values
+  //     if (value === null || value === undefined || value === '') {
+  //       return null
+  //     }
+  //
+  //     // If it's already a Date object, validate it
+  //     if (value instanceof Date) {
+  //       return isNaN(value.getTime()) ? null : value
+  //     }
+  //
+  //     // If it's a string, try to parse it
+  //     const parsed = new Date(value)
+  //     return isNaN(parsed.getTime()) ? null : parsed
+  //   },
+  //   set: val => {
+  //     props.participant.birthDate = val ?? null
+  //   },
+  // })
 
   defineExpose({
     validate: async () => {
@@ -153,26 +153,26 @@
         />
       </VCol>
 
-      <VCol :cols="mobile ? 12 : 6">
-        <p class="custom-input-label mb-2">{{ $t('birth_date') }}</p>
-        <DatePicker
-          v-model="participant.birthDate"
-          auto-apply
-          :dark="false"
-          :enable-time-picker="false"
-          :placeholder="$t('select_date')"
-        >
-          <template #input-icon>
-            <VIcon icon="mdi-calendar" size="18" />
-          </template>
-        </DatePicker>
-        <small v-if="showErrors && !participant.birthDate" class="fs-12 fc-error pl-4 pt-2">
-          {{ $t('fill_the_field_properly') }}
-        </small>
-        <p class="fs-12 px-4 fc-gray mt-1">
-          {{ $t('why_birthdate') }}
-        </p>
-      </VCol>
+<!--      <VCol :cols="mobile ? 12 : 6">-->
+<!--        <p class="custom-input-label mb-2">{{ $t('birth_date') }}</p>-->
+<!--        <DatePicker-->
+<!--          v-model="participant.birthDate"-->
+<!--          auto-apply-->
+<!--          :dark="false"-->
+<!--          :enable-time-picker="false"-->
+<!--          :placeholder="$t('select_date')"-->
+<!--        >-->
+<!--          <template #input-icon>-->
+<!--            <VIcon icon="mdi-calendar" size="18" />-->
+<!--          </template>-->
+<!--        </DatePicker>-->
+<!--        <small v-if="showErrors && !participant.birthDate" class="fs-12 fc-error pl-4 pt-2">-->
+<!--          {{ $t('fill_the_field_properly') }}-->
+<!--        </small>-->
+<!--        <p class="fs-12 px-4 fc-gray mt-1">-->
+<!--          {{ $t('why_birthdate') }}-->
+<!--        </p>-->
+<!--      </VCol>-->
 
       <VCol
         v-if="participant.participantType === 'child'"
