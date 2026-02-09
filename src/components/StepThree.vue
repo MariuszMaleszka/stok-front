@@ -321,7 +321,17 @@
    */
   watch(adultParticipants, adults => {
     const actualAdults = adults.filter(a => a.dynamicId !== 'another')
-    if (actualAdults.length > 0 && !stayStore.stayManagerData.managerId) {
+
+    // Auto-populate if exactly 1 adult and no manager selected yet
+    if (actualAdults.length === 1) {
+      const singleAdult = actualAdults[0]
+      stayStore.stayManagerData.managerId = singleAdult.dynamicId
+      stayStore.stayManagerData.name = singleAdult.name || ''
+      stayStore.stayManagerData.surname = singleAdult.surname || ''
+      stayStore.stayManagerData.phone = singleAdult.phone || ''
+      stayStore.stayManagerData.email = singleAdult.email || ''
+    } else if (actualAdults.length > 1 && !stayStore.stayManagerData.managerId) {
+      // Only set initial manager if none selected (original behavior)
       const firstAdult = actualAdults[0]
       stayStore.stayManagerData.managerId = firstAdult.dynamicId
       stayStore.stayManagerData.name = firstAdult.name || ''
@@ -329,34 +339,35 @@
       stayStore.stayManagerData.phone = firstAdult.phone || ''
       stayStore.stayManagerData.email = firstAdult.email || ''
     }
-  }, { immediate: true })
+  }, { immediate: true, deep: true })
 
   /**
-   * Update stay manager fields when selection changes
-   *
-   * If "another" is selected: Clear all fields (user enters new data)
-   * If existing participant selected: Auto-populate from participant data
-   *
-   * This creates a seamless UX where selecting a participant auto-fills their info
+   * Auto-populate stay manager data based on selected participant
+   * Updates on-the-fly when participant data changes
    */
-  watch(() => stayStore.stayManagerData.managerId, managerId => {
-    if (managerId === 'another') {
-      // Clear fields when "another" is selected - user will enter custom data
-      stayStore.stayManagerData.name = ''
-      stayStore.stayManagerData.surname = ''
-      stayStore.stayManagerData.phone = ''
-      stayStore.stayManagerData.email = ''
-    } else {
-      // Auto-populate from selected participant's data
-      const manager = stayStore.participants.find(p => p.dynamicId === managerId)
-      if (manager) {
-        stayStore.stayManagerData.name = manager.name || ''
-        stayStore.stayManagerData.surname = manager.surname || ''
-        stayStore.stayManagerData.phone = manager.phone || ''
-        stayStore.stayManagerData.email = manager.email || ''
+  watch(
+    () => {
+      const selectedParticipant = stayStore.participants.find(
+        p => p.dynamicId === stayStore.stayManagerData.managerId
+      )
+      return selectedParticipant ? {
+        dynamicId: selectedParticipant.dynamicId,
+        name: selectedParticipant.name,
+        surname: selectedParticipant.surname,
+        phone: selectedParticipant.phone,
+        email: selectedParticipant.email
+      } : null
+    },
+    (selectedData) => {
+      if (selectedData && stayStore.stayManagerData.managerId !== 'another') {
+        stayStore.stayManagerData.name = selectedData.name || ''
+        stayStore.stayManagerData.surname = selectedData.surname || ''
+        stayStore.stayManagerData.phone = selectedData.phone || ''
+        stayStore.stayManagerData.email = selectedData.email || ''
       }
-    }
-  })
+    },
+    { immediate: true, deep: true }
+  )
 
   // ============================================================================
   // COMPUTED - Stay Manager Helpers
