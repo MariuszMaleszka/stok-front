@@ -3,7 +3,7 @@
   import { useI18n } from 'vue-i18n'
   import { useDisplay } from 'vuetify'
   import UserIcon from '@/assets/user-circle-blue.svg'
-  import DatePicker from '@/components/DatePicker.vue'
+  // import DatePicker from '@/components/DatePicker.vue'
   import { useStayStore } from '@/stores/StayStore.js'
 
   const props = defineProps({
