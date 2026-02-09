@@ -136,7 +136,10 @@
 
       </VCol>
 
-      <VCol :cols="mobile ? 12 : 6">
+      <VCol
+        v-if="participant.participantType === 'adult'"
+        :cols="mobile ? 12 : 6"
+      >
         <p class="custom-input-label mb-2">{{ $t('phone_number') }}</p>
         <VTextField
           v-model="participant.phone"
