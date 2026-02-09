@@ -51,7 +51,7 @@ export function formatDateRange (input, locale = pl) {
   }
 
   const endFormatted = format(endDate, 'd MMMM', { locale })
-  const days = differenceInCalendarDays(endDate, startDate)
+  const days = differenceInCalendarDays(endDate, startDate) + 1
   return `${startFormatted} - ${endFormatted} (${days}dni)`
 }
 
@@ -84,6 +84,5 @@ export function formatDateRangeSimple (input, locale = pl) {
   }
 
   const endFormatted = format(endDate, 'd MMMM', { locale })
-  const days = differenceInCalendarDays(endDate, startDate)
   return `${startFormatted} - ${endFormatted}`
 }
