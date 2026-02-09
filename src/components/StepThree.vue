@@ -294,9 +294,17 @@
    */
   const adultParticipants = computed(() => {
     const adults = stayStore.participants.filter(p => p.participantType === 'adult')
+
+    // Force reactivity by accessing the properties we want to track
     return [
-      ...adults,
-      { dynamicId: 'another', name: t('another_stay_manager'), surname: '' },
+      ...adults.map(adult => ({
+        dynamicId: adult.dynamicId,
+        name: adult.name,
+        surname: adult.surname,
+        phone: adult.phone,
+        email: adult.email
+      })),
+      { dynamicId: 'another', name: t('another_stay_manager'), surname: '' }
     ]
   })
 
