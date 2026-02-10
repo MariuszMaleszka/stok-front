@@ -381,6 +381,26 @@
    */
   const isAnotherStayManager = computed(() => stayStore.stayManagerData.managerId === 'another')
 
+  /**
+   * Check if all participants are children AND all selected classes are group classes
+   * When true, additional options (insurance) should be hidden
+   *
+   * @returns {boolean} True if all participants are children with only group classes
+   */
+  const shouldHideAdditionalOptions = computed(() => {
+    // Check if all participants are children
+    const allParticipantsAreChildren = stayStore.participants.length > 0 &&
+      stayStore.participants.every(p => p.participantType === 'child')
+
+    if (!allParticipantsAreChildren) {
+      return false
+    }
+
+    // Check if all booked classes are group type
+    return classStore.bookedClasses.length > 0 &&
+      classStore.bookedClasses.every(booking => booking.type === 'group')
+  })
+
   // ============================================================================
   // ACTIONS - Form Validation
   // ============================================================================
@@ -593,8 +613,13 @@
           <div :class="lgAndUp ? 'w-40 ml-auto' : 'w-100'">
             <!-- =========================================================== -->
             <!-- ADDITIONAL OPTIONS - Insurance for all participants -->
+            <!-- hidden when all participants are children & group lessons-->
             <!-- =========================================================== -->
-            <div class="my-4 px-1">
+            <div
+              v-if="!shouldHideAdditionalOptions"
+              id="additional-options"
+              class="my-4 px-1"
+            >
               <p
                 class="fw-600 my-4"
                 :class="mobile? 'fs-16':'fs-20'"
