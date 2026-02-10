@@ -1,92 +1,98 @@
 <script setup>
-  import { ref } from 'vue'
-  import { useI18n } from 'vue-i18n'
-  import { useDisplay } from 'vuetify'
-  import UserIcon from '@/assets/user-circle-blue.svg'
-  // import DatePicker from '@/components/DatePicker.vue'
-  import { useStayStore } from '@/stores/StayStore.js'
+import {ref, computed, watch} from 'vue'
+import {useI18n} from 'vue-i18n'
+import {useDisplay} from 'vuetify'
+import UserIcon from '@/assets/user-circle-blue.svg'
+// import DatePicker from '@/components/DatePicker.vue'
+import {useStayStore} from '@/stores/StayStore.js'
 
-  const props = defineProps({
-    participant: {
-      type: Object,
-      required: true,
-    },
-    index: {
-      type: Number,
-      required: true,
-    },
-  })
+const props = defineProps({
+  participant: {
+    type: Object,
+    required: true,
+  },
+  index: {
+    type: Number,
+    required: true,
+  },
+})
 
-  const { t } = useI18n()
-  const { mobile } = useDisplay()
-  const stayStore = useStayStore()
-  const form = ref(null)
-  const showErrors = ref(false)
+const {t} = useI18n()
+const {mobile} = useDisplay()
+const stayStore = useStayStore()
+const form = ref(null)
+const showErrors = ref(false)
 
-  const rules = {
-    required: value => !!value || t('fill_the_field_properly'),
-    phone: value => {
-      const phoneRegex = /^\+?[0-9]{9,15}$/
-      return !value || phoneRegex.test(value) || t('invalid_phone_number')
-    },
-  }
+const rules = {
+  required: value => !!value || t('fill_the_field_properly'),
+  phone: value => {
+    const phoneRegex = /^\+?[0-9]{9,15}$/
+    return !value || phoneRegex.test(value) || t('invalid_phone_number')
+  },
+}
 
-  // Get adult participants for childminder selection
-  const adultParticipants = computed(() => {
-    return stayStore.participants.filter(p => p.participantType === 'adult')
-  })
+// Get adult participants for childminder selection
+const adultParticipants = computed(() => {
+  return stayStore.participants.filter(p => p.participantType === 'adult')
+})
 
-  const isAnotherChildminder = computed(() =>
-    props.participant.childminder === 'another',
-  )
+const isAnotherChildminder = computed(() =>
+  props.participant.childminder === 'another',
+)
 
-  // Prepare select items with "Another childminder" option
-  const childminderOptions = computed(() => {
-    return [
-      ...adultParticipants.value,
-      { name: t('another_childminder'), dynamicId: 'another' },
-    ]
-  })
+// Prepare select items with "Another childminder" option
+const childminderOptions = computed(() => {
+  return [
+    ...adultParticipants.value,
+    {name: t('another_childminder'), dynamicId: 'another'},
+  ]
+})
 
-  // Computed property to handle birthDate null/undefined conversion
-  // const birthDate = computed({
-  //   get: () => {
-  //     const value = props.participant.birthDate
-  //
-  //     // Return null for any invalid values
-  //     if (value === null || value === undefined || value === '') {
-  //       return null
-  //     }
-  //
-  //     // If it's already a Date object, validate it
-  //     if (value instanceof Date) {
-  //       return isNaN(value.getTime()) ? null : value
-  //     }
-  //
-  //     // If it's a string, try to parse it
-  //     const parsed = new Date(value)
-  //     return isNaN(parsed.getTime()) ? null : parsed
-  //   },
-  //   set: val => {
-  //     props.participant.birthDate = val ?? null
-  //   },
-  // })
+const hasAdultParticipants = computed(() => {
+  return stayStore.participants.some(p => p.participantType === 'adult')
+})
 
-  defineExpose({
-    validate: async () => {
-      showErrors.value = true
-      const formValid = await form.value?.validate()
+// Computed property to handle birthDate null/undefined conversion
+// const birthDate = computed({
+//   get: () => {
+//     const value = props.participant.birthDate
+//
+//     // Return null for any invalid values
+//     if (value === null || value === undefined || value === '') {
+//       return null
+//     }
+//
+//     // If it's already a Date object, validate it
+//     if (value instanceof Date) {
+//       return isNaN(value.getTime()) ? null : value
+//     }
+//
+//     // If it's a string, try to parse it
+//     const parsed = new Date(value)
+//     return isNaN(parsed.getTime()) ? null : parsed
+//   },
+//   set: val => {
+//     props.participant.birthDate = val ?? null
+//   },
+// })
 
-      // Additional validation for childminder if child
-      const hasChildminder = props.participant.participantType === 'child'
-        ? !!props.participant.childminder
-        : true
 
-      return {
-        valid: formValid?.valid && hasChildminder,
-      }
-    },
-  })
+defineExpose({
+  validate: async () => {
+    showErrors.value = true
+    const formValid = await form.value?.validate()
+
+    // Additional validation for childminder if child
+    const hasChildminder = props.participant.participantType === 'child'
+      ? !!props.participant.childminder
+      : true
+
+    return {
+      valid: formValid?.valid && hasChildminder,
+    }
+  },
+})
+
 </script>
 
 <template>
@@ -156,56 +162,105 @@
         />
       </VCol>
 
-<!--      <VCol :cols="mobile ? 12 : 6">-->
-<!--        <p class="custom-input-label mb-2">{{ $t('birth_date') }}</p>-->
-<!--        <DatePicker-->
-<!--          v-model="participant.birthDate"-->
-<!--          auto-apply-->
-<!--          :dark="false"-->
-<!--          :enable-time-picker="false"-->
-<!--          :placeholder="$t('select_date')"-->
-<!--        >-->
-<!--          <template #input-icon>-->
-<!--            <VIcon icon="mdi-calendar" size="18" />-->
-<!--          </template>-->
-<!--        </DatePicker>-->
-<!--        <small v-if="showErrors && !participant.birthDate" class="fs-12 fc-error pl-4 pt-2">-->
-<!--          {{ $t('fill_the_field_properly') }}-->
-<!--        </small>-->
-<!--        <p class="fs-12 px-4 fc-gray mt-1">-->
-<!--          {{ $t('why_birthdate') }}-->
-<!--        </p>-->
-<!--      </VCol>-->
+      <!--      <VCol :cols="mobile ? 12 : 6">-->
+      <!--        <p class="custom-input-label mb-2">{{ $t('birth_date') }}</p>-->
+      <!--        <DatePicker-->
+      <!--          v-model="participant.birthDate"-->
+      <!--          auto-apply-->
+      <!--          :dark="false"-->
+      <!--          :enable-time-picker="false"-->
+      <!--          :placeholder="$t('select_date')"-->
+      <!--        >-->
+      <!--          <template #input-icon>-->
+      <!--            <VIcon icon="mdi-calendar" size="18" />-->
+      <!--          </template>-->
+      <!--        </DatePicker>-->
+      <!--        <small v-if="showErrors && !participant.birthDate" class="fs-12 fc-error pl-4 pt-2">-->
+      <!--          {{ $t('fill_the_field_properly') }}-->
+      <!--        </small>-->
+      <!--        <p class="fs-12 px-4 fc-gray mt-1">-->
+      <!--          {{ $t('why_birthdate') }}-->
+      <!--        </p>-->
+      <!--      </VCol>-->
 
       <VCol
         v-if="participant.participantType === 'child'"
         :cols="12"
       >
         <p class="custom-input-label mb-2">{{ $t('childminder') }}</p>
-        <VSelect
-          v-model="participant.childminder"
-          clear-icon="mdi-close"
-          clearable
-          density="default"
-          hide-details="auto"
-          item-title="name"
-          item-value="dynamicId"
-          :items="childminderOptions"
-          :placeholder="$t('select_childminder')"
-          :rules="[rules.required]"
-          variant="outlined"
-        />
-        <small v-if="showErrors && !participant.childminder" class="fs-12 fc-error pl-4 pt-2">
-          {{ $t('select_childminder') }}
-        </small>
-        <p class="fs-12 px-4 fc-gray mt-1">
+        <div v-if="hasAdultParticipants">
+          <VSelect
+            v-model="participant.childminder"
+            clear-icon="mdi-close"
+            clearable
+            density="default"
+            hide-details="auto"
+            item-title="name"
+            item-value="dynamicId"
+            :items="childminderOptions"
+            :placeholder="$t('select_childminder')"
+            :rules="[rules.required]"
+            variant="outlined"
+          />
+          <small v-if="showErrors && !participant.childminder" class="fs-12 fc-error pl-4 pt-2">
+            {{ $t('select_childminder') }}
+          </small>
+        </div>
+        <p
+          class="fs-12  fc-gray mt-1"
+          :class="hasAdultParticipants ? 'px-4' : 'px-0'"
+        >
           {{ $t('person_reponsible_for_child') }}
         </p>
+        <div v-if="!hasAdultParticipants">
+
+          <p class="custom-input-label mt-4 mb-2">{{ $t('childminder_name') }}</p>
+          <VTextField
+            v-model="participant.anotherChildminderName"
+            autocomplete="off"
+            clear-icon="mdi-close"
+            clearable
+            density="default"
+            hide-details="auto"
+            max-length="50"
+            min-length="2"
+            :rules="[rules.required]"
+            variant="outlined"
+          />
+
+          <p class="custom-input-label my-2">{{ $t('surname') }}</p>
+          <VTextField
+            v-model="participant.anotherChildminderSurname"
+            autocomplete="off"
+            clear-icon="mdi-close"
+            clearable
+            density="default"
+            hide-details="auto"
+            max-length="50"
+            min-length="2"
+            :rules="[rules.required]"
+            variant="outlined"
+          />
+
+          <p class="custom-input-label my-2">{{ $t('childminder_phone') }}</p>
+          <VTextField
+            v-model="participant.anotherChildminderPhone"
+            autocomplete="off"
+            clear-icon="mdi-close"
+            clearable
+            density="default"
+            hide-details="auto"
+            max-length="11"
+            :rules="[rules.required, rules.phone]"
+            variant="outlined"
+            @keydown="(e) => !/[\d+]/.test(e.key) && e.key !== 'Backspace' && e.preventDefault()"
+          />
+        </div>
       </VCol>
       <!-- Additional fields for "Another childminder" -->
       <template v-if="isAnotherChildminder">
         <VCol :cols="mobile ? 12 : 6">
-          <p class="custom-input-label mb-2">{{ $t('childminder_name') }}</p>
+          <p class="custom-input-label my-2">{{ $t('childminder_name') }}</p>
           <VTextField
             v-model="participant.anotherChildminderName"
             autocomplete="off"

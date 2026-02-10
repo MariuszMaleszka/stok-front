@@ -257,7 +257,9 @@
   "discount_12_percent": "Rabaty 12%",
   "discount_12_info": "dotyczy lekcji prywatnych i nie łączy się z Happy Hours ani pakietami.",
   "add_new_classes": "Dodaj nowe zajęcia",
-  "stay": "Pobyt"
+  "stay": "Pobyt",
+  "select_or_enter_stay_manager": "Wpisz dane osoby dokonującej rezerwacji"
+
 
 
 }

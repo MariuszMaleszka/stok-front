@@ -462,6 +462,9 @@
 
     return true
   }
+  const hasAdultParticipants = computed(() => {
+    return stayStore.participants.some(p => p.participantType === 'adult')
+  })
 
   // ============================================================================
   // COMPONENT EXPOSURE
@@ -933,14 +936,24 @@
               class="bg-white rounded-lg box-shadow-sm"
               :class="mobile ? 'fs-11 pa-4' : 'fs-14 pa-8'"
             >
-              <div class="mb-2">
+              <div
+                v-if="hasAdultParticipants"
+                class="mb-2">
                 <img alt="wallet" :src="WalletIcon">
                 <div class="d-flex align-center fs-16 fw-500 mt-2">
                   {{ $t('select_stay_manager') }}:
                 </div>
               </div>
+              <div v-else class="mb-2">
+                <img alt="wallet" :src="WalletIcon">
+                <div class="d-flex align-center fs-16 fw-500 mt-2">
+                  {{ $t('select_or_enter_stay_manager') }}:
+                </div>
+
+              </div>
 
               <VSelect
+                v-if="hasAdultParticipants"
                 v-model="stayStore.stayManagerData.managerId"
                 clear-icon="mdi-close"
                 clearable
@@ -963,6 +976,7 @@
                   </v-list-item>
                 </template>
               </VSelect>
+
               <VDivider class="my-4" />
 
               <VRow class="mt-4">

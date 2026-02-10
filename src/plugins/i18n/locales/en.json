@@ -255,6 +255,8 @@
   "discount_12_percent": "12% discount",
   "discount_12_info": "applies to private lessons and cannot be combined with Happy Hours or packages.",
   "add_new_classes": "Add new classes",
-  "stay": "Stay"
+  "stay": "Stay",
+  "select_or_enter_stay_manager": "Enter the name of your stay manager"
+
 
 }
