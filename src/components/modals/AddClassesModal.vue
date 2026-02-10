@@ -826,7 +826,7 @@
                     class="text-capitalize mb-8 text-primary-900 border-primary find-other-btn text-wrap py-2"
                     color="primary"
                     style="min-height: 59px; height: auto;"
-                    variant="outlined"
+                    variant="flat"
                     width="100%"
                   >
                     <span class="text-break" style="white-space: normal; line-height: 1.2;" v-html="t('find_closest_classes').replace('\n', '<br>')" />

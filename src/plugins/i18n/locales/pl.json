@@ -111,7 +111,7 @@
   "instructor": "Instruktor",
   "select_instructor": "Wybierz instruktora",
   "instructor_not_available": "Wybrany instruktor nie jest dostępny w tym wymiarze czasowym w wybranym dniu.",
-  "no_classes_found": "Brak terminów spełniających wszystkie kryteria.",
+  "no_classes_found": "Brak terminów spełniających wszystkie wybrane kryteria.",
   "find_closest_classes": "Zobacz najbliższe dostępne opcje",
   "contact_customer_service_info": "Jeśli nie znalazłeś/aś dopasowanej oferty, skontaktuj się z naszym",
   "customer_service_office": "biurem obsługi klienta",
