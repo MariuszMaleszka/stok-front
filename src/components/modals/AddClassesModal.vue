@@ -1,518 +1,581 @@
 <script setup>
-  import { differenceInCalendarDays } from 'date-fns'
-  import { computed, ref, watch } from 'vue'
-  import { useI18n } from 'vue-i18n'
-  import CalendarPlusIcon from '@/assets/calendar-plus.svg'
-  import ClockGrayIcon from '@/assets/clock_gray.svg'
-  import InfoIcon from '@/assets/info.svg'
-  import UserIcon from '@/assets/user.svg'
-  import UsersGroupIcon from '@/assets/users-group.svg'
-  import UsersIcon from '@/assets/users.svg'
-  import ChildSpecialistInfoModal from '@/components/modals/ChildSpecialistInfoModal.vue'
-  import ClassesInfoModal from '@/components/modals/ClassesInfoModal.vue'
-  import GroupDetailsModal from '@/components/modals/GroupDetailsModal.vue'
-  import { usePickedClassesStore } from '@/stores/PickedClassesStore'
-  import { useStayStore } from '@/stores/StayStore'
-  import { useViewControlStore } from '@/stores/ViewControlStore'
+import {differenceInCalendarDays} from 'date-fns'
+import {computed, ref, watch} from 'vue'
+import {useI18n} from 'vue-i18n'
+import CalendarPlusIcon from '@/assets/calendar-plus.svg'
+import ClockGrayIcon from '@/assets/clock_gray.svg'
+import InfoIcon from '@/assets/info.svg'
+import UserIcon from '@/assets/user.svg'
+import UsersGroupIcon from '@/assets/users-group.svg'
+import UsersIcon from '@/assets/users.svg'
+import ChildSpecialistInfoModal from '@/components/modals/ChildSpecialistInfoModal.vue'
+import ClassesInfoModal from '@/components/modals/ClassesInfoModal.vue'
+import GroupDetailsModal from '@/components/modals/GroupDetailsModal.vue'
+import {usePickedClassesStore} from '@/stores/PickedClassesStore'
+import {useStayStore} from '@/stores/StayStore'
+import {useViewControlStore} from '@/stores/ViewControlStore'
+import {useDisplay} from "vuetify/framework";
 
-  const props = defineProps({
-    modelValue: { type: Boolean, default: false },
-    dateStr: { type: String, default: '' },
-    dateIso: { type: String, default: '' },
-    participantType: { type: String, default: 'adult' },
-    age: { type: Number, default: null },
+const props = defineProps({
+  modelValue: {type: Boolean, default: false},
+  dateStr: {type: String, default: ''},
+  dateIso: {type: String, default: ''},
+  participantType: {type: String, default: 'adult'},
+  age: {type: Number, default: null},
+  currentParticipant: {type: Object, default: null},
+})
+
+const emit = defineEmits(['update:modelValue', 'next'])
+const {t} = useI18n()
+const stayStore = useStayStore()
+const pickedClassesStore = usePickedClassesStore()
+const viewStore = useViewControlStore()
+const {mobile} = useDisplay()
+
+
+const availableSkillLevels = computed(() => {
+
+  console.log(props.currentParticipant)
+  if (props.participantType === 'adult') {
+    return stayStore.skillLevels_ADULTS
+  } else if (props.participantType === 'child') {
+    if (!props.age) {
+      return []
+    }
+
+    const age = Number.parseInt(props.age)
+
+    // Use adult skill levels for children aged 14 and above
+    if (age >= 14) {
+      return stayStore.skillLevels_ADULTS
+    }
+
+    if (props.currentParticipant.activityType === 'Narty') {
+      return stayStore.skillLevels_CHILDREN_SKI.filter(level =>
+        age >= level.ageRange[0] && age <= level.ageRange[1],
+      )
+    } else if (props.currentParticipant.activityType === 'Snowboard') {
+      return stayStore.skillLevels_CHILDREN_SNOWBOARD.filter(level =>
+        age >= level.ageRange[0] && age <= level.ageRange[1],
+      )
+    }
+  }
+  return []
+})
+
+
+const currentStep = ref(1)
+const selectedType = ref(null)
+const showStepper = ref(false)
+const showClassesInfoModal = ref(false)
+const showChildSpecialistModal = ref(false)
+const showGroupDetailsModal = ref(false)
+const selectedGroupForDetails = ref(null)
+const savePreferences = ref(false)
+
+const skillInfoDialog = ref(false)
+const selectedSkillLevel = ref(null)
+const currentSkillLevelInfo = ref(null)
+
+const selectSkillLevel = (level) => {
+  for (const l of availableSkillLevels.value) l.selected = false
+  level.selected = true
+
+
+  props.currentParticipant.skillLevel = level.name
+  selectedSkillLevel.value = [level]
+  skillInfoDialog.value = false
+}
+
+function openGroupDetails(group) {
+  selectedGroupForDetails.value = group
+  showGroupDetailsModal.value = true
+}
+
+function formatSchedule(text) {
+  if (!text) return ''
+  return text.replace(/(\d{1,2}:\d{2})/g, '<span class="text-primary font-weight-bold">$1</span>')
+}
+
+// Shared Flow State
+const sharedParticipants = ref([])
+
+// Group Flow State
+// selectedGroup is now in store
+
+const stayDuration = computed(() => {
+  if (!stayStore.dateOfStay) return 0
+  let start, end
+  if (Array.isArray(stayStore.dateOfStay)) {
+    if (stayStore.dateOfStay.length === 0) return 0
+    start = new Date(stayStore.dateOfStay[0])
+    end = stayStore.dateOfStay[1] ? new Date(stayStore.dateOfStay[1]) : start
+  } else {
+    start = new Date(stayStore.dateOfStay)
+    end = start
+  }
+  return differenceInCalendarDays(end, start) + 1
+})
+
+// Mock Data
+const classTypes = computed(() => {
+  const types = [
+    {
+      id: 'individual',
+      label: t('private_lesson_1p'),
+      icon: UserIcon,
+    },
+    {
+      id: 'shared',
+      label: t('private_lesson_2_3p'),
+      icon: UsersIcon,
+    },
+    {
+      id: 'group',
+      label: t('group_course_few_days'),
+      icon: UsersGroupIcon,
+    },
+  ]
+
+  return types.filter(type => {
+    // 1. Hide shared if < 2 participants
+    if (type.id === 'shared' && stayStore.participants.length < 2) {
+      return false
+    }
+    // 2. Hide group if stay <= 2 days
+    if (type.id === 'group' && stayDuration.value <= 2) {
+      return false
+    }
+    return true
   })
+})
 
-  const emit = defineEmits(['update:modelValue', 'next'])
-  const { t } = useI18n()
-  const stayStore = useStayStore()
-  const pickedClassesStore = usePickedClassesStore()
-  const viewStore = useViewControlStore()
+const timesOfDay = computed(() => [
+  {title: t('any_time'), value: 'Dowolna'},
+  {title: t('morning'), value: 'Rano'},
+  {title: t('afternoon'), value: 'Popołudnie'},
+  {title: t('evening'), value: 'Wieczór'},
+])
+const durations = ['1h', '1,5h', '2h', '2,5h', '3h', '4h', '5h']
+const genders = computed(() => [
+  {title: t('any_gender'), value: 'Dowolna'},
+  {title: t('female'), value: 'Kobieta'},
+  {title: t('male'), value: 'Mężczyzna'},
+])
 
-  const currentStep = ref(1)
-  const selectedType = ref(null)
-  const showStepper = ref(false)
-  const showClassesInfoModal = ref(false)
-  const showChildSpecialistModal = ref(false)
-  const showGroupDetailsModal = ref(false)
-  const selectedGroupForDetails = ref(null)
-  const savePreferences = ref(false)
+// Reset state when modal opens/closes or type changes
+watch(() => props.modelValue, val => {
+  if (val) {
+    resetState()
+  }
+})
 
-  function openGroupDetails (group) {
-    selectedGroupForDetails.value = group
-    showGroupDetailsModal.value = true
+// Update store selected date when prop changes
+watch(() => props.dateIso, val => {
+  if (val) {
+    pickedClassesStore.setSelectedDate(val)
+  }
+}, {immediate: true})
+
+// Reset filters when "Search only classes with previously selected instructor" is enabled
+watch(() => pickedClassesStore.searchPreviouslySelected, val => {
+  if (val) {
+    // Reset Individual Preferences
+    pickedClassesStore.individualPreferences.timeOfDay = 'Dowolna'
+    pickedClassesStore.individualPreferences.instructorGender = 'Dowolna'
+    pickedClassesStore.individualPreferences.findSpecificInstructor = false
+    pickedClassesStore.individualPreferences.selectedInstructor = null
+
+    // Reset Shared Preferences
+    pickedClassesStore.sharedPreferences.timeOfDay = 'Dowolna'
+    pickedClassesStore.sharedPreferences.instructorGender = 'Dowolna'
+    pickedClassesStore.sharedPreferences.findSpecificInstructor = false
+    pickedClassesStore.sharedPreferences.selectedInstructor = null
+  }
+})
+
+// Disable "Search only classes with previously selected instructor" if no instructor is selected
+watch(() => pickedClassesStore.hasPreviouslySelectedInstructor, val => {
+  if (!val) {
+    pickedClassesStore.searchPreviouslySelected = false
+  }
+})
+
+
+function resetState() {
+  currentStep.value = 1
+  selectedType.value = null
+  showStepper.value = false
+  viewStore.isAddClassesStepOneCompleted = false
+  viewStore.isAddClassesStepTwoCompleted = false
+  viewStore.isAddClassesStepThreeCompleted = false
+  pickedClassesStore.resetState()
+
+  const saved = pickedClassesStore.loadFilterPreferences()
+  if (saved) {
+    savePreferences.value = true
+  } else {
+    savePreferences.value = false
+    // Set default duration based on age
+    const ageNum = Number(props.age)
+    const defaultDuration = (!Number.isNaN(ageNum) && ageNum >= 4 && ageNum <= 8) ? '1h' : '2h'
+    pickedClassesStore.individualPreferences.duration = defaultDuration
+    pickedClassesStore.sharedPreferences.duration = defaultDuration
   }
 
-  function formatSchedule (text) {
-    if (!text) return ''
-    return text.replace(/(\d{1,2}:\d{2})/g, '<span class="text-primary font-weight-bold">$1</span>')
+  sharedParticipants.value = []
+
+  // Always pre-select the first participant
+  if (stayStore.participants.length > 0) {
+    const p1 = stayStore.participants[0]
+    sharedParticipants.value.push(p1.dynamicId || 0)
   }
+}
 
-  // Shared Flow State
-  const sharedParticipants = ref([])
+function close() {
+  emit('update:modelValue', false)
+}
 
-  // Group Flow State
-  // selectedGroup is now in store
-
-  const stayDuration = computed(() => {
-    if (!stayStore.dateOfStay) return 0
-    let start, end
-    if (Array.isArray(stayStore.dateOfStay)) {
-      if (stayStore.dateOfStay.length === 0) return 0
-      start = new Date(stayStore.dateOfStay[0])
-      end = stayStore.dateOfStay[1] ? new Date(stayStore.dateOfStay[1]) : start
-    } else {
-      start = new Date(stayStore.dateOfStay)
-      end = start
-    }
-    return differenceInCalendarDays(end, start) + 1
-  })
-
-  // Mock Data
-  const classTypes = computed(() => {
-    const types = [
-      {
-        id: 'individual',
-        label: t('private_lesson_1p'),
-        icon: UserIcon,
-      },
-      {
-        id: 'shared',
-        label: t('private_lesson_2_3p'),
-        icon: UsersIcon,
-      },
-      {
-        id: 'group',
-        label: t('group_course_few_days'),
-        icon: UsersGroupIcon,
-      },
-    ]
-
-    return types.filter(type => {
-      // 1. Hide shared if < 2 participants
-      if (type.id === 'shared' && stayStore.participants.length < 2) {
-        return false
-      }
-      // 2. Hide group if stay <= 2 days
-      if (type.id === 'group' && stayDuration.value <= 2) {
-        return false
-      }
-      return true
-    })
-  })
-
-  const timesOfDay = computed(() => [
-    { title: t('any_time'), value: 'Dowolna' },
-    { title: t('morning'), value: 'Rano' },
-    { title: t('afternoon'), value: 'Popołudnie' },
-    { title: t('evening'), value: 'Wieczór' },
-  ])
-  const durations = ['1h', '1,5h', '2h', '2,5h', '3h', '4h', '5h']
-  const genders = computed(() => [
-    { title: t('any_gender'), value: 'Dowolna' },
-    { title: t('female'), value: 'Kobieta' },
-    { title: t('male'), value: 'Mężczyzna' },
-  ])
-
-  // Reset state when modal opens/closes or type changes
-  watch(() => props.modelValue, val => {
-    if (val) {
-      resetState()
-    }
-  })
-
-  // Update store selected date when prop changes
-  watch(() => props.dateIso, val => {
-    if (val) {
-      pickedClassesStore.setSelectedDate(val)
-    }
-  }, { immediate: true })
-
-  // Reset filters when "Search only classes with previously selected instructor" is enabled
-  watch(() => pickedClassesStore.searchPreviouslySelected, val => {
-    if (val) {
-      // Reset Individual Preferences
-      pickedClassesStore.individualPreferences.timeOfDay = 'Dowolna'
-      pickedClassesStore.individualPreferences.instructorGender = 'Dowolna'
-      pickedClassesStore.individualPreferences.findSpecificInstructor = false
-      pickedClassesStore.individualPreferences.selectedInstructor = null
-
-      // Reset Shared Preferences
-      pickedClassesStore.sharedPreferences.timeOfDay = 'Dowolna'
-      pickedClassesStore.sharedPreferences.instructorGender = 'Dowolna'
-      pickedClassesStore.sharedPreferences.findSpecificInstructor = false
-      pickedClassesStore.sharedPreferences.selectedInstructor = null
-    }
-  })
-
-  // Disable "Search only classes with previously selected instructor" if no instructor is selected
-  watch(() => pickedClassesStore.hasPreviouslySelectedInstructor, val => {
-    if (!val) {
-      pickedClassesStore.searchPreviouslySelected = false
-    }
-  })
-
-  function resetState () {
+function handleTypeSelection() {
+  if (selectedType.value) {
+    showStepper.value = true
     currentStep.value = 1
-    selectedType.value = null
-    showStepper.value = false
-    viewStore.isAddClassesStepOneCompleted = false
-    viewStore.isAddClassesStepTwoCompleted = false
-    viewStore.isAddClassesStepThreeCompleted = false
-    pickedClassesStore.resetState()
+  }
+}
 
-    const saved = pickedClassesStore.loadFilterPreferences()
-    if (saved) {
-      savePreferences.value = true
-    } else {
-      savePreferences.value = false
-      // Set default duration based on age
-      const ageNum = Number(props.age)
-      const defaultDuration = (!Number.isNaN(ageNum) && ageNum >= 4 && ageNum <= 8) ? '1h' : '2h'
-      pickedClassesStore.individualPreferences.duration = defaultDuration
-      pickedClassesStore.sharedPreferences.duration = defaultDuration
-    }
-
-    sharedParticipants.value = []
-
-    // Always pre-select the first participant
-    if (stayStore.participants.length > 0) {
-      const p1 = stayStore.participants[0]
-      sharedParticipants.value.push(p1.dynamicId || 0)
-    }
+function goNext() {
+  if (savePreferences.value && (
+    (selectedType.value === 'individual' && currentStep.value === 1)
+    || (selectedType.value === 'shared' && currentStep.value === 2)
+  )) {
+    const prefs = selectedType.value === 'individual'
+      ? pickedClassesStore.individualPreferences
+      : pickedClassesStore.sharedPreferences
+    pickedClassesStore.saveFilterPreferences(prefs)
   }
 
-  function close () {
-    emit('update:modelValue', false)
-  }
-
-  function handleTypeSelection () {
-    if (selectedType.value) {
-      showStepper.value = true
-      currentStep.value = 1
-    }
-  }
-
-  function goNext () {
-    if (savePreferences.value && (
-      (selectedType.value === 'individual' && currentStep.value === 1)
-      || (selectedType.value === 'shared' && currentStep.value === 2)
-    )) {
-      const prefs = selectedType.value === 'individual'
-        ? pickedClassesStore.individualPreferences
-        : pickedClassesStore.sharedPreferences
-      pickedClassesStore.saveFilterPreferences(prefs)
-    }
-
-    switch (selectedType.value) {
-      case 'individual': {
-        if (currentStep.value < 2) {
-          if (currentStep.value === 1) viewStore.isAddClassesStepOneCompleted = true
-          currentStep.value++
-        } else {
-          viewStore.isAddClassesStepTwoCompleted = true
-          handleFinish()
-        }
-        break
-      }
-      case 'shared': {
-        if (currentStep.value < 3) {
-          if (currentStep.value === 1) viewStore.isAddClassesStepOneCompleted = true
-          if (currentStep.value === 2) viewStore.isAddClassesStepTwoCompleted = true
-          currentStep.value++
-        } else {
-          viewStore.isAddClassesStepThreeCompleted = true
-          handleFinish()
-        }
-        break
-      }
-      case 'group': {
+  switch (selectedType.value) {
+    case 'individual': {
+      if (currentStep.value < 2) {
+        if (currentStep.value === 1) viewStore.isAddClassesStepOneCompleted = true
+        currentStep.value++
+      } else {
+        viewStore.isAddClassesStepTwoCompleted = true
         handleFinish()
-        break
       }
+      break
+    }
+    case 'shared': {
+      if (currentStep.value < 3) {
+        if (currentStep.value === 1) viewStore.isAddClassesStepOneCompleted = true
+        if (currentStep.value === 2) viewStore.isAddClassesStepTwoCompleted = true
+        currentStep.value++
+      } else {
+        viewStore.isAddClassesStepThreeCompleted = true
+        handleFinish()
+      }
+      break
+    }
+    case 'group': {
+      if (currentStep.value < 2) {
+        currentStep.value++
+      } else {
+        handleFinish()
+      }
+      break
     }
   }
+}
 
-  function goBack () {
-    if (currentStep.value > 1) {
-      currentStep.value--
-    } else {
-      showStepper.value = false
-      selectedType.value = null
+function goBack() {
+  if (currentStep.value > 1) {
+    currentStep.value--
+  } else {
+    showStepper.value = false
+    selectedType.value = null
+  }
+}
+
+function handleFinish() {
+  // Emit next with selected data
+  emit('next', {
+    type: selectedType.value,
+    data: getDataForType(),
+  })
+  close()
+}
+
+function getDataForType() {
+  if (selectedType.value === 'individual') {
+    let slotObj = pickedClassesStore.availableSlots.find(s => s.id === pickedClassesStore.individualSlot)
+    if (!slotObj) {
+      slotObj = pickedClassesStore.availableSlots.find(s => s.id === Number(pickedClassesStore.individualSlot))
+    }
+
+    let finalSlot = slotObj
+    if (slotObj && slotObj.discount) {
+      finalSlot = {...slotObj}
+      finalSlot.originalPrice = finalSlot.price
+      finalSlot.price = calculateDiscountedPrice(finalSlot.price, finalSlot.discount)
+    }
+
+    return {preferences: pickedClassesStore.individualPreferences, slot: finalSlot || pickedClassesStore.individualSlot}
+  }
+  if (selectedType.value === 'shared') {
+    let slotObj = pickedClassesStore.availableSlots.find(s => s.id === pickedClassesStore.sharedSlot)
+    if (!slotObj) {
+      slotObj = pickedClassesStore.availableSlots.find(s => s.id === Number(pickedClassesStore.sharedSlot))
+    }
+
+    let finalSlot = slotObj
+    if (slotObj && slotObj.discount) {
+      finalSlot = {...slotObj}
+      finalSlot.originalPrice = finalSlot.price
+      finalSlot.price = calculateDiscountedPrice(finalSlot.price, finalSlot.discount)
+    }
+
+    return {
+      participants: sharedParticipants.value,
+      preferences: pickedClassesStore.sharedPreferences,
+      slot: finalSlot || pickedClassesStore.sharedSlot
     }
   }
+  if (selectedType.value === 'group') {
+    const groupObj = pickedClassesStore.availableGroups.find(g => g.id === pickedClassesStore.selectedGroup)
 
-  function handleFinish () {
-    // Emit next with selected data
-    emit('next', {
-      type: selectedType.value,
-      data: getDataForType(),
-    })
+    let finalGroup = groupObj
+    if (groupObj && groupObj.discount) {
+      finalGroup = {...groupObj}
+      finalGroup.originalPrice = finalGroup.price
+      finalGroup.price = calculateDiscountedPrice(finalGroup.price, finalGroup.discount)
+    }
+
+    return {
+      group: finalGroup || pickedClassesStore.selectedGroup,
+      childAddOn: props.participantType === 'child' && pickedClassesStore.childAddOnSelections[pickedClassesStore.selectedGroup],
+      childAddOnPrice: pickedClassesStore.childAddOnPrice,
+    }
+  }
+  return null
+}
+
+function calculateDiscountedPrice(price, discount) {
+  if (!discount) return price
+  return Math.round(price * (1 - discount))
+}
+
+function calculateGroupPrice(group) {
+  let price = group.price
+  if (props.participantType === 'child' && pickedClassesStore.childAddOnSelections[group.id]) {
+    price += pickedClassesStore.childAddOnPrice
+  }
+  return price
+}
+
+function calculateDiscountedGroupPrice(group) {
+  let price = calculateDiscountedPrice(group.price, group.discount)
+  if (props.participantType === 'child' && pickedClassesStore.childAddOnSelections[group.id]) {
+    price += pickedClassesStore.childAddOnPrice
+  }
+  return price
+}
+
+// Titles
+const modalTitle = computed(() => {
+  if (!showStepper.value) return t('adding_classes')
+  if (selectedType.value === 'individual') return t('adding_private_lesson')
+  if (selectedType.value === 'shared') return t('adding_private_lesson_2_3')
+  if (selectedType.value === 'group') return t('adding_group_course')
+  return t('adding_classes')
+})
+
+// Navigation Logic
+const isLastStep = computed(() => {
+  if (!showStepper.value) return false
+  if (selectedType.value === 'individual') return currentStep.value === 2
+  if (selectedType.value === 'shared') return currentStep.value === 3
+  // if (selectedType.value === 'group') return true
+  if (selectedType.value === 'group') return currentStep.value === 2 // Updated from true
+  return false
+})
+
+const leftButtonText = computed(() => showStepper.value ? t('back') : t('exit'))
+
+const rightButtonText = computed(() => {
+  if (!showStepper.value) return t('next')
+  return isLastStep.value ? t('add_classes') : t('next')
+})
+
+const rightButtonIcon = computed(() => {
+  if (!showStepper.value) return 'mdi-arrow-right'
+  return isLastStep.value ? '' : 'mdi-arrow-right'
+})
+
+const isRightButtonDisabled = computed(() => {
+  if (!showStepper.value) return !selectedType.value
+
+  if (selectedType.value === 'individual' && currentStep.value === 2) {
+    return !pickedClassesStore.individualSlot
+  }
+  if (selectedType.value === 'shared') {
+    if (currentStep.value === 1) return sharedParticipants.value.length <= 1
+    if (currentStep.value === 3) return !pickedClassesStore.sharedSlot
+  }
+  if (selectedType.value === 'group') {
+    // Add check for skill level in step 1
+    if (currentStep.value === 1) return !props.currentParticipant?.skillLevel
+
+    // Step 2: Selecting a group
+    return !pickedClassesStore.selectedGroup
+  }
+
+  return false
+})
+
+const rightButtonColor = computed(() => {
+  if (!showStepper.value) return selectedType.value ? 'blue' : 'grey-lighten-2'
+  return 'blue'
+})
+
+function handleLeftButton() {
+  if (showStepper.value) {
+    goBack()
+  } else {
     close()
   }
+}
 
-  function getDataForType () {
-    if (selectedType.value === 'individual') {
-      let slotObj = pickedClassesStore.availableSlots.find(s => s.id === pickedClassesStore.individualSlot)
-      if (!slotObj) {
-        slotObj = pickedClassesStore.availableSlots.find(s => s.id === Number(pickedClassesStore.individualSlot))
-      }
+function handleRightButton() {
+  if (showStepper.value) {
+    goNext()
+  } else {
+    handleTypeSelection()
+  }
+}
 
-      let finalSlot = slotObj
-      if (slotObj && slotObj.discount) {
-        finalSlot = { ...slotObj }
-        finalSlot.originalPrice = finalSlot.price
-        finalSlot.price = calculateDiscountedPrice(finalSlot.price, finalSlot.discount)
-      }
+const isChildParticipant = computed(() => {
+  if (selectedType.value === 'individual') {
+    return props.participantType === 'child'
+  }
+  if (selectedType.value === 'shared' && stayStore.participants.length > 0) {
+    return stayStore.participants[0].participantType === 'child'
+  }
+  return false
+})
 
-      return { preferences: pickedClassesStore.individualPreferences, slot: finalSlot || pickedClassesStore.individualSlot }
-    }
-    if (selectedType.value === 'shared') {
-      let slotObj = pickedClassesStore.availableSlots.find(s => s.id === pickedClassesStore.sharedSlot)
-      if (!slotObj) {
-        slotObj = pickedClassesStore.availableSlots.find(s => s.id === Number(pickedClassesStore.sharedSlot))
-      }
-
-      let finalSlot = slotObj
-      if (slotObj && slotObj.discount) {
-        finalSlot = { ...slotObj }
-        finalSlot.originalPrice = finalSlot.price
-        finalSlot.price = calculateDiscountedPrice(finalSlot.price, finalSlot.discount)
-      }
-
-      return { participants: sharedParticipants.value, preferences: pickedClassesStore.sharedPreferences, slot: finalSlot || pickedClassesStore.sharedSlot }
-    }
-    if (selectedType.value === 'group') {
-      const groupObj = pickedClassesStore.availableGroups.find(g => g.id === pickedClassesStore.selectedGroup)
-
-      let finalGroup = groupObj
-      if (groupObj && groupObj.discount) {
-        finalGroup = { ...groupObj }
-        finalGroup.originalPrice = finalGroup.price
-        finalGroup.price = calculateDiscountedPrice(finalGroup.price, finalGroup.discount)
-      }
-
-      return {
-        group: finalGroup || pickedClassesStore.selectedGroup,
-        childAddOn: props.participantType === 'child' && pickedClassesStore.childAddOnSelections[pickedClassesStore.selectedGroup],
-        childAddOnPrice: pickedClassesStore.childAddOnPrice,
-      }
-    }
-    return null
+const isInstructorAvailableForDuration = computed(() => {
+  let prefs
+  if (selectedType.value === 'individual') {
+    prefs = pickedClassesStore.individualPreferences
+  } else if (selectedType.value === 'shared') {
+    prefs = pickedClassesStore.sharedPreferences
+  } else {
+    return true
   }
 
-  function calculateDiscountedPrice (price, discount) {
-    if (!discount) return price
-    return Math.round(price * (1 - discount))
+  if (!prefs.findSpecificInstructor || !prefs.selectedInstructor) return true
+
+  return pickedClassesStore.availableSlots.some(s =>
+    s.date === pickedClassesStore.selectedDate
+    && s.instructor === prefs.selectedInstructor
+    && s.duration === prefs.duration,
+  )
+})
+
+function toggleChildSpecialist(type) {
+  const prefs = type === 'individual' ? pickedClassesStore.individualPreferences : pickedClassesStore.sharedPreferences
+  prefs.childSpecialist = !prefs.childSpecialist
+}
+
+function getFilters(prefs) {
+  const filters = []
+  if (prefs.timeOfDay && prefs.timeOfDay !== 'Dowolna') {
+    const timeMap = {
+      Rano: t('morning'),
+      Popołudnie: t('afternoon'),
+      Wieczór: t('evening'),
+    }
+    const label = timeMap[prefs.timeOfDay] || prefs.timeOfDay
+    filters.push({key: 'timeOfDay', label})
   }
-
-  function calculateGroupPrice (group) {
-    let price = group.price
-    if (props.participantType === 'child' && pickedClassesStore.childAddOnSelections[group.id]) {
-      price += pickedClassesStore.childAddOnPrice
-    }
-    return price
+  if (prefs.duration && prefs.duration !== '2h') {
+    filters.push({key: 'duration', label: t('lessons_duration_label', {duration: prefs.duration})})
   }
-
-  function calculateDiscountedGroupPrice (group) {
-    let price = calculateDiscountedPrice(group.price, group.discount)
-    if (props.participantType === 'child' && pickedClassesStore.childAddOnSelections[group.id]) {
-      price += pickedClassesStore.childAddOnPrice
-    }
-    return price
+  if (prefs.instructorGender && prefs.instructorGender !== 'Dowolna') {
+    let genderLabel = ''
+    if (prefs.instructorGender === 'Kobieta') genderLabel = t('female').toLowerCase()
+    else if (prefs.instructorGender === 'Mężczyzna') genderLabel = t('male').toLowerCase()
+    else genderLabel = t('any_gender').toLowerCase()
+    filters.push({key: 'instructorGender', label: `${t('instructor')} ${genderLabel}`})
   }
+  return filters
+}
 
-  // Titles
-  const modalTitle = computed(() => {
-    if (!showStepper.value) return t('adding_classes')
-    if (selectedType.value === 'individual') return t('adding_private_lesson')
-    if (selectedType.value === 'shared') return t('adding_private_lesson_2_3')
-    if (selectedType.value === 'group') return t('adding_group_course')
-    return t('adding_classes')
-  })
+const individualFilters = computed(() => getFilters(pickedClassesStore.individualPreferences))
+const sharedFilters = computed(() => getFilters(pickedClassesStore.sharedPreferences))
 
-  // Navigation Logic
-  const isLastStep = computed(() => {
-    if (!showStepper.value) return false
-    if (selectedType.value === 'individual') return currentStep.value === 2
-    if (selectedType.value === 'shared') return currentStep.value === 3
-    if (selectedType.value === 'group') return true
-    return false
-  })
+function removeFilter(type, key) {
+  const prefs = type === 'individual' ? pickedClassesStore.individualPreferences : pickedClassesStore.sharedPreferences
+  if (key === 'timeOfDay') prefs.timeOfDay = 'Dowolna'
+  if (key === 'duration') prefs.duration = '2h'
+  if (key === 'instructorGender') prefs.instructorGender = 'Dowolna'
+}
 
-  const leftButtonText = computed(() => showStepper.value ? t('back') : t('exit'))
+const availableParticipantsForShared = computed(() => {
+  if (stayStore.participants.length === 0) return []
 
-  const rightButtonText = computed(() => {
-    if (!showStepper.value) return t('next')
-    return isLastStep.value ? t('add_classes') : t('next')
-  })
+  const firstParticipant = stayStore.participants[0]
+  const allowedType = firstParticipant.participantType
+  const allowedActivity = firstParticipant.activityType
 
-  const rightButtonIcon = computed(() => {
-    if (!showStepper.value) return 'mdi-arrow-right'
-    return isLastStep.value ? '' : 'mdi-arrow-right'
-  })
+  return stayStore.participants
+    .map((p, index) => ({data: p, originalIndex: index}))
+    .filter(({data: p}) => {
+      // Check age category
+      if (p.participantType !== allowedType) return false
 
-  const isRightButtonDisabled = computed(() => {
-    if (!showStepper.value) return !selectedType.value
+      // Check discipline
+      if (p.activityType !== allowedActivity) return false
 
-    if (selectedType.value === 'individual' && currentStep.value === 2) {
-      return !pickedClassesStore.individualSlot
-    }
-    if (selectedType.value === 'shared') {
-      if (currentStep.value === 1) return sharedParticipants.value.length <= 1
-      if (currentStep.value === 3) return !pickedClassesStore.sharedSlot
-    }
-    if (selectedType.value === 'group') {
-      return !pickedClassesStore.selectedGroup
-    }
-
-    return false
-  })
-
-  const rightButtonColor = computed(() => {
-    if (!showStepper.value) return selectedType.value ? 'blue' : 'grey-lighten-2'
-    return 'blue'
-  })
-
-  function handleLeftButton () {
-    if (showStepper.value) {
-      goBack()
-    } else {
-      close()
-    }
-  }
-
-  function handleRightButton () {
-    if (showStepper.value) {
-      goNext()
-    } else {
-      handleTypeSelection()
-    }
-  }
-
-  const isChildParticipant = computed(() => {
-    if (selectedType.value === 'individual') {
-      return props.participantType === 'child'
-    }
-    if (selectedType.value === 'shared' && stayStore.participants.length > 0) {
-      return stayStore.participants[0].participantType === 'child'
-    }
-    return false
-  })
-
-  const isInstructorAvailableForDuration = computed(() => {
-    let prefs
-    if (selectedType.value === 'individual') {
-      prefs = pickedClassesStore.individualPreferences
-    } else if (selectedType.value === 'shared') {
-      prefs = pickedClassesStore.sharedPreferences
-    } else {
       return true
-    }
-
-    if (!prefs.findSpecificInstructor || !prefs.selectedInstructor) return true
-
-    return pickedClassesStore.availableSlots.some(s =>
-      s.date === pickedClassesStore.selectedDate
-      && s.instructor === prefs.selectedInstructor
-      && s.duration === prefs.duration,
-    )
-  })
-
-  function toggleChildSpecialist (type) {
-    const prefs = type === 'individual' ? pickedClassesStore.individualPreferences : pickedClassesStore.sharedPreferences
-    prefs.childSpecialist = !prefs.childSpecialist
-  }
-
-  function getFilters (prefs) {
-    const filters = []
-    if (prefs.timeOfDay && prefs.timeOfDay !== 'Dowolna') {
-      const timeMap = {
-        Rano: t('morning'),
-        Popołudnie: t('afternoon'),
-        Wieczór: t('evening'),
-      }
-      const label = timeMap[prefs.timeOfDay] || prefs.timeOfDay
-      filters.push({ key: 'timeOfDay', label })
-    }
-    if (prefs.duration && prefs.duration !== '2h') {
-      filters.push({ key: 'duration', label: t('lessons_duration_label', { duration: prefs.duration }) })
-    }
-    if (prefs.instructorGender && prefs.instructorGender !== 'Dowolna') {
-      let genderLabel = ''
-      if (prefs.instructorGender === 'Kobieta') genderLabel = t('female').toLowerCase()
-      else if (prefs.instructorGender === 'Mężczyzna') genderLabel = t('male').toLowerCase()
-      else genderLabel = t('any_gender').toLowerCase()
-      filters.push({ key: 'instructorGender', label: `${t('instructor')} ${genderLabel}` })
-    }
-    return filters
-  }
-
-  const individualFilters = computed(() => getFilters(pickedClassesStore.individualPreferences))
-  const sharedFilters = computed(() => getFilters(pickedClassesStore.sharedPreferences))
-
-  function removeFilter (type, key) {
-    const prefs = type === 'individual' ? pickedClassesStore.individualPreferences : pickedClassesStore.sharedPreferences
-    if (key === 'timeOfDay') prefs.timeOfDay = 'Dowolna'
-    if (key === 'duration') prefs.duration = '2h'
-    if (key === 'instructorGender') prefs.instructorGender = 'Dowolna'
-  }
-
-  const availableParticipantsForShared = computed(() => {
-    if (stayStore.participants.length === 0) return []
-
-    const firstParticipant = stayStore.participants[0]
-    const allowedType = firstParticipant.participantType
-    const allowedActivity = firstParticipant.activityType
-
-    return stayStore.participants
-      .map((p, index) => ({ data: p, originalIndex: index }))
-      .filter(({ data: p }) => {
-        // Check age category
-        if (p.participantType !== allowedType) return false
-
-        // Check discipline
-        if (p.activityType !== allowedActivity) return false
-
-        return true
-      })
-  })
-
-  function toggleParticipant (id) {
-    const firstId = stayStore.participants[0]?.dynamicId || 0
-
-    // Prevent removing the first participant
-    if (id === firstId) {
-      // Ensure it's selected (recovery mechanism)
-      if (!sharedParticipants.value.includes(id)) {
-        sharedParticipants.value.push(id)
-      }
-      return
-    }
-
-    const index = sharedParticipants.value.indexOf(id)
-    if (index === -1) {
-      if (sharedParticipants.value.length < 3) {
-        sharedParticipants.value.push(id)
-      }
-    } else {
-      sharedParticipants.value.splice(index, 1)
-    }
-  }
-
-  const selectedParticipantNames = computed(() => {
-    if (selectedType.value !== 'shared') return []
-    const parts = stayStore.participants
-    if (!parts) return []
-
-    return sharedParticipants.value.map(id => {
-      const p = parts.find(part => (part.dynamicId || 0) === id)
-      if (p) return p.name || 'Uczestnik'
-      const pByIndex = parts[id]
-      if (pByIndex) return pByIndex.name || 'Uczestnik'
-      return 'Uczestnik'
     })
+})
+
+function toggleParticipant(id) {
+  const firstId = stayStore.participants[0]?.dynamicId || 0
+
+  // Prevent removing the first participant
+  if (id === firstId) {
+    // Ensure it's selected (recovery mechanism)
+    if (!sharedParticipants.value.includes(id)) {
+      sharedParticipants.value.push(id)
+    }
+    return
+  }
+
+  const index = sharedParticipants.value.indexOf(id)
+  if (index === -1) {
+    if (sharedParticipants.value.length < 3) {
+      sharedParticipants.value.push(id)
+    }
+  } else {
+    sharedParticipants.value.splice(index, 1)
+  }
+}
+
+const selectedParticipantNames = computed(() => {
+  if (selectedType.value !== 'shared') return []
+  const parts = stayStore.participants
+  if (!parts) return []
+
+  return sharedParticipants.value.map(id => {
+    const p = parts.find(part => (part.dynamicId || 0) === id)
+    if (p) return p.name || 'Uczestnik'
+    const pByIndex = parts[id]
+    if (pByIndex) return pByIndex.name || 'Uczestnik'
+    return 'Uczestnik'
   })
+})
 </script>
 
 <template>
@@ -527,10 +590,11 @@
       <div class="modal-header pa-4">
         <div class="d-flex justify-space-between align-center">
           <span class="text-h6 font-weight-bold text-primary-900 mb-1 pr-6">{{ modalTitle }}</span>
-          <VBtn class="special-close-btn" variant="text" @click="close" />
+          <VBtn class="special-close-btn" variant="text" @click="close"/>
         </div>
 
-        <div v-if="selectedParticipantNames.length > 0 && currentStep > 1" class="d-flex flex-wrap align-center mb-3 mt-1" style="gap: 8px;">
+        <div v-if="selectedParticipantNames.length > 0 && currentStep > 1"
+             class="d-flex flex-wrap align-center mb-3 mt-1" style="gap: 8px;">
           <div
             v-for="(name, index) in selectedParticipantNames"
             :key="index"
@@ -549,6 +613,7 @@
 
       <!-- Scrollable Content Area -->
       <div class="flex-grow-1 overflow-y-auto pa-4" style="min-height: 0;">
+
         <!-- TYPE SELECTION VIEW -->
         <div v-if="!showStepper">
           <div class="text-center mb-4">
@@ -563,7 +628,7 @@
               :class="{ 'selected': selectedType === type.id }"
               @click="selectedType = type.id"
             >
-              <div class="selection-circle mr-4 d-flex align-center justify-center" />
+              <div class="selection-circle mr-4 d-flex align-center justify-center"/>
               <img alt="" class="mr-3" :src="type.icon" width="24">
               <span class="font-weight-medium text-primary-900 fs-14">{{ type.label }}</span>
             </div>
@@ -599,7 +664,7 @@
                 :title="t('preferences')"
                 :value="1"
               />
-              <VDivider />
+              <VDivider/>
               <VStepperItem
                 class="pa-2"
                 :complete="viewStore.isAddClassesStepTwoCompleted"
@@ -614,14 +679,14 @@
                 :title="t('participants')"
                 :value="1"
               />
-              <VDivider />
+              <VDivider/>
               <VStepperItem
                 class="pa-2"
                 :complete="viewStore.isAddClassesStepTwoCompleted"
                 :title="t('preferences')"
                 :value="2"
               />
-              <VDivider />
+              <VDivider/>
               <VStepperItem
                 class="pa-2"
                 :complete="viewStore.isAddClassesStepThreeCompleted"
@@ -632,8 +697,13 @@
             <template v-if="selectedType === 'group'">
               <VStepperItem
                 class="pa-2"
-                :title="t('group')"
+                :title="t('skillLevel')"
                 :value="1"
+              />
+              <VStepperItem
+                class="pa-2"
+                :title="t('group')"
+                :value="2"
               />
             </template>
           </VStepperHeader>
@@ -644,7 +714,9 @@
               <!-- Step 1: Preferences -->
               <VStepperWindowItem :value="1">
                 <div class="text-center mb-4">
-                  <span class="text-subtitle-1 font-weight-medium text-primary-900">{{ t('adjust_your_classes') }}</span>
+                  <span class="text-subtitle-1 font-weight-medium text-primary-900">{{
+                      t('adjust_your_classes')
+                    }}</span>
                 </div>
 
                 <VSwitch
@@ -658,7 +730,9 @@
                 />
 
                 <div>
-                  <span class="text-subtitle-2 font-weight-bold mb-1 d-block text-primary-900">{{ t('time_of_day') }}</span>
+                  <span class="text-subtitle-2 font-weight-bold mb-1 d-block text-primary-900">{{
+                      t('time_of_day')
+                    }}</span>
                   <VSelect
                     v-model="pickedClassesStore.individualPreferences.timeOfDay"
                     density="compact"
@@ -668,7 +742,9 @@
                   />
                 </div>
                 <div>
-                  <span class="text-subtitle-2 font-weight-bold mb-1 d-block text-primary-900">{{ t('lesson_duration') }}</span>
+                  <span class="text-subtitle-2 font-weight-bold mb-1 d-block text-primary-900">{{
+                      t('lesson_duration')
+                    }}</span>
                   <VSelect
                     v-model="pickedClassesStore.individualPreferences.duration"
                     density="compact"
@@ -677,7 +753,9 @@
                   />
                 </div>
                 <div class="mb-4">
-                  <span class="text-subtitle-2 font-weight-bold mb-1 d-block text-primary-900 mb-2">{{ t('instructor_gender') }}</span>
+                  <span class="text-subtitle-2 font-weight-bold mb-1 d-block text-primary-900 mb-2">{{
+                      t('instructor_gender')
+                    }}</span>
                   <VBtnToggle
                     v-model="pickedClassesStore.individualPreferences.instructorGender"
                     class="ga-2 w-100 gender-buttons"
@@ -695,7 +773,8 @@
                       {{ gender.title }}
                     </VBtn>
                   </VBtnToggle>
-                </div>                <div class="mb-4">
+                </div>
+                <div class="mb-4">
                   <VCheckbox
                     v-model="pickedClassesStore.individualPreferences.findSpecificInstructor"
                     color="primary"
@@ -705,7 +784,9 @@
                     :label="t('find_specific_instructor')"
                   />
                   <div v-if="pickedClassesStore.individualPreferences.findSpecificInstructor">
-                    <span class="text-subtitle-2 font-weight-bold mt-1 mb-1 d-block text-primary-900">{{ t('instructor') }}</span>
+                    <span class="text-subtitle-2 font-weight-bold mt-1 mb-1 d-block text-primary-900">{{
+                        t('instructor')
+                      }}</span>
                     <VAutocomplete
                       v-model="pickedClassesStore.individualPreferences.selectedInstructor"
                       class="instructor-select"
@@ -719,7 +800,8 @@
                     </div>
                   </div>
 
-                  <div v-if="isChildParticipant" class="mb-4 pa-3 rounded-lg d-flex align-start mt-2" style="background-color: #E1EFFE;">
+                  <div v-if="isChildParticipant" class="mb-4 pa-3 rounded-lg d-flex align-start mt-2"
+                       style="background-color: #E1EFFE;">
                     <div class="mr-3 mt-1">
                       <div
                         class="selection-circle d-flex align-center justify-center cursor-pointer"
@@ -727,11 +809,14 @@
                         style="width: 20px; height: 20px; border: 2px solid #A4CAFE; border-radius: 50%; background: white;"
                         @click="toggleChildSpecialist('individual')"
                       >
-                        <div v-if="pickedClassesStore.individualPreferences.childSpecialist" style="width: 10px; height: 10px; border-radius: 50%; background-color: #1E429F;" />
+                        <div v-if="pickedClassesStore.individualPreferences.childSpecialist"
+                             style="width: 10px; height: 10px; border-radius: 50%; background-color: #1E429F;"/>
                       </div>
                     </div>
                     <div>
-                      <div class="font-weight-bold text-primary-900 fs-14 cursor-pointer" @click="toggleChildSpecialist('individual')">{{ t('child_specialists_only') }}</div>
+                      <div class="font-weight-bold text-primary-900 fs-14 cursor-pointer"
+                           @click="toggleChildSpecialist('individual')">{{ t('child_specialists_only') }}
+                      </div>
                       <div class="text-caption text-primary-900 mb-1" style="line-height: 1.3; opacity: 0.8;">
                         {{ t('child_specialists_description') }}
                       </div>
@@ -749,7 +834,9 @@
               <!-- Step 2: Slots -->
               <VStepperWindowItem :value="2">
                 <div class="text-center mb-4">
-                  <span class="text-subtitle-1 font-weight-medium text-primary-900">{{ t('choose_available_slots') }}</span>
+                  <span class="text-subtitle-1 font-weight-medium text-primary-900">{{
+                      t('choose_available_slots')
+                    }}</span>
                 </div>
 
                 <div class="d-flex align-center justify-center flex-wrap gap-2 mb-4">
@@ -778,7 +865,7 @@
                     :class="{ 'selected': pickedClassesStore.individualSlot === slot.id }"
                     @click="pickedClassesStore.individualSlot = slot.id"
                   >
-                    <div class="selection-circle mr-4 d-flex align-center justify-center flex-shrink-0" />
+                    <div class="selection-circle mr-4 d-flex align-center justify-center flex-shrink-0"/>
 
                     <div class="d-flex flex-column w-100">
                       <div class="flex-grow-1 d-flex justify-space-between align-start">
@@ -798,14 +885,17 @@
                       <div v-if="slot.price" class="d-flex justify-end w-100 mt-1">
                         <div v-if="slot.discount" class="d-flex align-center">
                           <span class="text-decoration-line-through text-grey mr-2 fs-14">{{ slot.price }},00zł</span>
-                          <span class="font-weight-bold blue-text fs-14 pl-1">{{ calculateDiscountedPrice(slot.price, slot.discount) }},00zł</span>
+                          <span class="font-weight-bold blue-text fs-14 pl-1">{{
+                              calculateDiscountedPrice(slot.price, slot.discount)
+                            }},00zł</span>
                         </div>
                         <span v-else class="font-weight-bold text-primary-900 fs-14 pl-1">{{ slot.price }},00zł</span>
                       </div>
                     </div>
                   </div>
                   <!-- TODO: Remove this button after backend integration -->
-                  <div v-if="pickedClassesStore.individualFilteredSlots.length > pickedClassesStore.visibleSlotsLimit" class="mt-2">
+                  <div v-if="pickedClassesStore.individualFilteredSlots.length > pickedClassesStore.visibleSlotsLimit"
+                       class="mt-2">
                     <VBtn
                       block
                       class="text-capitalize load-more-btn"
@@ -819,7 +909,7 @@
 
                 <div v-else class="text-center py-4">
                   <div class="text-h6 font-weight-bold text-primary-900 mb-6">
-                    <span v-html="t('no_classes_found').replace('\n', '<br>')" />
+                    <span v-html="t('no_classes_found').replace('\n', '<br>')"/>
                   </div>
 
                   <VBtn
@@ -829,14 +919,17 @@
                     variant="flat"
                     width="100%"
                   >
-                    <span class="text-break" style="white-space: normal; line-height: 1.2;" v-html="t('find_closest_classes').replace('\n', '<br>')" />
+                    <span class="text-break" style="white-space: normal; line-height: 1.2;"
+                          v-html="t('find_closest_classes').replace('\n', '<br>')"/>
                   </VBtn>
 
                   <div class="border rounded-lg px-4 py-3 d-flex align-start text-left bg-white border-gray">
-                    <VIcon class="mr-3 mt-1 flex-shrink-0" color="grey-darken-1" icon="mdi-message-text-outline" />
+                    <VIcon class="mr-3 mt-1 flex-shrink-0" color="grey-darken-1" icon="mdi-message-text-outline"/>
                     <div class="text-caption text-grey-darken-1" style="line-height: 1.4;">
                       {{ t('contact_customer_service_info') }}
-                      <a class="text-decoration-underline text-grey-darken-1 font-weight-medium cursor-pointer" href="https://szkolastok.pl/kontakt" rel="noopener noreferrer" target="_blank">{{ t('customer_service_office') }}</a>.
+                      <a class="text-decoration-underline text-grey-darken-1 font-weight-medium cursor-pointer"
+                         href="https://szkolastok.pl/kontakt" rel="noopener noreferrer"
+                         target="_blank">{{ t('customer_service_office') }}</a>.
                     </div>
                   </div>
                 </div>
@@ -851,8 +944,10 @@
                   <span class="text-subtitle-1 font-weight-medium text-primary-900">Wybierz uczestników:</span>
                 </div>
                 <div class="mb-4">
-                  <p class="text-caption text-grey-darken-1 mb-6 text-center" style="line-height: 1.4; max-width: 92%; margin: 0 auto;">
-                    Wybierz maksymalnie trzech uczestników o podobnych preferncjach którzy mają uczestniczyć w zajęciach.
+                  <p class="text-caption text-grey-darken-1 mb-6 text-center"
+                     style="line-height: 1.4; max-width: 92%; margin: 0 auto;">
+                    Wybierz maksymalnie trzech uczestników o podobnych preferncjach którzy mają uczestniczyć w
+                    zajęciach.
                   </p>
                   <div class="d-flex flex-column gap-3">
                     <div
@@ -862,7 +957,7 @@
                       :class="{ 'selected': sharedParticipants.includes(item.data.dynamicId || item.originalIndex), 'disabled': item.originalIndex === 0 }"
                       @click="toggleParticipant(item.data.dynamicId || item.originalIndex)"
                     >
-                      <div class="selection-circle mr-4 d-flex align-center justify-center flex-shrink-0" />
+                      <div class="selection-circle mr-4 d-flex align-center justify-center flex-shrink-0"/>
                       <span class="font-weight-medium text-primary-900 fs-14">
                         {{ item.originalIndex + 1 }} - {{ item.data.name || `Uczestnik ${item.originalIndex + 1}` }}
                       </span>
@@ -874,7 +969,9 @@
               <!-- Step 2: Preferences (Same as Individual Step 1) -->
               <VStepperWindowItem :value="2">
                 <div class="text-center mb-4">
-                  <span class="text-subtitle-1 font-weight-medium text-primary-900">{{ t('adjust_your_classes') }}</span>
+                  <span class="text-subtitle-1 font-weight-medium text-primary-900">{{
+                      t('adjust_your_classes')
+                    }}</span>
                 </div>
                 <VSwitch
                   v-model="pickedClassesStore.searchPreviouslySelected"
@@ -887,7 +984,9 @@
                 />
 
                 <div class="mb-4">
-                  <span class="text-subtitle-2 font-weight-bold mb-1 d-block text-primary-900">{{ t('time_of_day') }}</span>
+                  <span class="text-subtitle-2 font-weight-bold mb-1 d-block text-primary-900">{{
+                      t('time_of_day')
+                    }}</span>
                   <VSelect
                     v-model="pickedClassesStore.sharedPreferences.timeOfDay"
                     density="compact"
@@ -897,7 +996,9 @@
                   />
                 </div>
                 <div class="mb-4">
-                  <span class="text-subtitle-2 font-weight-bold mb-1 d-block text-primary-900">{{ t('lesson_duration') }}</span>
+                  <span class="text-subtitle-2 font-weight-bold mb-1 d-block text-primary-900">{{
+                      t('lesson_duration')
+                    }}</span>
                   <VSelect
                     v-model="pickedClassesStore.sharedPreferences.duration"
                     density="compact"
@@ -906,7 +1007,9 @@
                   />
                 </div>
                 <div class="mb-4">
-                  <span class="text-subtitle-2 font-weight-bold mb-1 d-block text-primary-900 mb-2">{{ t('instructor_gender') }}</span>
+                  <span class="text-subtitle-2 font-weight-bold mb-1 d-block text-primary-900 mb-2">{{
+                      t('instructor_gender')
+                    }}</span>
                   <VBtnToggle
                     v-model="pickedClassesStore.sharedPreferences.instructorGender"
                     class="ga-2 w-100 gender-buttons"
@@ -936,7 +1039,9 @@
                     :label="t('find_specific_instructor')"
                   />
                   <div v-if="pickedClassesStore.sharedPreferences.findSpecificInstructor">
-                    <span class="text-subtitle-2 font-weight-bold mt-1 mb-1 d-block text-primary-900">{{ t('instructor') }}</span>
+                    <span class="text-subtitle-2 font-weight-bold mt-1 mb-1 d-block text-primary-900">{{
+                        t('instructor')
+                      }}</span>
                     <VAutocomplete
                       v-model="pickedClassesStore.sharedPreferences.selectedInstructor"
                       class="instructor-select"
@@ -955,7 +1060,9 @@
               <!-- Step 3: Slots (Same as Individual Step 2) -->
               <VStepperWindowItem :value="3">
                 <div class="text-center mb-4">
-                  <span class="text-subtitle-1 font-weight-medium text-primary-900">{{ t('choose_available_slots') }}</span>
+                  <span class="text-subtitle-1 font-weight-medium text-primary-900">{{
+                      t('choose_available_slots')
+                    }}</span>
                 </div>
 
                 <div class="d-flex align-center justify-center flex-wrap gap-2 mb-4">
@@ -984,7 +1091,7 @@
                     :class="{ 'selected': pickedClassesStore.sharedSlot === slot.id }"
                     @click="pickedClassesStore.sharedSlot = slot.id"
                   >
-                    <div class="selection-circle mr-4 d-flex align-center justify-center flex-shrink-0" />
+                    <div class="selection-circle mr-4 d-flex align-center justify-center flex-shrink-0"/>
                     <div class="flex-grow-1 d-flex justify-space-between align-center">
                       <div class="d-flex flex-column align-start">
                         <span class="font-weight-bold fs-14 blue-text">{{ slot.time }}</span>
@@ -999,14 +1106,19 @@
                         </div>
                         <div v-if="slot.discount" class="d-flex align-center">
                           <span class="text-decoration-line-through text-grey mr-2 fs-14">{{ slot.price }},00zł</span>
-                          <span class="font-weight-semibold blue-text fs-14 max-content-width">{{ calculateDiscountedPrice(slot.price, slot.discount) }},00zł</span>
+                          <span class="font-weight-semibold blue-text fs-14 max-content-width">{{
+                              calculateDiscountedPrice(slot.price, slot.discount)
+                            }},00zł</span>
                         </div>
-                        <span v-else-if="slot.price" class="font-weight-semibold blue-text fs-14 max-content-width">{{ slot.price }},00zł</span>
+                        <span v-else-if="slot.price" class="font-weight-semibold blue-text fs-14 max-content-width">{{
+                            slot.price
+                          }},00zł</span>
                       </div>
                     </div>
                   </div>
                   <!-- TODO: Remove this button after backend integration -->
-                  <div v-if="pickedClassesStore.sharedFilteredSlots.length > pickedClassesStore.visibleSlotsLimit" class="mt-2">
+                  <div v-if="pickedClassesStore.sharedFilteredSlots.length > pickedClassesStore.visibleSlotsLimit"
+                       class="mt-2">
                     <VBtn
                       block
                       class="text-capitalize load-more-btn"
@@ -1020,7 +1132,7 @@
 
                 <div v-else class="text-center py-4">
                   <div class="text-h6 font-weight-bold text-primary-900 mb-6">
-                    <span v-html="t('no_classes_found').replace('\n', '<br>')" />
+                    <span v-html="t('no_classes_found').replace('\n', '<br>')"/>
                   </div>
 
                   <VBtn
@@ -1030,14 +1142,17 @@
                     variant="outlined"
                     width="100%"
                   >
-                    <span class="text-break" style="white-space: normal; line-height: 1.2;" v-html="t('find_closest_classes').replace('\n', '<br>')" />
+                    <span class="text-break" style="white-space: normal; line-height: 1.2;"
+                          v-html="t('find_closest_classes').replace('\n', '<br>')"/>
                   </VBtn>
 
                   <div class="border rounded-lg px-4 py-3 d-flex align-start text-left bg-white border-gray">
-                    <VIcon class="mr-3 mt-1 flex-shrink-0" color="grey-darken-1" icon="mdi-message-text-outline" />
+                    <VIcon class="mr-3 mt-1 flex-shrink-0" color="grey-darken-1" icon="mdi-message-text-outline"/>
                     <div class="text-caption text-grey-darken-1" style="line-height: 1.4;">
                       {{ t('contact_customer_service_info') }}
-                      <a class="text-decoration-underline text-grey-darken-1 font-weight-medium cursor-pointer" href="https://szkolastok.pl/kontakt" rel="noopener noreferrer" target="_blank">{{ t('customer_service_office') }}</a>.
+                      <a class="text-decoration-underline text-grey-darken-1 font-weight-medium cursor-pointer"
+                         href="https://szkolastok.pl/kontakt" rel="noopener noreferrer"
+                         target="_blank">{{ t('customer_service_office') }}</a>.
                     </div>
                   </div>
                 </div>
@@ -1047,11 +1162,67 @@
             <!-- GROUP FLOW -->
             <template v-if="selectedType === 'group'">
               <VStepperWindowItem :value="1">
+                <!--                Selecting skill level-->
+<!--                <div v-if="selectedClassType === 0 || selectedClassType === 1" class="mb-4">-->
+                <div  class="mb-4">
+                  <p class="custom-input-label mb-2">{{ $t('select_difficulty_level') }}</p>
+                  <VList
+                    v-model:selected="selectedSkillLevel"
+                    select-strategy="single-leaf"
+                    selectable
+                  >
+                    <VListItem
+                      v-for="(item, i) in availableSkillLevels"
+                      :key="i"
+                      class="border rounded-lg mb-2"
+                      color="primary"
+                      :ripple="false"
+                      :value="item"
+                      @click="selectSkillLevel(item)"
+                    >
+                      <template #prepend="{ isSelected }">
+                        <VIcon
+                          :icon="isSelected ? 'mdi-circle-slice-8' : 'mdi-circle-outline'"
+                          size="16"
+                        />
+                      </template>
+
+                      <template #default>
+                        <VListItemTitle>
+                          <p class="mb-0 fs-14 text-pre-wrap lh-normal">
+                            {{ item.name }}
+                          </p>
+                        </VListItemTitle>
+                        <VListItemSubtitle>
+                          <p class="mb-0 fs-11 text-pre-wrap">
+                            {{ item.description }}
+                          </p>
+                        </VListItemSubtitle>
+                      </template>
+
+                      <template #append>
+                        <VIcon
+                          icon="mdi-information-slab-circle"
+                          size="18"
+                          @click.stop="currentSkillLevelInfo = item; skillInfoDialog = true"
+                        />
+                      </template>
+                    </VListItem>
+                  </VList>
+                  <small v-if="!selectedSkillLevel" class="fs-12 fc-error pl-4">
+                    {{ $t('select_difficulty_level') }}
+                  </small>
+                </div>
+              </VStepperWindowItem>
+              <VStepperWindowItem :value="2">
                 <div class="text-center mb-2">
-                  <span class="text-subtitle-1 font-weight-medium text-primary-900">{{ t('choose_group_classes') }}</span>
+                  <span class="text-subtitle-1 font-weight-medium text-primary-900">{{
+                      t('choose_group_classes')
+                    }}</span>
                 </div>
                 <div class="mb-6">
-                  <p class="text-caption text-grey-darken-1 text-center" style="line-height: 1.4; max-width: 90%; margin: 0 auto;">
+                  <p class="text-caption text-grey-darken-1 text-center"
+                     style="line-height: 1.4; max-width: 90%; margin: 0 auto;">
                     {{ t('group_classes_description') }}
                   </p>
                 </div>
@@ -1071,7 +1242,7 @@
 
                       <div class="d-flex align-start justify-start w-100">
                         <!-- Checkbox/Circle -->
-                        <div class="selection-circle mr-4 mt-1 d-flex align-center justify-center flex-shrink-0" />
+                        <div class="selection-circle mr-4 mt-1 d-flex align-center justify-center flex-shrink-0"/>
 
                         <!-- Content -->
                         <div class="flex-grow-1">
@@ -1092,7 +1263,8 @@
                           </div>
 
                           <!-- Schedule (Hours) -->
-                          <div class="text-caption text-grey-darken-1 mb-3" style="line-height: 1.4;" v-html="formatSchedule(group.schedule)" />
+                          <div class="text-caption text-grey-darken-1 mb-3" style="line-height: 1.4;"
+                               v-html="formatSchedule(group.schedule)"/>
 
                           <!-- Details Button -->
                           <VBtn
@@ -1111,10 +1283,16 @@
                       <!-- Price (Absolute Bottom Right) -->
                       <div v-if="group.price" class="d-flex justify-end w-100 mt-1">
                         <div v-if="group.discount" class="d-flex align-center">
-                          <span class="text-decoration-line-through text-grey mr-2 fs-14">{{ calculateGroupPrice(group) }},00zł</span>
-                          <span class="font-weight-bold blue-text fs-14 pl-1">{{ calculateDiscountedGroupPrice(group) }},00zł</span>
+                          <span class="text-decoration-line-through text-grey mr-2 fs-14">{{
+                              calculateGroupPrice(group)
+                            }},00zł</span>
+                          <span class="font-weight-bold blue-text fs-14 pl-1">{{
+                              calculateDiscountedGroupPrice(group)
+                            }},00zł</span>
                         </div>
-                        <span v-else class="font-weight-bold text-primary-900 fs-14 pl-1">{{ calculateGroupPrice(group) }},00zł</span>
+                        <span v-else class="font-weight-bold text-primary-900 fs-14 pl-1">{{
+                            calculateGroupPrice(group)
+                          }},00zł</span>
                       </div>
                     </div>
 
@@ -1158,11 +1336,11 @@
 
                               <div class="d-flex align-center text-caption text-grey-darken-1 mb-1">
                                 <img alt="" class="mr-2" :src="ClockGrayIcon" width="16">
-                                <span v-html="formatSchedule(t('animations_schedule'))" />
+                                <span v-html="formatSchedule(t('animations_schedule'))"/>
                               </div>
                               <div class="d-flex align-center text-caption text-grey-darken-1">
                                 <img alt="" class="mr-2" :src="UsersGroupIcon" width="16">
-                                <span><strong class="text-primary-900">{{ t('places_left', { count: 18 }) }}</strong> (18/20)</span>
+                                <span><strong class="text-primary-900">{{ t('places_left', {count: 18}) }}</strong> (18/20)</span>
                               </div>
                             </VExpansionPanelText>
                           </VExpansionPanel>
@@ -1174,10 +1352,12 @@
 
                 <div v-else class="text-center py-4">
                   <div class="border rounded-lg px-4 py-3 d-flex align-start text-left bg-white border-gray">
-                    <VIcon class="mr-3 mt-1 flex-shrink-0" color="grey-darken-1" icon="mdi-message-text-outline" />
+                    <VIcon class="mr-3 mt-1 flex-shrink-0" color="grey-darken-1" icon="mdi-message-text-outline"/>
                     <div class="text-caption text-grey-darken-1" style="line-height: 1.4;">
                       {{ t('contact_customer_service_info') }}
-                      <a class="text-decoration-underline text-grey-darken-1 font-weight-medium cursor-pointer" href="https://szkolastok.pl/kontakt" rel="noopener noreferrer" target="_blank">{{ t('customer_service_office') }}</a>.
+                      <a class="text-decoration-underline text-grey-darken-1 font-weight-medium cursor-pointer"
+                         href="https://szkolastok.pl/kontakt" rel="noopener noreferrer"
+                         target="_blank">{{ t('customer_service_office') }}</a>.
                     </div>
                   </div>
                 </div>
@@ -1226,9 +1406,34 @@
     </VCard>
   </VDialog>
 
-  <ClassesInfoModal v-model="showClassesInfoModal" />
-  <ChildSpecialistInfoModal v-model="showChildSpecialistModal" />
-  <GroupDetailsModal v-model="showGroupDetailsModal" :group="selectedGroupForDetails" />
+  <VDialog v-model="skillInfoDialog" max-width="320px">
+    <VCard v-if="currentSkillLevelInfo">
+      <VCardTitle>
+        <div class="d-flex justify-space-between" :class="mobile ? 'py-2':''">
+              <span :class="mobile ? 'fs-14':'fs-16'">
+                {{ currentSkillLevelInfo.name }}
+              </span>
+          <button aria-label="Close" class="close-btn" @click="skillInfoDialog = false">
+            <VIcon icon="mdi-close" size="18"/>
+          </button>
+        </div>
+      </VCardTitle>
+      <VCardText :class="mobile ? 'pt-0':''">
+        <p :class="mobile ? 'fs-12':'fs-14'">
+          {{ currentSkillLevelInfo.additionalInfo }}
+        </p>
+      </VCardText>
+      <VCardActions class="border-t d-flex justify-between text-capitalize">
+        <VBtn class="px-4 text-capitalize" variant="outlined" @click="skillInfoDialog = false">
+          {{ $t('close') }}
+        </VBtn>
+      </VCardActions>
+    </VCard>
+  </VDialog>
+
+  <ClassesInfoModal v-model="showClassesInfoModal"/>
+  <ChildSpecialistInfoModal v-model="showChildSpecialistModal"/>
+  <GroupDetailsModal v-model="showGroupDetailsModal" :group="selectedGroupForDetails"/>
 </template>
 
 <style scoped lang="scss">
@@ -1268,7 +1473,7 @@
     background-color: #EFF6FF;
     border-width: 1px;
 
-    span,div {
+    span, div {
       color: #2563EB;
     }
   }
@@ -1409,16 +1614,16 @@
 }
 
 .happy-hours-badge {
-    color: #000 !important;
-    font-size: 10px;
-    font-weight: 400 !important;
-    background: #FACA15;
-    padding: 2px 3px;
-    border-radius: 5px;
-    margin-bottom: 16px !important;
-    width: max-content;
-    min-width: 70px;
-    text-align: center;
+  color: #000 !important;
+  font-size: 10px;
+  font-weight: 400 !important;
+  background: #FACA15;
+  padding: 2px 3px;
+  border-radius: 5px;
+  margin-bottom: 16px !important;
+  width: max-content;
+  min-width: 70px;
+  text-align: center;
 }
 
 .text-caption {
@@ -1426,7 +1631,7 @@
 }
 
 .blue-text {
-  color: #233876!important;
+  color: #233876 !important;
 }
 
 .text-caption-slot {
@@ -1444,7 +1649,7 @@
   font-weight: 600 !important;
   line-height: 150% !important;
   color: rgba(0, 0, 0, 0.55);
-  border-radius: 8px!important;
+  border-radius: 8px !important;
 
   :deep(.v-chip__content) {
     font-family: 'Inter', sans-serif !important;
@@ -1472,9 +1677,9 @@
   line-height: 1;
 }
 
-:deep(.v-chip.v-chip--size-small)  {
-    --v-chip-height: 19px;
-    padding: 0 8px !important;
+:deep(.v-chip.v-chip--size-small) {
+  --v-chip-height: 19px;
+  padding: 0 8px !important;
 }
 
 .gap-2 {
@@ -1482,34 +1687,34 @@
 }
 
 .footer-actions {
- :deep(.v-btn) {
-    height: 48px!important;
+  :deep(.v-btn) {
+    height: 48px !important;
     line-height: 1;
-}
+  }
 
 }
 
 .find-other-btn {
-    line-height: 1.4!important;
+  line-height: 1.4 !important;
 }
 
 .gender-buttons {
-  height: 38px!important;
+  height: 38px !important;
 
   :deep(.v-btn) {
-    height: 38px!important;
+    height: 38px !important;
   }
 }
 
 :deep(.v-select .v-field .v-field__input > input) {
-    align-self: center !important;
+  align-self: center !important;
 }
 
 .gap-4 {
 
   :deep(.v-selection-control) {
-      gap: 4px;
-}
+    gap: 4px;
+  }
 
 }
 
@@ -1518,10 +1723,11 @@
   border-radius: 10px;
 
   .add-on-card {
-      background: #F3F4F6;
-      .v-input {
-        min-width: 30px!important;
-      }
+    background: #F3F4F6;
+
+    .v-input {
+      min-width: 30px !important;
+    }
 
     :deep(.v-expansion-panel-text__wrapper) {
       padding: 4px 0;
@@ -1534,7 +1740,7 @@
     :deep(.v-expansion-panel-title__icon) {
       margin-top: -20px !important;
     }
-     }
+  }
 
 }
 </style>

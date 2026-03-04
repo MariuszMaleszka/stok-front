@@ -579,6 +579,7 @@
     :date-iso="selectedDateForAddIso"
     :date-str="selectedDateForAdd"
     :participant-type="props.participantType"
+    :current-participant="props.participant"
     @next="handleAddClassesNext"
   />
 
