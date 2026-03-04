@@ -41,10 +41,15 @@ const isAnotherChildminder = computed(() =>
 )
 
 // Prepare select items with "Another childminder" option
+// 1. Ensure childminderOptions reacts to participant name changes
 const childminderOptions = computed(() => {
   return [
-    ...adultParticipants.value,
-    {name: t('another_childminder'), dynamicId: 'another'},
+    ...adultParticipants.value.map(p => ({
+      ...p,
+      // Create a display name for the dropdown
+      name: `${p.name} ${p.surname}`.trim() || t('unnamed_adult')
+    })),
+    { name: t('another_childminder'), dynamicId: 'another' },
   ]
 })
 
@@ -75,6 +80,51 @@ const hasAdultParticipants = computed(() => {
 //     props.participant.birthDate = val ?? null
 //   },
 // })
+
+// Watch for changes in childminder selection
+watch(() => props.participant.childminder, (newVal) => {
+  if (props.participant.participantType !== 'child' || !newVal) return
+
+  // 1. Update the global suggestion if this is a manual change or the first one
+  stayStore.tempChildminderSuggestion = {
+    childminder: newVal,
+    anotherChildminderName: props.participant.anotherChildminderName,
+    anotherChildminderSurname: props.participant.anotherChildminderSurname,
+    anotherChildminderPhone: props.participant.anotherChildminderPhone,
+  }
+
+  // 2. Automatically apply this selection to all other children who haven't picked a childminder yet
+  stayStore.participants.forEach(p => {
+    if (p.participantType === 'child' && !p.childminder) {
+      p.childminder = newVal
+      if (newVal === 'another') {
+        p.anotherChildminderName = props.participant.anotherChildminderName
+        p.anotherChildminderSurname = props.participant.anotherChildminderSurname
+        p.anotherChildminderPhone = props.participant.anotherChildminderPhone
+      }
+    }
+  })
+})
+
+// Optional: Keep "Another childminder" details in sync across participants
+watch(
+  [
+    () => props.participant.anotherChildminderName,
+    () => props.participant.anotherChildminderSurname,
+    () => props.participant.anotherChildminderPhone
+  ],
+  ([name, surname, phone]) => {
+    if (props.participant.childminder === 'another') {
+      stayStore.participants.forEach(p => {
+        if (p.participantType === 'child' && p.childminder === 'another') {
+          p.anotherChildminderName = name
+          p.anotherChildminderSurname = surname
+          p.anotherChildminderPhone = phone
+        }
+      })
+    }
+  }
+)
 
 
 defineExpose({

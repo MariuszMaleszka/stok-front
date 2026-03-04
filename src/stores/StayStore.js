@@ -42,6 +42,8 @@ const blankParticipant = {
   // selectedClasses: [], // Classes enrolled in
 }
 
+const tempChildminderSuggestion = ref({})
+
 // ============================================================================
 // STORE DEFINITION
 // ============================================================================
@@ -613,6 +615,7 @@ export const useStayStore = defineStore('stayStore', () => {
     adultsNumber.value = 1
     childrenNumber.value = 0
     participants.value = []
+    tempChildminderSuggestion.value = {}
   }
 
   // ==========================================================================
@@ -712,6 +715,8 @@ export const useStayStore = defineStore('stayStore', () => {
     allParticipantsTotalHours, // Total hours of classes for all participants excluding groups
     checkingLoyaltyCardNumber, // Loyalty card validation loading state
     getParticipantClasses, // Get selected classes for a participant
+    tempChildminderSuggestion, // Used for suggesting childminder when first is selected
+
 
     // ==========================================================================
     // ACTIONS/METHODS
