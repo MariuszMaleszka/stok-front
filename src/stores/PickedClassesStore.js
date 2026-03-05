@@ -315,6 +315,11 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
   }
 
   // Actions
+
+  function removeClassesForParticipant(participantId) {
+    bookedClasses.value = bookedClasses.value.filter(c => c.participantId !== participantId)
+  }
+
   function setSelectedDate (dateIso) {
     selectedDate.value = dateIso
   }
@@ -414,6 +419,7 @@ export const usePickedClassesStore = defineStore('pickedClassesStore', () => {
     hasPreviouslySelectedInstructor,
 
     // Actions
+    removeClassesForParticipant,
     setSearchPreviouslySelected,
     saveFilterPreferences,
     loadFilterPreferences,

@@ -107,26 +107,64 @@ watch(() => props.participant.childminder, (newVal) => {
 })
 
 // Optional: Keep "Another childminder" details in sync across participants
+// watch(
+//   [
+//     () => props.participant.anotherChildminderName,
+//     () => props.participant.anotherChildminderSurname,
+//     () => props.participant.anotherChildminderPhone
+//   ],
+//   ([name, surname, phone]) => {
+//     if (props.participant.childminder === 'another') {
+//       stayStore.participants.forEach(p => {
+//         if (p.participantType === 'child' && p.childminder === 'another') {
+//           p.anotherChildminderName = name
+//           p.anotherChildminderSurname = surname
+//           p.anotherChildminderPhone = phone
+//         }
+//       })
+//     }
+//   }
+// )
 watch(
   [
     () => props.participant.anotherChildminderName,
     () => props.participant.anotherChildminderSurname,
     () => props.participant.anotherChildminderPhone
   ],
-  ([name, surname, phone]) => {
-    if (props.participant.childminder === 'another') {
-      stayStore.participants.forEach(p => {
-        if (p.participantType === 'child' && p.childminder === 'another') {
-          p.anotherChildminderName = name
-          p.anotherChildminderSurname = surname
-          p.anotherChildminderPhone = phone
+  ([name, surname, phone], [oldName, oldSurname, oldPhone]) => {
+    const isUsingAnother = props.participant.childminder === 'another' || !hasAdultParticipants.value
+
+    if (props.participant.participantType === 'child' && isUsingAnother) {
+      // Propagate ONLY to children that appear AFTER the current one in the list
+      stayStore.participants.forEach((p, idx) => {
+        // Condition: Must be a child AND must be further down in the participants array
+        if (p.participantType === 'child' && idx > props.index) {
+          const targetIsAnother = p.childminder === 'another' || !hasAdultParticipants.value
+
+          // Check if the target is empty OR if it matches what was there before the change
+          const isTargetEmpty = !p.anotherChildminderName && !p.anotherChildminderSurname && !p.anotherChildminderPhone
+          const isTargetMatchingOld = p.anotherChildminderName === oldName &&
+            p.anotherChildminderSurname === oldSurname &&
+            p.anotherChildminderPhone === oldPhone
+
+          if (targetIsAnother && (isTargetEmpty || isTargetMatchingOld)) {
+            p.anotherChildminderName = name
+            p.anotherChildminderSurname = surname
+            p.anotherChildminderPhone = phone
+          }
         }
       })
+
+      // Update global suggestion for any future participants added
+      stayStore.tempChildminderSuggestion = {
+        childminder: 'another',
+        anotherChildminderName: name,
+        anotherChildminderSurname: surname,
+        anotherChildminderPhone: phone,
+      }
     }
   }
 )
-
-
 defineExpose({
   validate: async () => {
     showErrors.value = true
@@ -310,7 +348,7 @@ defineExpose({
       <!-- Additional fields for "Another childminder" -->
       <template v-if="isAnotherChildminder">
         <VCol :cols="mobile ? 12 : 6">
-          <p class="custom-input-label my-2">{{ $t('childminder_name') }}</p>
+          <p class="custom-input-label mb-2">{{ $t('childminder_name') }}</p>
           <VTextField
             v-model="participant.anotherChildminderName"
             autocomplete="off"

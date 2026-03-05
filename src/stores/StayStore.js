@@ -573,34 +573,97 @@ export const useStayStore = defineStore('stayStore', () => {
    * - Adult participants are added first, then children
    * - Each new participant gets a unique ID and proper type
    */
+  // watch([adultsNumber, childrenNumber], ([newAdults, newChildren]) => {
+  //   const totalNeeded = newAdults + newChildren
+  //   const currentLength = participants.value.length
+  //
+  //   // Add new participants if needed
+  //   if (totalNeeded > currentLength) {
+  //     const toAdd = totalNeeded - currentLength
+  //     const adultsToAdd = Math.max(0, newAdults - participants.value.filter(p => p.participantType === 'adult').length)
+  //
+  //     // Create new participant objects with proper type assignment
+  //     const newParticipants = Array.from({ length: toAdd }, (_, i) => {
+  //       const isAdult = i < adultsToAdd
+  //       return reactive({
+  //         ...blankParticipant,
+  //         dynamicId: generateUniqueId(),
+  //         participantType: isAdult ? 'adult' : 'child',
+  //         age: isAdult ? null : null, // Age will be set by user input
+  //         birthDate: null,
+  //         // selectedClasses: structuredClone(blankParticipant.selectedClasses), // Deep clone to avoid shared reference
+  //       })
+  //     })
+  //     participants.value.push(...newParticipants)
+  //   } else if (totalNeeded < currentLength) {
+  //     // Remove excess participants from the end
+  //     const toRemove = currentLength - totalNeeded
+  //     participants.value.splice(-toRemove)
+  //   }
+  // }, { immediate: true }) // Execute immediately on store initialization
   watch([adultsNumber, childrenNumber], ([newAdults, newChildren]) => {
-    const totalNeeded = newAdults + newChildren
-    const currentLength = participants.value.length
+    const pickedClassesStore = usePickedClassesStore()
+    const currentAdults = participants.value.filter(p => p.participantType === 'adult')
+    const currentChildren = participants.value.filter(p => p.participantType === 'child')
 
-    // Add new participants if needed
-    if (totalNeeded > currentLength) {
-      const toAdd = totalNeeded - currentLength
-      const adultsToAdd = Math.max(0, newAdults - participants.value.filter(p => p.participantType === 'adult').length)
-
-      // Create new participant objects with proper type assignment
-      const newParticipants = Array.from({ length: toAdd }, (_, i) => {
-        const isAdult = i < adultsToAdd
-        return reactive({
+    // --- Handle Adults ---
+    if (newAdults > currentAdults.length) {
+      // Add missing adults at the end of the adult section
+      for (let i = 0; i < newAdults - currentAdults.length; i++) {
+        participants.value.splice(currentAdults.length, 0, reactive({
           ...blankParticipant,
           dynamicId: generateUniqueId(),
-          participantType: isAdult ? 'adult' : 'child',
-          age: isAdult ? null : null, // Age will be set by user input
-          birthDate: null,
-          // selectedClasses: structuredClone(blankParticipant.selectedClasses), // Deep clone to avoid shared reference
-        })
+          participantType: 'adult'
+        }))
+      }
+    } else if (newAdults < currentAdults.length) {
+      // Identify and remove excess adults from the end of the adult section
+      const toRemoveCount = currentAdults.length - newAdults
+      const firstAdultIdx = participants.value.findIndex(p => p.participantType === 'adult')
+
+      // Get the participants to be removed to clean up their booked classes
+      const removedAdults = participants.value.slice(firstAdultIdx + newAdults, firstAdultIdx + currentAdults.length)
+      removedAdults.forEach(p => {
+        if (p.dynamicId) {
+          pickedClassesStore.removeClassesForParticipant(p.dynamicId)
+        }
       })
-      participants.value.push(...newParticipants)
-    } else if (totalNeeded < currentLength) {
-      // Remove excess participants from the end
-      const toRemove = currentLength - totalNeeded
-      participants.value.splice(-toRemove)
+
+      participants.value.splice(firstAdultIdx + newAdults, toRemoveCount)
     }
-  }, { immediate: true }) // Execute immediately on store initialization
+
+    // --- Handle Children ---
+    if (newChildren > currentChildren.length) {
+      // Add missing children at the very end of the array
+      for (let i = 0; i < newChildren - currentChildren.length; i++) {
+        participants.value.push(reactive({
+          ...blankParticipant,
+          dynamicId: generateUniqueId(),
+          participantType: 'child'
+        }))
+      }
+    } else if (newChildren < currentChildren.length) {
+      // Remove excess children from the end of the list
+      const toRemoveCount = currentChildren.length - newChildren
+
+      for (let i = 0; i < toRemoveCount; i++) {
+        // Find the last child in the array
+        const lastChildIdx = [...participants.value].reverse().findIndex(p => p.participantType === 'child')
+        if (lastChildIdx !== -1) {
+          const actualIdx = participants.value.length - 1 - lastChildIdx
+          const childToRemove = participants.value[actualIdx]
+
+          // Clean up booked classes for this child
+          if (childToRemove.dynamicId) {
+            pickedClassesStore.removeClassesForParticipant(childToRemove.dynamicId)
+          }
+
+          // Remove the child from the participants array
+          participants.value.splice(actualIdx, 1)
+        }
+      }
+    }
+  }, { immediate: true })
 
   // ==========================================================================
   // ACTIONS - RESET FUNCTIONALITY
