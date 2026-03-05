@@ -35,7 +35,6 @@ const {mobile} = useDisplay()
 
 const availableSkillLevels = computed(() => {
 
-  console.log(props.currentParticipant)
   if (props.participantType === 'adult') {
     return stayStore.skillLevels_ADULTS
   } else if (props.participantType === 'child') {
@@ -167,6 +166,12 @@ const genders = computed(() => [
 watch(() => props.modelValue, val => {
   if (val) {
     resetState()
+    if (props.currentParticipant?.skillLevel) {
+      const level = availableSkillLevels.value.find(l => l.name === props.currentParticipant.skillLevel)
+      if (level) {
+        selectedSkillLevel.value = [level]
+      }
+    }
   }
 })
 
@@ -206,6 +211,11 @@ function resetState() {
   currentStep.value = 1
   selectedType.value = null
   showStepper.value = false
+
+  // Clear the selected skill level state
+  selectedSkillLevel.value = null
+  availableSkillLevels.value.forEach(l => l.selected = false)
+
   viewStore.isAddClassesStepOneCompleted = false
   viewStore.isAddClassesStepTwoCompleted = false
   viewStore.isAddClassesStepThreeCompleted = false
