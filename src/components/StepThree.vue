@@ -868,8 +868,6 @@
                     </div>
                   </div>
                 </div>
-                <!--                {{ classStore.childAddOnSelections }}-->
-                <!--                {{ classStore.childAddOnPrice }}-->
               </VSheet>
             </div>
           </div>
